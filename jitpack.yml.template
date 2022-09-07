@@ -3,9 +3,9 @@ before_install:
   - mkdir -p LipaLightningLib/src/main/jniLibs/arm64-v8a
   - mkdir -p LipaLightningLib/src/main/jniLibs/armeabi
   - mkdir -p LipaLightningLib/src/main/jniLibs/x86
-  - wget https://github.com/danielgranhao/test-push-to-another-repo-android-target/releases/download/to_replace_release_version/libuniffi_lipalightninglib_arm64.so
-  - wget https://github.com/danielgranhao/test-push-to-another-repo-android-target/releases/download/to_replace_release_version/libuniffi_lipalightninglib_armeabi.so
-  - wget https://github.com/danielgranhao/test-push-to-another-repo-android-target/releases/download/to_replace_release_version/libuniffi_lipalightninglib_x86.so
+  - wget https://github.com/getlipa/lipa-lightning-lib-android/releases/download/to_replace_release_version/libuniffi_lipalightninglib_arm64.so
+  - wget https://github.com/getlipa/lipa-lightning-lib-android/releases/download/to_replace_release_version/libuniffi_lipalightninglib_armeabi.so
+  - wget https://github.com/getlipa/lipa-lightning-lib-android/releases/download/to_replace_release_version/libuniffi_lipalightninglib_x86.so
   - cp libuniffi_lipalightninglib_arm64.so LipaLightningLib/src/main/jniLibs/arm64/libuniffi_lipalightninglib.so
   - cp libuniffi_lipalightninglib_arm64.so LipaLightningLib/src/main/jniLibs/arm64-v8a/libuniffi_lipalightninglib.so
   - cp libuniffi_lipalightninglib_armeabi.so LipaLightningLib/src/main/jniLibs/armeabi/libuniffi_lipalightninglib.so
