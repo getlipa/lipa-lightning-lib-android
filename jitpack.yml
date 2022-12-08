@@ -1,15 +1,8 @@
 before_install:
-  - mkdir -p LipaLightningLib/src/main/jniLibs/arm64
-  - mkdir -p LipaLightningLib/src/main/jniLibs/arm64-v8a
-  - mkdir -p LipaLightningLib/src/main/jniLibs/armeabi
-  - mkdir -p LipaLightningLib/src/main/jniLibs/x86
-  - wget https://github.com/getlipa/lipa-lightning-lib-android/releases/download/v0.1.0-alpha.5/libuniffi_lipalightninglib_arm64.so
-  - wget https://github.com/getlipa/lipa-lightning-lib-android/releases/download/v0.1.0-alpha.5/libuniffi_lipalightninglib_armeabi.so
-  - wget https://github.com/getlipa/lipa-lightning-lib-android/releases/download/v0.1.0-alpha.5/libuniffi_lipalightninglib_x86.so
-  - cp libuniffi_lipalightninglib_arm64.so LipaLightningLib/src/main/jniLibs/arm64/libuniffi_lipalightninglib.so
-  - cp libuniffi_lipalightninglib_arm64.so LipaLightningLib/src/main/jniLibs/arm64-v8a/libuniffi_lipalightninglib.so
-  - cp libuniffi_lipalightninglib_armeabi.so LipaLightningLib/src/main/jniLibs/armeabi/libuniffi_lipalightninglib.so
-  - cp libuniffi_lipalightninglib_x86.so LipaLightningLib/src/main/jniLibs/x86/libuniffi_lipalightninglib.so
+  - wget https://github.com/getlipa/lipa-lightning-lib-android/releases/download/v0.1.0-alpha.8/jniLibs.zip
+  - if [ $(shasum -a 256 jniLibs.zip | sed 's/ .*//') != '93c254ea5da1790cd48eb9dee4d289d7abf3e262d8f420d2a5371538cf94edb5' ]; then exit 1; fi
+  - unzip -o jniLibs.zip
+  - mv jniLibs LipaLightningLib/src/main/jniLibs
   - wget https://github.com/java-native-access/jna/archive/refs/tags/5.8.0.zip
   - unzip 5.8.0.zip
   - unzip -o jna-5.8.0/dist/android-aarch64.jar
@@ -17,5 +10,6 @@ before_install:
   - cp libjnidispatch.so LipaLightningLib/src/main/jniLibs/arm64-v8a
   - unzip -o jna-5.8.0/dist/android-armv7.jar
   - cp libjnidispatch.so LipaLightningLib/src/main/jniLibs/armeabi
+  - cp libjnidispatch.so LipaLightningLib/src/main/jniLibs/armeabi-v7a
   - unzip -o jna-5.8.0/dist/android-x86.jar
   - cp libjnidispatch.so LipaLightningLib/src/main/jniLibs/x86

@@ -44,7 +44,7 @@ open class RustBuffer : Structure() {
 
     companion object {
         internal fun alloc(size: Int = 0) = rustCall() { status ->
-            _UniFFILib.INSTANCE.ffi_lipalightninglib_da8c_rustbuffer_alloc(size, status).also {
+            _UniFFILib.INSTANCE.ffi_lipalightninglib_977e_rustbuffer_alloc(size, status).also {
                 if(it.data == null) {
                    throw RuntimeException("RustBuffer.alloc() returned null data pointer (size=${size})")
                }
@@ -52,7 +52,7 @@ open class RustBuffer : Structure() {
         }
 
         internal fun free(buf: RustBuffer.ByValue) = rustCall() { status ->
-            _UniFFILib.INSTANCE.ffi_lipalightninglib_da8c_rustbuffer_free(buf, status)
+            _UniFFILib.INSTANCE.ffi_lipalightninglib_977e_rustbuffer_free(buf, status)
         }
     }
 
@@ -258,74 +258,74 @@ internal interface _UniFFILib : Library {
         internal val INSTANCE: _UniFFILib by lazy {
             loadIndirect<_UniFFILib>(componentName = "lipalightninglib")
             .also { lib: _UniFFILib ->
-                FfiConverterTypePersistCallback.register(lib)
+                FfiConverterTypeLspCallback.register(lib)
                 FfiConverterTypeRedundantStorageCallback.register(lib)
                 }
             
         }
     }
 
-    fun ffi_lipalightninglib_da8c_LipaLightning_object_free(`ptr`: Pointer,
+    fun ffi_lipalightninglib_977e_LightningNode_object_free(`ptr`: Pointer,
     _uniffi_out_err: RustCallStatus
     ): Unit
 
-    fun lipalightninglib_da8c_LipaLightning_new(`config`: RustBuffer.ByValue,`persistCallback`: Long,
+    fun lipalightninglib_977e_LightningNode_new(`config`: RustBuffer.ByValue,`redundantStorageCallback`: Long,`lspCallback`: Long,
     _uniffi_out_err: RustCallStatus
     ): Pointer
 
-    fun lipalightninglib_da8c_LipaLightning_stop(`ptr`: Pointer,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_da8c_LipaLightning_get_my_node_id(`ptr`: Pointer,
+    fun lipalightninglib_977e_LightningNode_get_node_info(`ptr`: Pointer,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun lipalightninglib_da8c_LipaLightning_get_node_info(`ptr`: Pointer,
+    fun lipalightninglib_977e_LightningNode_query_lsp_fee(`ptr`: Pointer,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun lipalightninglib_da8c_LipaLightning_connect_open_channel(`ptr`: Pointer,`nodeId`: RustBuffer.ByValue,`nodeAddress`: RustBuffer.ByValue,`channelValueSat`: Long,
+    fun lipalightninglib_977e_LightningNode_connected_to_node(`ptr`: Pointer,`node`: RustBuffer.ByValue,
     _uniffi_out_err: RustCallStatus
-    ): Unit
+    ): Byte
 
-    fun lipalightninglib_da8c_LipaLightning_send_payment(`ptr`: Pointer,`invoiceStr`: RustBuffer.ByValue,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_da8c_LipaLightning_send_spontaneous_payment(`ptr`: Pointer,`amoutMsat`: Long,`nodeId`: RustBuffer.ByValue,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_da8c_LipaLightning_create_invoice(`ptr`: Pointer,`amountMsat`: Long,`expirySecs`: Int,
+    fun lipalightninglib_977e_LightningNode_create_invoice(`ptr`: Pointer,`amountMsat`: Long,`description`: RustBuffer.ByValue,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun ffi_lipalightninglib_da8c_PersistCallback_init_callback(`callbackStub`: ForeignCallback,
+    fun lipalightninglib_977e_LightningNode_sync_graph(`ptr`: Pointer,
     _uniffi_out_err: RustCallStatus
     ): Unit
 
-    fun ffi_lipalightninglib_da8c_RedundantStorageCallback_init_callback(`callbackStub`: ForeignCallback,
+    fun ffi_lipalightninglib_977e_RedundantStorageCallback_init_callback(`callbackStub`: ForeignCallback,
     _uniffi_out_err: RustCallStatus
     ): Unit
 
-    fun lipalightninglib_da8c_init_native_logger_once(`minLevel`: RustBuffer.ByValue,
+    fun ffi_lipalightninglib_977e_LspCallback_init_callback(`callbackStub`: ForeignCallback,
     _uniffi_out_err: RustCallStatus
     ): Unit
 
-    fun ffi_lipalightninglib_da8c_rustbuffer_alloc(`size`: Int,
+    fun lipalightninglib_977e_init_native_logger_once(`minLevel`: RustBuffer.ByValue,
+    _uniffi_out_err: RustCallStatus
+    ): Unit
+
+    fun lipalightninglib_977e_generate_secret(`passphrase`: RustBuffer.ByValue,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun ffi_lipalightninglib_da8c_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,
+    fun lipalightninglib_977e_mnemonic_to_secret(`mnemonicString`: RustBuffer.ByValue,`passphrase`: RustBuffer.ByValue,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun ffi_lipalightninglib_da8c_rustbuffer_free(`buf`: RustBuffer.ByValue,
+    fun ffi_lipalightninglib_977e_rustbuffer_alloc(`size`: Int,
+    _uniffi_out_err: RustCallStatus
+    ): RustBuffer.ByValue
+
+    fun ffi_lipalightninglib_977e_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,
+    _uniffi_out_err: RustCallStatus
+    ): RustBuffer.ByValue
+
+    fun ffi_lipalightninglib_977e_rustbuffer_free(`buf`: RustBuffer.ByValue,
     _uniffi_out_err: RustCallStatus
     ): Unit
 
-    fun ffi_lipalightninglib_da8c_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Int,
+    fun ffi_lipalightninglib_977e_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Int,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
@@ -372,26 +372,6 @@ public object FfiConverterUShort: FfiConverter<UShort, Short> {
 
     override fun write(value: UShort, buf: ByteBuffer) {
         buf.putShort(value.toShort())
-    }
-}
-
-public object FfiConverterUInt: FfiConverter<UInt, Int> {
-    override fun lift(value: Int): UInt {
-        return value.toUInt()
-    }
-
-    override fun read(buf: ByteBuffer): UInt {
-        return lift(buf.getInt())
-    }
-
-    override fun lower(value: UInt): Int {
-        return value.toInt()
-    }
-
-    override fun allocationSize(value: UInt) = 4
-
-    override fun write(value: UInt, buf: ByteBuffer) {
-        buf.putInt(value.toInt())
     }
 }
 
@@ -644,35 +624,30 @@ abstract class FFIObject(
     }
 }
 
-public interface LipaLightningInterface {
+public interface LightningNodeInterface {
     
-    fun `stop`()
+    fun `getNodeInfo`(): NodeInfo
     
-    fun `getMyNodeId`(): List<UByte>
+    @Throws(LipaException::class)
+    fun `queryLspFee`(): LspFee
     
-    fun `getNodeInfo`(): LipaNodeInfo
+    fun `connectedToNode`(`node`: NodeAddress): Boolean
     
-    @Throws(LipaLightningException::class)
-    fun `connectOpenChannel`(`nodeId`: List<UByte>, `nodeAddress`: String, `channelValueSat`: ULong)
+    @Throws(LipaException::class)
+    fun `createInvoice`(`amountMsat`: ULong, `description`: String): String
     
-    @Throws(LipaLightningException::class)
-    fun `sendPayment`(`invoiceStr`: String)
-    
-    @Throws(LipaLightningException::class)
-    fun `sendSpontaneousPayment`(`amoutMsat`: ULong, `nodeId`: List<UByte>)
-    
-    @Throws(LipaLightningException::class)
-    fun `createInvoice`(`amountMsat`: ULong, `expirySecs`: UInt): String
+    @Throws(LipaException::class)
+    fun `syncGraph`()
     
 }
 
-class LipaLightning(
+class LightningNode(
     pointer: Pointer
-) : FFIObject(pointer), LipaLightningInterface {
-    constructor(`config`: LipaLightningConfig, `persistCallback`: PersistCallback) :
+) : FFIObject(pointer), LightningNodeInterface {
+    constructor(`config`: Config, `redundantStorageCallback`: RedundantStorageCallback, `lspCallback`: LspCallback) :
         this(
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_da8c_LipaLightning_new(FfiConverterTypeLipaLightningConfig.lower(`config`), FfiConverterTypePersistCallback.lower(`persistCallback`), _status)
+    rustCallWithError(InitializationException) { _status ->
+    _UniFFILib.INSTANCE.lipalightninglib_977e_LightningNode_new(FfiConverterTypeConfig.lower(`config`), FfiConverterTypeRedundantStorageCallback.lower(`redundantStorageCallback`), FfiConverterTypeLspCallback.lower(`lspCallback`), _status)
 })
 
     /**
@@ -685,87 +660,73 @@ class LipaLightning(
      */
     override protected fun freeRustArcPtr() {
         rustCall() { status ->
-            _UniFFILib.INSTANCE.ffi_lipalightninglib_da8c_LipaLightning_object_free(this.pointer, status)
+            _UniFFILib.INSTANCE.ffi_lipalightninglib_977e_LightningNode_object_free(this.pointer, status)
         }
     }
 
-    override fun `stop`() =
+    override fun `getNodeInfo`(): NodeInfo =
         callWithPointer {
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_da8c_LipaLightning_stop(it,  _status)
-}
-        }
-    
-    override fun `getMyNodeId`(): List<UByte> =
-        callWithPointer {
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_da8c_LipaLightning_get_my_node_id(it,  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_977e_LightningNode_get_node_info(it,  _status)
 }
         }.let {
-            FfiConverterSequenceUByte.lift(it)
+            FfiConverterTypeNodeInfo.lift(it)
         }
-    override fun `getNodeInfo`(): LipaNodeInfo =
+    
+    @Throws(LipaException::class)override fun `queryLspFee`(): LspFee =
         callWithPointer {
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_da8c_LipaLightning_get_node_info(it,  _status)
+    rustCallWithError(LipaException) { _status ->
+    _UniFFILib.INSTANCE.lipalightninglib_977e_LightningNode_query_lsp_fee(it,  _status)
 }
         }.let {
-            FfiConverterTypeLipaNodeInfo.lift(it)
+            FfiConverterTypeLspFee.lift(it)
         }
-    
-    @Throws(LipaLightningException::class)override fun `connectOpenChannel`(`nodeId`: List<UByte>, `nodeAddress`: String, `channelValueSat`: ULong) =
+    override fun `connectedToNode`(`node`: NodeAddress): Boolean =
         callWithPointer {
-    rustCallWithError(LipaLightningException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_da8c_LipaLightning_connect_open_channel(it, FfiConverterSequenceUByte.lower(`nodeId`), FfiConverterString.lower(`nodeAddress`), FfiConverterULong.lower(`channelValueSat`),  _status)
+    rustCall() { _status ->
+    _UniFFILib.INSTANCE.lipalightninglib_977e_LightningNode_connected_to_node(it, FfiConverterTypeNodeAddress.lower(`node`),  _status)
 }
+        }.let {
+            FfiConverterBoolean.lift(it)
         }
     
-    
-    @Throws(LipaLightningException::class)override fun `sendPayment`(`invoiceStr`: String) =
+    @Throws(LipaException::class)override fun `createInvoice`(`amountMsat`: ULong, `description`: String): String =
         callWithPointer {
-    rustCallWithError(LipaLightningException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_da8c_LipaLightning_send_payment(it, FfiConverterString.lower(`invoiceStr`),  _status)
-}
-        }
-    
-    
-    @Throws(LipaLightningException::class)override fun `sendSpontaneousPayment`(`amoutMsat`: ULong, `nodeId`: List<UByte>) =
-        callWithPointer {
-    rustCallWithError(LipaLightningException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_da8c_LipaLightning_send_spontaneous_payment(it, FfiConverterULong.lower(`amoutMsat`), FfiConverterSequenceUByte.lower(`nodeId`),  _status)
-}
-        }
-    
-    
-    @Throws(LipaLightningException::class)override fun `createInvoice`(`amountMsat`: ULong, `expirySecs`: UInt): String =
-        callWithPointer {
-    rustCallWithError(LipaLightningException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_da8c_LipaLightning_create_invoice(it, FfiConverterULong.lower(`amountMsat`), FfiConverterUInt.lower(`expirySecs`),  _status)
+    rustCallWithError(LipaException) { _status ->
+    _UniFFILib.INSTANCE.lipalightninglib_977e_LightningNode_create_invoice(it, FfiConverterULong.lower(`amountMsat`), FfiConverterString.lower(`description`),  _status)
 }
         }.let {
             FfiConverterString.lift(it)
         }
     
+    @Throws(LipaException::class)override fun `syncGraph`() =
+        callWithPointer {
+    rustCallWithError(LipaException) { _status ->
+    _UniFFILib.INSTANCE.lipalightninglib_977e_LightningNode_sync_graph(it,  _status)
+}
+        }
+    
+    
 
     
 }
 
-public object FfiConverterTypeLipaLightning: FfiConverter<LipaLightning, Pointer> {
-    override fun lower(value: LipaLightning): Pointer = value.callWithPointer { it }
+public object FfiConverterTypeLightningNode: FfiConverter<LightningNode, Pointer> {
+    override fun lower(value: LightningNode): Pointer = value.callWithPointer { it }
 
-    override fun lift(value: Pointer): LipaLightning {
-        return LipaLightning(value)
+    override fun lift(value: Pointer): LightningNode {
+        return LightningNode(value)
     }
 
-    override fun read(buf: ByteBuffer): LipaLightning {
+    override fun read(buf: ByteBuffer): LightningNode {
         // The Rust code always writes pointers as 8 bytes, and will
         // fail to compile if they don't fit.
         return lift(Pointer(buf.getLong()))
     }
 
-    override fun allocationSize(value: LipaLightning) = 8
+    override fun allocationSize(value: LightningNode) = 8
 
-    override fun write(value: LipaLightning, buf: ByteBuffer) {
+    override fun write(value: LightningNode, buf: ByteBuffer) {
         // The Rust code always expects pointers written as 8 bytes,
         // and will fail to compile if they don't fit.
         buf.putLong(Pointer.nativeValue(lower(value)))
@@ -775,90 +736,206 @@ public object FfiConverterTypeLipaLightning: FfiConverter<LipaLightning, Pointer
 
 
 
-data class LipaLightningConfig (
-    var `seed`: List<UByte>, 
-    var `bitcoindRpcUsername`: String, 
-    var `bitcoindRpcPassword`: String, 
-    var `bitcoindRpcPort`: UShort, 
-    var `bitcoindRpcHost`: String, 
-    var `ldkPeerListeningPort`: UShort, 
-    var `network`: Network
-) {
-    
-}
-
-public object FfiConverterTypeLipaLightningConfig: FfiConverterRustBuffer<LipaLightningConfig> {
-    override fun read(buf: ByteBuffer): LipaLightningConfig {
-        return LipaLightningConfig(
-            FfiConverterSequenceUByte.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterUShort.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterUShort.read(buf),
-            FfiConverterTypeNetwork.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: LipaLightningConfig) = (
-            FfiConverterSequenceUByte.allocationSize(value.`seed`) +
-            FfiConverterString.allocationSize(value.`bitcoindRpcUsername`) +
-            FfiConverterString.allocationSize(value.`bitcoindRpcPassword`) +
-            FfiConverterUShort.allocationSize(value.`bitcoindRpcPort`) +
-            FfiConverterString.allocationSize(value.`bitcoindRpcHost`) +
-            FfiConverterUShort.allocationSize(value.`ldkPeerListeningPort`) +
-            FfiConverterTypeNetwork.allocationSize(value.`network`)
-    )
-
-    override fun write(value: LipaLightningConfig, buf: ByteBuffer) {
-            FfiConverterSequenceUByte.write(value.`seed`, buf)
-            FfiConverterString.write(value.`bitcoindRpcUsername`, buf)
-            FfiConverterString.write(value.`bitcoindRpcPassword`, buf)
-            FfiConverterUShort.write(value.`bitcoindRpcPort`, buf)
-            FfiConverterString.write(value.`bitcoindRpcHost`, buf)
-            FfiConverterUShort.write(value.`ldkPeerListeningPort`, buf)
-            FfiConverterTypeNetwork.write(value.`network`, buf)
-    }
-}
-
-
-
-
-data class LipaNodeInfo (
-    var `nodePubkey`: List<UByte>, 
-    var `numChannels`: ULong, 
-    var `numUsableChannels`: ULong, 
+data class ChannelsInfo (
+    var `numChannels`: UShort, 
+    var `numUsableChannels`: UShort, 
     var `localBalanceMsat`: ULong, 
-    var `numPeers`: ULong
+    var `inboundCapacityMsat`: ULong, 
+    var `outboundCapacityMsat`: ULong
 ) {
     
 }
 
-public object FfiConverterTypeLipaNodeInfo: FfiConverterRustBuffer<LipaNodeInfo> {
-    override fun read(buf: ByteBuffer): LipaNodeInfo {
-        return LipaNodeInfo(
-            FfiConverterSequenceUByte.read(buf),
-            FfiConverterULong.read(buf),
+public object FfiConverterTypeChannelsInfo: FfiConverterRustBuffer<ChannelsInfo> {
+    override fun read(buf: ByteBuffer): ChannelsInfo {
+        return ChannelsInfo(
+            FfiConverterUShort.read(buf),
+            FfiConverterUShort.read(buf),
             FfiConverterULong.read(buf),
             FfiConverterULong.read(buf),
             FfiConverterULong.read(buf),
         )
     }
 
-    override fun allocationSize(value: LipaNodeInfo) = (
-            FfiConverterSequenceUByte.allocationSize(value.`nodePubkey`) +
-            FfiConverterULong.allocationSize(value.`numChannels`) +
-            FfiConverterULong.allocationSize(value.`numUsableChannels`) +
+    override fun allocationSize(value: ChannelsInfo) = (
+            FfiConverterUShort.allocationSize(value.`numChannels`) +
+            FfiConverterUShort.allocationSize(value.`numUsableChannels`) +
             FfiConverterULong.allocationSize(value.`localBalanceMsat`) +
-            FfiConverterULong.allocationSize(value.`numPeers`)
+            FfiConverterULong.allocationSize(value.`inboundCapacityMsat`) +
+            FfiConverterULong.allocationSize(value.`outboundCapacityMsat`)
     )
 
-    override fun write(value: LipaNodeInfo, buf: ByteBuffer) {
-            FfiConverterSequenceUByte.write(value.`nodePubkey`, buf)
-            FfiConverterULong.write(value.`numChannels`, buf)
-            FfiConverterULong.write(value.`numUsableChannels`, buf)
+    override fun write(value: ChannelsInfo, buf: ByteBuffer) {
+            FfiConverterUShort.write(value.`numChannels`, buf)
+            FfiConverterUShort.write(value.`numUsableChannels`, buf)
             FfiConverterULong.write(value.`localBalanceMsat`, buf)
-            FfiConverterULong.write(value.`numPeers`, buf)
+            FfiConverterULong.write(value.`inboundCapacityMsat`, buf)
+            FfiConverterULong.write(value.`outboundCapacityMsat`, buf)
+    }
+}
+
+
+
+
+data class Config (
+    var `network`: Network, 
+    var `seed`: List<UByte>, 
+    var `esploraApiUrl`: String, 
+    var `lspNode`: NodeAddress, 
+    var `rgsUrl`: String
+) {
+    
+}
+
+public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
+    override fun read(buf: ByteBuffer): Config {
+        return Config(
+            FfiConverterTypeNetwork.read(buf),
+            FfiConverterSequenceUByte.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterTypeNodeAddress.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: Config) = (
+            FfiConverterTypeNetwork.allocationSize(value.`network`) +
+            FfiConverterSequenceUByte.allocationSize(value.`seed`) +
+            FfiConverterString.allocationSize(value.`esploraApiUrl`) +
+            FfiConverterTypeNodeAddress.allocationSize(value.`lspNode`) +
+            FfiConverterString.allocationSize(value.`rgsUrl`)
+    )
+
+    override fun write(value: Config, buf: ByteBuffer) {
+            FfiConverterTypeNetwork.write(value.`network`, buf)
+            FfiConverterSequenceUByte.write(value.`seed`, buf)
+            FfiConverterString.write(value.`esploraApiUrl`, buf)
+            FfiConverterTypeNodeAddress.write(value.`lspNode`, buf)
+            FfiConverterString.write(value.`rgsUrl`, buf)
+    }
+}
+
+
+
+
+data class LspFee (
+    var `minMsat`: ULong, 
+    var `ratePpm`: ULong
+) {
+    
+}
+
+public object FfiConverterTypeLspFee: FfiConverterRustBuffer<LspFee> {
+    override fun read(buf: ByteBuffer): LspFee {
+        return LspFee(
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: LspFee) = (
+            FfiConverterULong.allocationSize(value.`minMsat`) +
+            FfiConverterULong.allocationSize(value.`ratePpm`)
+    )
+
+    override fun write(value: LspFee, buf: ByteBuffer) {
+            FfiConverterULong.write(value.`minMsat`, buf)
+            FfiConverterULong.write(value.`ratePpm`, buf)
+    }
+}
+
+
+
+
+data class NodeAddress (
+    var `pubKey`: String, 
+    var `address`: String
+) {
+    
+}
+
+public object FfiConverterTypeNodeAddress: FfiConverterRustBuffer<NodeAddress> {
+    override fun read(buf: ByteBuffer): NodeAddress {
+        return NodeAddress(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: NodeAddress) = (
+            FfiConverterString.allocationSize(value.`pubKey`) +
+            FfiConverterString.allocationSize(value.`address`)
+    )
+
+    override fun write(value: NodeAddress, buf: ByteBuffer) {
+            FfiConverterString.write(value.`pubKey`, buf)
+            FfiConverterString.write(value.`address`, buf)
+    }
+}
+
+
+
+
+data class NodeInfo (
+    var `nodePubkey`: List<UByte>, 
+    var `numPeers`: UShort, 
+    var `channelsInfo`: ChannelsInfo
+) {
+    
+}
+
+public object FfiConverterTypeNodeInfo: FfiConverterRustBuffer<NodeInfo> {
+    override fun read(buf: ByteBuffer): NodeInfo {
+        return NodeInfo(
+            FfiConverterSequenceUByte.read(buf),
+            FfiConverterUShort.read(buf),
+            FfiConverterTypeChannelsInfo.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: NodeInfo) = (
+            FfiConverterSequenceUByte.allocationSize(value.`nodePubkey`) +
+            FfiConverterUShort.allocationSize(value.`numPeers`) +
+            FfiConverterTypeChannelsInfo.allocationSize(value.`channelsInfo`)
+    )
+
+    override fun write(value: NodeInfo, buf: ByteBuffer) {
+            FfiConverterSequenceUByte.write(value.`nodePubkey`, buf)
+            FfiConverterUShort.write(value.`numPeers`, buf)
+            FfiConverterTypeChannelsInfo.write(value.`channelsInfo`, buf)
+    }
+}
+
+
+
+
+data class Secret (
+    var `mnemonic`: List<String>, 
+    var `passphrase`: String, 
+    var `seed`: List<UByte>
+) {
+    
+}
+
+public object FfiConverterTypeSecret: FfiConverterRustBuffer<Secret> {
+    override fun read(buf: ByteBuffer): Secret {
+        return Secret(
+            FfiConverterSequenceString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterSequenceUByte.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: Secret) = (
+            FfiConverterSequenceString.allocationSize(value.`mnemonic`) +
+            FfiConverterString.allocationSize(value.`passphrase`) +
+            FfiConverterSequenceUByte.allocationSize(value.`seed`)
+    )
+
+    override fun write(value: Secret, buf: ByteBuffer) {
+            FfiConverterSequenceString.write(value.`mnemonic`, buf)
+            FfiConverterString.write(value.`passphrase`, buf)
+            FfiConverterSequenceUByte.write(value.`seed`, buf)
     }
 }
 
@@ -912,55 +989,260 @@ public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
 
 
 
-sealed class LipaLightningException(message: String): Exception(message) {
+sealed class InitializationException(message: String): Exception(message) {
         // Each variant is a nested class
         // Flat enums carries a string error message, so no special implementation is necessary.
-        class Placeholder(message: String) : LipaLightningException(message)
-        class PeerConnection(message: String) : LipaLightningException(message)
-        class ChannelOpen(message: String) : LipaLightningException(message)
-        class InvoiceParsing(message: String) : LipaLightningException(message)
-        class InvoiceInvalid(message: String) : LipaLightningException(message)
-        class Routing(message: String) : LipaLightningException(message)
-        class PaymentFail(message: String) : LipaLightningException(message)
-        class InternalException(message: String) : LipaLightningException(message)
-        class PubkeyParsing(message: String) : LipaLightningException(message)
-        class InvalidPayee(message: String) : LipaLightningException(message)
-        class InvoiceCreation(message: String) : LipaLightningException(message)
+        class AsyncRuntime(message: String) : InitializationException(message)
+        class ChainMonitorWatchChannel(message: String) : InitializationException(message)
+        class ChainSync(message: String) : InitializationException(message)
+        class ChannelMonitorBackup(message: String) : InitializationException(message)
+        class EsploraClient(message: String) : InitializationException(message)
+        class KeysManager(message: String) : InitializationException(message)
+        class Logic(message: String) : InitializationException(message)
+        class PeerConnection(message: String) : InitializationException(message)
+        class PublicKey(message: String) : InitializationException(message)
+        class SecretGeneration(message: String) : InitializationException(message)
         
 
-    companion object ErrorHandler : CallStatusErrorHandler<LipaLightningException> {
-        override fun lift(error_buf: RustBuffer.ByValue): LipaLightningException = FfiConverterTypeLipaLightningError.lift(error_buf)
+    companion object ErrorHandler : CallStatusErrorHandler<InitializationException> {
+        override fun lift(error_buf: RustBuffer.ByValue): InitializationException = FfiConverterTypeInitializationError.lift(error_buf)
     }
 }
 
-public object FfiConverterTypeLipaLightningError : FfiConverterRustBuffer<LipaLightningException> {
-    override fun read(buf: ByteBuffer): LipaLightningException {
+public object FfiConverterTypeInitializationError : FfiConverterRustBuffer<InitializationException> {
+    override fun read(buf: ByteBuffer): InitializationException {
         
             return when(buf.getInt()) {
-            1 -> LipaLightningException.Placeholder(FfiConverterString.read(buf))
-            2 -> LipaLightningException.PeerConnection(FfiConverterString.read(buf))
-            3 -> LipaLightningException.ChannelOpen(FfiConverterString.read(buf))
-            4 -> LipaLightningException.InvoiceParsing(FfiConverterString.read(buf))
-            5 -> LipaLightningException.InvoiceInvalid(FfiConverterString.read(buf))
-            6 -> LipaLightningException.Routing(FfiConverterString.read(buf))
-            7 -> LipaLightningException.PaymentFail(FfiConverterString.read(buf))
-            8 -> LipaLightningException.InternalException(FfiConverterString.read(buf))
-            9 -> LipaLightningException.PubkeyParsing(FfiConverterString.read(buf))
-            10 -> LipaLightningException.InvalidPayee(FfiConverterString.read(buf))
-            11 -> LipaLightningException.InvoiceCreation(FfiConverterString.read(buf))
+            1 -> InitializationException.AsyncRuntime(FfiConverterString.read(buf))
+            2 -> InitializationException.ChainMonitorWatchChannel(FfiConverterString.read(buf))
+            3 -> InitializationException.ChainSync(FfiConverterString.read(buf))
+            4 -> InitializationException.ChannelMonitorBackup(FfiConverterString.read(buf))
+            5 -> InitializationException.EsploraClient(FfiConverterString.read(buf))
+            6 -> InitializationException.KeysManager(FfiConverterString.read(buf))
+            7 -> InitializationException.Logic(FfiConverterString.read(buf))
+            8 -> InitializationException.PeerConnection(FfiConverterString.read(buf))
+            9 -> InitializationException.PublicKey(FfiConverterString.read(buf))
+            10 -> InitializationException.SecretGeneration(FfiConverterString.read(buf))
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
         
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    override fun allocationSize(value: LipaLightningException): Int {
-        throw RuntimeException("Writing Errors is not supported")
+    override fun allocationSize(value: InitializationException): Int {
+        return 4
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    override fun write(value: LipaLightningException, buf: ByteBuffer) {
-        throw RuntimeException("Writing Errors is not supported")
+    override fun write(value: InitializationException, buf: ByteBuffer) {
+        when(value) {
+            is InitializationException.AsyncRuntime -> {
+                buf.putInt(1)
+                Unit
+            }
+            is InitializationException.ChainMonitorWatchChannel -> {
+                buf.putInt(2)
+                Unit
+            }
+            is InitializationException.ChainSync -> {
+                buf.putInt(3)
+                Unit
+            }
+            is InitializationException.ChannelMonitorBackup -> {
+                buf.putInt(4)
+                Unit
+            }
+            is InitializationException.EsploraClient -> {
+                buf.putInt(5)
+                Unit
+            }
+            is InitializationException.KeysManager -> {
+                buf.putInt(6)
+                Unit
+            }
+            is InitializationException.Logic -> {
+                buf.putInt(7)
+                Unit
+            }
+            is InitializationException.PeerConnection -> {
+                buf.putInt(8)
+                Unit
+            }
+            is InitializationException.PublicKey -> {
+                buf.putInt(9)
+                Unit
+            }
+            is InitializationException.SecretGeneration -> {
+                buf.putInt(10)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+
+
+sealed class LipaException(message: String): Exception(message) {
+        // Each variant is a nested class
+        // Flat enums carries a string error message, so no special implementation is necessary.
+        class InvalidInput(message: String) : LipaException(message)
+        class RuntimeException(message: String) : LipaException(message)
+        class PermanentFailure(message: String) : LipaException(message)
+        
+
+    companion object ErrorHandler : CallStatusErrorHandler<LipaException> {
+        override fun lift(error_buf: RustBuffer.ByValue): LipaException = FfiConverterTypeLipaError.lift(error_buf)
+    }
+}
+
+public object FfiConverterTypeLipaError : FfiConverterRustBuffer<LipaException> {
+    override fun read(buf: ByteBuffer): LipaException {
+        
+            return when(buf.getInt()) {
+            1 -> LipaException.InvalidInput(FfiConverterString.read(buf))
+            2 -> LipaException.RuntimeException(FfiConverterString.read(buf))
+            3 -> LipaException.PermanentFailure(FfiConverterString.read(buf))
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+        
+    }
+
+    override fun allocationSize(value: LipaException): Int {
+        return 4
+    }
+
+    override fun write(value: LipaException, buf: ByteBuffer) {
+        when(value) {
+            is LipaException.InvalidInput -> {
+                buf.putInt(1)
+                Unit
+            }
+            is LipaException.RuntimeException -> {
+                buf.putInt(2)
+                Unit
+            }
+            is LipaException.PermanentFailure -> {
+                buf.putInt(3)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+
+
+sealed class LspException(message: String): Exception(message) {
+        // Each variant is a nested class
+        // Flat enums carries a string error message, so no special implementation is necessary.
+        class Grpc(message: String) : LspException(message)
+        class Network(message: String) : LspException(message)
+        class UnexpectedUniFfi(message: String) : LspException(message)
+        
+
+    companion object ErrorHandler : CallStatusErrorHandler<LspException> {
+        override fun lift(error_buf: RustBuffer.ByValue): LspException = FfiConverterTypeLspError.lift(error_buf)
+    }
+}
+
+public object FfiConverterTypeLspError : FfiConverterRustBuffer<LspException> {
+    override fun read(buf: ByteBuffer): LspException {
+        
+            return when(buf.getInt()) {
+            1 -> LspException.Grpc(FfiConverterString.read(buf))
+            2 -> LspException.Network(FfiConverterString.read(buf))
+            3 -> LspException.UnexpectedUniFfi(FfiConverterString.read(buf))
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+        
+    }
+
+    override fun allocationSize(value: LspException): Int {
+        return 4
+    }
+
+    override fun write(value: LspException, buf: ByteBuffer) {
+        when(value) {
+            is LspException.Grpc -> {
+                buf.putInt(1)
+                Unit
+            }
+            is LspException.Network -> {
+                buf.putInt(2)
+                Unit
+            }
+            is LspException.UnexpectedUniFfi -> {
+                buf.putInt(3)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+
+
+sealed class RuntimeException(message: String): Exception(message) {
+        // Each variant is a nested class
+        // Flat enums carries a string error message, so no special implementation is necessary.
+        class ChainSync(message: String) : RuntimeException(message)
+        class InvalidAddress(message: String) : RuntimeException(message)
+        class InvalidPubKey(message: String) : RuntimeException(message)
+        class Logic(message: String) : RuntimeException(message)
+        class PeerConnection(message: String) : RuntimeException(message)
+        
+
+    companion object ErrorHandler : CallStatusErrorHandler<RuntimeException> {
+        override fun lift(error_buf: RustBuffer.ByValue): RuntimeException = FfiConverterTypeRuntimeError.lift(error_buf)
+    }
+}
+
+public object FfiConverterTypeRuntimeError : FfiConverterRustBuffer<RuntimeException> {
+    override fun read(buf: ByteBuffer): RuntimeException {
+        
+            return when(buf.getInt()) {
+            1 -> RuntimeException.ChainSync(FfiConverterString.read(buf))
+            2 -> RuntimeException.InvalidAddress(FfiConverterString.read(buf))
+            3 -> RuntimeException.InvalidPubKey(FfiConverterString.read(buf))
+            4 -> RuntimeException.Logic(FfiConverterString.read(buf))
+            5 -> RuntimeException.PeerConnection(FfiConverterString.read(buf))
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+        
+    }
+
+    override fun allocationSize(value: RuntimeException): Int {
+        return 4
+    }
+
+    override fun write(value: RuntimeException, buf: ByteBuffer) {
+        when(value) {
+            is RuntimeException.ChainSync -> {
+                buf.putInt(1)
+                Unit
+            }
+            is RuntimeException.InvalidAddress -> {
+                buf.putInt(2)
+                Unit
+            }
+            is RuntimeException.InvalidPubKey -> {
+                buf.putInt(3)
+                Unit
+            }
+            is RuntimeException.Logic -> {
+                buf.putInt(4)
+                Unit
+            }
+            is RuntimeException.PeerConnection -> {
+                buf.putInt(5)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 
 }
@@ -1043,121 +1325,97 @@ public abstract class FfiConverterCallbackInterface<CallbackInterface>(
     }
 }
 
-// Declaration and FfiConverters for PersistCallback Callback Interface
+// Declaration and FfiConverters for LspCallback Callback Interface
 
-public interface PersistCallback {
-    fun `exists`(`path`: String): Boolean
-    fun `readDir`(`path`: String): List<String>
-    fun `writeToFile`(`path`: String, `data`: List<UByte>): Boolean
-    fun `read`(`path`: String): List<UByte>
+public interface LspCallback {
+    fun `channelInformation`(): List<UByte>
+    fun `registerPayment`(`bytes`: List<UByte>)
     
 }
 
 // The ForeignCallback that is passed to Rust.
-internal class ForeignCallbackTypePersistCallback : ForeignCallback {
+internal class ForeignCallbackTypeLspCallback : ForeignCallback {
     @Suppress("TooGenericExceptionCaught")
     override fun invoke(handle: Handle, method: Int, args: RustBuffer.ByValue, outBuf: RustBufferByReference): Int {
-        val cb = FfiConverterTypePersistCallback.lift(handle)
+        val cb = FfiConverterTypeLspCallback.lift(handle)
         return when (method) {
             IDX_CALLBACK_FREE -> {
-                FfiConverterTypePersistCallback.drop(handle)
+                FfiConverterTypeLspCallback.drop(handle)
                 // No return value.
                 // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
                 0
             }
             1 -> {
-                val buffer = this.`invokeExists`(cb, args)
-                outBuf.setValue(buffer)
-                // Value written to out buffer.
-                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
-                1
+                // Call the method, write to outBuf and return a status code
+                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs` for info
+                try {
+                    try {
+                        val buffer = this.`invokeChannelInformation`(cb, args)
+                        // Success
+                        outBuf.setValue(buffer)
+                        1
+                    } catch (e: LspException) {
+                        // Expected error
+                        val buffer = FfiConverterTypeLspError.lowerIntoRustBuffer(e)
+                        outBuf.setValue(buffer)
+                        -2
+                    }
+                } catch (e: Throwable) {
+                    // Unexpected error
+                    try {
+                        // Try to serialize the error into a string
+                        outBuf.setValue(FfiConverterString.lower(e.toString()))
+                    } catch (e: Throwable) {
+                        // If that fails, then it's time to give up and just return
+                    }
+                    -1
+                }
             }
             2 -> {
-                val buffer = this.`invokeReadDir`(cb, args)
-                outBuf.setValue(buffer)
-                // Value written to out buffer.
-                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
-                1
-            }
-            3 -> {
-                val buffer = this.`invokeWriteToFile`(cb, args)
-                outBuf.setValue(buffer)
-                // Value written to out buffer.
-                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
-                1
-            }
-            4 -> {
-                val buffer = this.`invokeRead`(cb, args)
-                outBuf.setValue(buffer)
-                // Value written to out buffer.
-                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
-                1
+                // Call the method, write to outBuf and return a status code
+                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs` for info
+                try {
+                    try {
+                        val buffer = this.`invokeRegisterPayment`(cb, args)
+                        // Success
+                        outBuf.setValue(buffer)
+                        1
+                    } catch (e: LspException) {
+                        // Expected error
+                        val buffer = FfiConverterTypeLspError.lowerIntoRustBuffer(e)
+                        outBuf.setValue(buffer)
+                        -2
+                    }
+                } catch (e: Throwable) {
+                    // Unexpected error
+                    try {
+                        // Try to serialize the error into a string
+                        outBuf.setValue(FfiConverterString.lower(e.toString()))
+                    } catch (e: Throwable) {
+                        // If that fails, then it's time to give up and just return
+                    }
+                    -1
+                }
             }
             
-            // This should never happen, because an out of bounds method index won't
-            // ever be used. Once we can catch errors, we should return an InternalException.
-            // https://github.com/mozilla/uniffi-rs/issues/351
             else -> {
                 // An unexpected error happened.
                 // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
+                try {
+                    // Try to serialize the error into a string
+                    outBuf.setValue(FfiConverterString.lower("Invalid Callaback index"))
+                } catch (e: Throwable) {
+                    // If that fails, then it's time to give up and just return
+                }
                 -1
             }
         }
     }
 
     
-    private fun `invokeExists`(kotlinCallbackInterface: PersistCallback, args: RustBuffer.ByValue): RustBuffer.ByValue =
+    private fun `invokeChannelInformation`(kotlinCallbackInterface: LspCallback, args: RustBuffer.ByValue): RustBuffer.ByValue =
         try {
-            val buf = args.asByteBuffer() ?: throw InternalException("No ByteBuffer in RustBuffer; this is a Uniffi bug")
-            kotlinCallbackInterface.`exists`(
-                    FfiConverterString.read(buf)
-                    )
-            .let {
-                    FfiConverterBoolean.lowerIntoRustBuffer(it)
-                }// TODO catch errors and report them back to Rust.
-                // https://github.com/mozilla/uniffi-rs/issues/351
-        } finally {
-            RustBuffer.free(args)
-        }
-
-    
-    private fun `invokeReadDir`(kotlinCallbackInterface: PersistCallback, args: RustBuffer.ByValue): RustBuffer.ByValue =
-        try {
-            val buf = args.asByteBuffer() ?: throw InternalException("No ByteBuffer in RustBuffer; this is a Uniffi bug")
-            kotlinCallbackInterface.`readDir`(
-                    FfiConverterString.read(buf)
-                    )
-            .let {
-                    FfiConverterSequenceString.lowerIntoRustBuffer(it)
-                }// TODO catch errors and report them back to Rust.
-                // https://github.com/mozilla/uniffi-rs/issues/351
-        } finally {
-            RustBuffer.free(args)
-        }
-
-    
-    private fun `invokeWriteToFile`(kotlinCallbackInterface: PersistCallback, args: RustBuffer.ByValue): RustBuffer.ByValue =
-        try {
-            val buf = args.asByteBuffer() ?: throw InternalException("No ByteBuffer in RustBuffer; this is a Uniffi bug")
-            kotlinCallbackInterface.`writeToFile`(
-                    FfiConverterString.read(buf), 
-                    FfiConverterSequenceUByte.read(buf)
-                    )
-            .let {
-                    FfiConverterBoolean.lowerIntoRustBuffer(it)
-                }// TODO catch errors and report them back to Rust.
-                // https://github.com/mozilla/uniffi-rs/issues/351
-        } finally {
-            RustBuffer.free(args)
-        }
-
-    
-    private fun `invokeRead`(kotlinCallbackInterface: PersistCallback, args: RustBuffer.ByValue): RustBuffer.ByValue =
-        try {
-            val buf = args.asByteBuffer() ?: throw InternalException("No ByteBuffer in RustBuffer; this is a Uniffi bug")
-            kotlinCallbackInterface.`read`(
-                    FfiConverterString.read(buf)
-                    )
+            kotlinCallbackInterface.`channelInformation`()
             .let {
                     FfiConverterSequenceUByte.lowerIntoRustBuffer(it)
                 }// TODO catch errors and report them back to Rust.
@@ -1167,15 +1425,29 @@ internal class ForeignCallbackTypePersistCallback : ForeignCallback {
         }
 
     
+    private fun `invokeRegisterPayment`(kotlinCallbackInterface: LspCallback, args: RustBuffer.ByValue): RustBuffer.ByValue =
+        try {
+            val buf = args.asByteBuffer() ?: throw InternalException("No ByteBuffer in RustBuffer; this is a Uniffi bug")
+            kotlinCallbackInterface.`registerPayment`(
+                    FfiConverterSequenceUByte.read(buf)
+                    )
+            .let { RustBuffer.ByValue() }
+                // TODO catch errors and report them back to Rust.
+                // https://github.com/mozilla/uniffi-rs/issues/351
+        } finally {
+            RustBuffer.free(args)
+        }
+
+    
 }
 
 // The ffiConverter which transforms the Callbacks in to Handles to pass to Rust.
-public object FfiConverterTypePersistCallback: FfiConverterCallbackInterface<PersistCallback>(
-    foreignCallback = ForeignCallbackTypePersistCallback()
+public object FfiConverterTypeLspCallback: FfiConverterCallbackInterface<LspCallback>(
+    foreignCallback = ForeignCallbackTypeLspCallback()
 ) {
     override fun register(lib: _UniFFILib) {
         rustCall() { status ->
-            lib.ffi_lipalightninglib_da8c_PersistCallback_init_callback(this.foreignCallback, status)
+            lib.ffi_lipalightninglib_977e_LspCallback_init_callback(this.foreignCallback, status)
         }
     }
 }
@@ -1193,6 +1465,7 @@ public interface RedundantStorageCallback {
     fun `checkHealth`(`bucket`: String): Boolean
     fun `putObject`(`bucket`: String, `key`: String, `value`: List<UByte>): Boolean
     fun `listObjects`(`bucket`: String): List<String>
+    fun `deleteObject`(`bucket`: String, `key`: String): Boolean
     
 }
 
@@ -1209,47 +1482,129 @@ internal class ForeignCallbackTypeRedundantStorageCallback : ForeignCallback {
                 0
             }
             1 -> {
-                val buffer = this.`invokeObjectExists`(cb, args)
-                outBuf.setValue(buffer)
-                // Value written to out buffer.
-                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
-                1
+                // Call the method, write to outBuf and return a status code
+                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs` for info
+                try { 
+                    val buffer = this.`invokeObjectExists`(cb, args)
+                    // Success
+                    outBuf.setValue(buffer)
+                    1
+                } catch (e: Throwable) {
+                    // Unexpected error
+                    try {
+                        // Try to serialize the error into a string
+                        outBuf.setValue(FfiConverterString.lower(e.toString()))
+                    } catch (e: Throwable) {
+                        // If that fails, then it's time to give up and just return
+                    }
+                    -1
+                }
             }
             2 -> {
-                val buffer = this.`invokeGetObject`(cb, args)
-                outBuf.setValue(buffer)
-                // Value written to out buffer.
-                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
-                1
+                // Call the method, write to outBuf and return a status code
+                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs` for info
+                try { 
+                    val buffer = this.`invokeGetObject`(cb, args)
+                    // Success
+                    outBuf.setValue(buffer)
+                    1
+                } catch (e: Throwable) {
+                    // Unexpected error
+                    try {
+                        // Try to serialize the error into a string
+                        outBuf.setValue(FfiConverterString.lower(e.toString()))
+                    } catch (e: Throwable) {
+                        // If that fails, then it's time to give up and just return
+                    }
+                    -1
+                }
             }
             3 -> {
-                val buffer = this.`invokeCheckHealth`(cb, args)
-                outBuf.setValue(buffer)
-                // Value written to out buffer.
-                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
-                1
+                // Call the method, write to outBuf and return a status code
+                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs` for info
+                try { 
+                    val buffer = this.`invokeCheckHealth`(cb, args)
+                    // Success
+                    outBuf.setValue(buffer)
+                    1
+                } catch (e: Throwable) {
+                    // Unexpected error
+                    try {
+                        // Try to serialize the error into a string
+                        outBuf.setValue(FfiConverterString.lower(e.toString()))
+                    } catch (e: Throwable) {
+                        // If that fails, then it's time to give up and just return
+                    }
+                    -1
+                }
             }
             4 -> {
-                val buffer = this.`invokePutObject`(cb, args)
-                outBuf.setValue(buffer)
-                // Value written to out buffer.
-                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
-                1
+                // Call the method, write to outBuf and return a status code
+                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs` for info
+                try { 
+                    val buffer = this.`invokePutObject`(cb, args)
+                    // Success
+                    outBuf.setValue(buffer)
+                    1
+                } catch (e: Throwable) {
+                    // Unexpected error
+                    try {
+                        // Try to serialize the error into a string
+                        outBuf.setValue(FfiConverterString.lower(e.toString()))
+                    } catch (e: Throwable) {
+                        // If that fails, then it's time to give up and just return
+                    }
+                    -1
+                }
             }
             5 -> {
-                val buffer = this.`invokeListObjects`(cb, args)
-                outBuf.setValue(buffer)
-                // Value written to out buffer.
-                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
-                1
+                // Call the method, write to outBuf and return a status code
+                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs` for info
+                try { 
+                    val buffer = this.`invokeListObjects`(cb, args)
+                    // Success
+                    outBuf.setValue(buffer)
+                    1
+                } catch (e: Throwable) {
+                    // Unexpected error
+                    try {
+                        // Try to serialize the error into a string
+                        outBuf.setValue(FfiConverterString.lower(e.toString()))
+                    } catch (e: Throwable) {
+                        // If that fails, then it's time to give up and just return
+                    }
+                    -1
+                }
+            }
+            6 -> {
+                // Call the method, write to outBuf and return a status code
+                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs` for info
+                try { 
+                    val buffer = this.`invokeDeleteObject`(cb, args)
+                    // Success
+                    outBuf.setValue(buffer)
+                    1
+                } catch (e: Throwable) {
+                    // Unexpected error
+                    try {
+                        // Try to serialize the error into a string
+                        outBuf.setValue(FfiConverterString.lower(e.toString()))
+                    } catch (e: Throwable) {
+                        // If that fails, then it's time to give up and just return
+                    }
+                    -1
+                }
             }
             
-            // This should never happen, because an out of bounds method index won't
-            // ever be used. Once we can catch errors, we should return an InternalException.
-            // https://github.com/mozilla/uniffi-rs/issues/351
             else -> {
                 // An unexpected error happened.
                 // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
+                try {
+                    // Try to serialize the error into a string
+                    outBuf.setValue(FfiConverterString.lower("Invalid Callaback index"))
+                } catch (e: Throwable) {
+                    // If that fails, then it's time to give up and just return
+                }
                 -1
             }
         }
@@ -1335,6 +1690,22 @@ internal class ForeignCallbackTypeRedundantStorageCallback : ForeignCallback {
         }
 
     
+    private fun `invokeDeleteObject`(kotlinCallbackInterface: RedundantStorageCallback, args: RustBuffer.ByValue): RustBuffer.ByValue =
+        try {
+            val buf = args.asByteBuffer() ?: throw InternalException("No ByteBuffer in RustBuffer; this is a Uniffi bug")
+            kotlinCallbackInterface.`deleteObject`(
+                    FfiConverterString.read(buf), 
+                    FfiConverterString.read(buf)
+                    )
+            .let {
+                    FfiConverterBoolean.lowerIntoRustBuffer(it)
+                }// TODO catch errors and report them back to Rust.
+                // https://github.com/mozilla/uniffi-rs/issues/351
+        } finally {
+            RustBuffer.free(args)
+        }
+
+    
 }
 
 // The ffiConverter which transforms the Callbacks in to Handles to pass to Rust.
@@ -1343,7 +1714,7 @@ public object FfiConverterTypeRedundantStorageCallback: FfiConverterCallbackInte
 ) {
     override fun register(lib: _UniFFILib) {
         rustCall() { status ->
-            lib.ffi_lipalightninglib_da8c_RedundantStorageCallback_init_callback(this.foreignCallback, status)
+            lib.ffi_lipalightninglib_977e_RedundantStorageCallback_init_callback(this.foreignCallback, status)
         }
     }
 }
@@ -1401,8 +1772,28 @@ public object FfiConverterSequenceString: FfiConverterRustBuffer<List<String>> {
 fun `initNativeLoggerOnce`(`minLevel`: LogLevel) =
     
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_da8c_init_native_logger_once(FfiConverterTypeLogLevel.lower(`minLevel`), _status)
+    _UniFFILib.INSTANCE.lipalightninglib_977e_init_native_logger_once(FfiConverterTypeLogLevel.lower(`minLevel`), _status)
 }
+
+@Throws(LipaException::class)
+
+fun `generateSecret`(`passphrase`: String): Secret {
+    return FfiConverterTypeSecret.lift(
+    rustCallWithError(LipaException) { _status ->
+    _UniFFILib.INSTANCE.lipalightninglib_977e_generate_secret(FfiConverterString.lower(`passphrase`), _status)
+})
+}
+
+
+@Throws(LipaException::class)
+
+fun `mnemonicToSecret`(`mnemonicString`: List<String>, `passphrase`: String): Secret {
+    return FfiConverterTypeSecret.lift(
+    rustCallWithError(LipaException) { _status ->
+    _UniFFILib.INSTANCE.lipalightninglib_977e_mnemonic_to_secret(FfiConverterSequenceString.lower(`mnemonicString`), FfiConverterString.lower(`passphrase`), _status)
+})
+}
+
 
 
 
