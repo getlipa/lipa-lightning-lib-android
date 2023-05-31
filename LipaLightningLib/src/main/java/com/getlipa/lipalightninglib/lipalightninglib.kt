@@ -44,7 +44,7 @@ open class RustBuffer : Structure() {
 
     companion object {
         internal fun alloc(size: Int = 0) = rustCall() { status ->
-            _UniFFILib.INSTANCE.ffi_lipalightninglib_9b5f_rustbuffer_alloc(size, status).also {
+            _UniFFILib.INSTANCE.ffi_lipalightninglib_90ce_rustbuffer_alloc(size, status).also {
                 if(it.data == null) {
                    throw RuntimeException("RustBuffer.alloc() returned null data pointer (size=${size})")
                }
@@ -52,7 +52,7 @@ open class RustBuffer : Structure() {
         }
 
         internal fun free(buf: RustBuffer.ByValue) = rustCall() { status ->
-            _UniFFILib.INSTANCE.ffi_lipalightninglib_9b5f_rustbuffer_free(buf, status)
+            _UniFFILib.INSTANCE.ffi_lipalightninglib_90ce_rustbuffer_free(buf, status)
         }
     }
 
@@ -264,131 +264,131 @@ internal interface _UniFFILib : Library {
         }
     }
 
-    fun ffi_lipalightninglib_9b5f_LightningNode_object_free(`ptr`: Pointer,
+    fun ffi_lipalightninglib_90ce_LightningNode_object_free(`ptr`: Pointer,
     _uniffi_out_err: RustCallStatus
     ): Unit
 
-    fun lipalightninglib_9b5f_LightningNode_new(`config`: RustBuffer.ByValue,`eventsCallback`: Long,
+    fun lipalightninglib_90ce_LightningNode_new(`config`: RustBuffer.ByValue,`eventsCallback`: Long,
     _uniffi_out_err: RustCallStatus
     ): Pointer
 
-    fun lipalightninglib_9b5f_LightningNode_get_node_info(`ptr`: Pointer,
+    fun lipalightninglib_90ce_LightningNode_get_node_info(`ptr`: Pointer,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun lipalightninglib_9b5f_LightningNode_query_lsp_fee(`ptr`: Pointer,
+    fun lipalightninglib_90ce_LightningNode_query_lsp_fee(`ptr`: Pointer,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun lipalightninglib_9b5f_LightningNode_get_payment_amount_limits(`ptr`: Pointer,
+    fun lipalightninglib_90ce_LightningNode_get_payment_amount_limits(`ptr`: Pointer,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun lipalightninglib_9b5f_LightningNode_calculate_lsp_fee(`ptr`: Pointer,`amountMsat`: Long,
-    _uniffi_out_err: RustCallStatus
-    ): Long
-
-    fun lipalightninglib_9b5f_LightningNode_create_invoice(`ptr`: Pointer,`amountMsat`: Long,`description`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,
+    fun lipalightninglib_90ce_LightningNode_calculate_lsp_fee(`ptr`: Pointer,`amountSat`: Long,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun lipalightninglib_9b5f_LightningNode_decode_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,
+    fun lipalightninglib_90ce_LightningNode_create_invoice(`ptr`: Pointer,`amountSat`: Long,`description`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun lipalightninglib_9b5f_LightningNode_pay_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_9b5f_LightningNode_pay_open_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,`amountMsat`: Long,`metadata`: RustBuffer.ByValue,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_9b5f_LightningNode_get_latest_payments(`ptr`: Pointer,`numberOfPayments`: Int,
+    fun lipalightninglib_90ce_LightningNode_decode_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun lipalightninglib_9b5f_LightningNode_get_payment(`ptr`: Pointer,`hash`: RustBuffer.ByValue,
+    fun lipalightninglib_90ce_LightningNode_pay_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,
+    _uniffi_out_err: RustCallStatus
+    ): Unit
+
+    fun lipalightninglib_90ce_LightningNode_pay_open_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,`amountSat`: Long,`metadata`: RustBuffer.ByValue,
+    _uniffi_out_err: RustCallStatus
+    ): Unit
+
+    fun lipalightninglib_90ce_LightningNode_get_latest_payments(`ptr`: Pointer,`numberOfPayments`: Int,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun lipalightninglib_9b5f_LightningNode_foreground(`ptr`: Pointer,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_9b5f_LightningNode_background(`ptr`: Pointer,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_9b5f_LightningNode_list_currency_codes(`ptr`: Pointer,
+    fun lipalightninglib_90ce_LightningNode_get_payment(`ptr`: Pointer,`hash`: RustBuffer.ByValue,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun lipalightninglib_9b5f_LightningNode_get_exchange_rate(`ptr`: Pointer,
+    fun lipalightninglib_90ce_LightningNode_foreground(`ptr`: Pointer,
+    _uniffi_out_err: RustCallStatus
+    ): Unit
+
+    fun lipalightninglib_90ce_LightningNode_background(`ptr`: Pointer,
+    _uniffi_out_err: RustCallStatus
+    ): Unit
+
+    fun lipalightninglib_90ce_LightningNode_list_currency_codes(`ptr`: Pointer,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun lipalightninglib_9b5f_LightningNode_change_fiat_currency(`ptr`: Pointer,`fiatCurrency`: RustBuffer.ByValue,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_9b5f_LightningNode_change_timezone_config(`ptr`: Pointer,`timezoneConfig`: RustBuffer.ByValue,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_9b5f_LightningNode_panic_directly(`ptr`: Pointer,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_9b5f_LightningNode_panic_in_background_thread(`ptr`: Pointer,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_9b5f_LightningNode_panic_in_tokio(`ptr`: Pointer,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun ffi_lipalightninglib_9b5f_EventsCallback_init_callback(`callbackStub`: ForeignCallback,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_9b5f_init_native_logger_once(`minLevel`: RustBuffer.ByValue,
-    _uniffi_out_err: RustCallStatus
-    ): Unit
-
-    fun lipalightninglib_9b5f_generate_secret(`passphrase`: RustBuffer.ByValue,
+    fun lipalightninglib_90ce_LightningNode_get_exchange_rate(`ptr`: Pointer,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
-    fun lipalightninglib_9b5f_mnemonic_to_secret(`mnemonicString`: RustBuffer.ByValue,`passphrase`: RustBuffer.ByValue,
-    _uniffi_out_err: RustCallStatus
-    ): RustBuffer.ByValue
-
-    fun lipalightninglib_9b5f_words_by_prefix(`prefix`: RustBuffer.ByValue,
-    _uniffi_out_err: RustCallStatus
-    ): RustBuffer.ByValue
-
-    fun lipalightninglib_9b5f_accept_terms_and_conditions(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,
+    fun lipalightninglib_90ce_LightningNode_change_fiat_currency(`ptr`: Pointer,`fiatCurrency`: RustBuffer.ByValue,
     _uniffi_out_err: RustCallStatus
     ): Unit
 
-    fun lipalightninglib_9b5f_recover_lightning_node(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`localPersistencePath`: RustBuffer.ByValue,
+    fun lipalightninglib_90ce_LightningNode_change_timezone_config(`ptr`: Pointer,`timezoneConfig`: RustBuffer.ByValue,
     _uniffi_out_err: RustCallStatus
     ): Unit
 
-    fun ffi_lipalightninglib_9b5f_rustbuffer_alloc(`size`: Int,
-    _uniffi_out_err: RustCallStatus
-    ): RustBuffer.ByValue
-
-    fun ffi_lipalightninglib_9b5f_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,
-    _uniffi_out_err: RustCallStatus
-    ): RustBuffer.ByValue
-
-    fun ffi_lipalightninglib_9b5f_rustbuffer_free(`buf`: RustBuffer.ByValue,
+    fun lipalightninglib_90ce_LightningNode_panic_directly(`ptr`: Pointer,
     _uniffi_out_err: RustCallStatus
     ): Unit
 
-    fun ffi_lipalightninglib_9b5f_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Int,
+    fun lipalightninglib_90ce_LightningNode_panic_in_background_thread(`ptr`: Pointer,
+    _uniffi_out_err: RustCallStatus
+    ): Unit
+
+    fun lipalightninglib_90ce_LightningNode_panic_in_tokio(`ptr`: Pointer,
+    _uniffi_out_err: RustCallStatus
+    ): Unit
+
+    fun ffi_lipalightninglib_90ce_EventsCallback_init_callback(`callbackStub`: ForeignCallback,
+    _uniffi_out_err: RustCallStatus
+    ): Unit
+
+    fun lipalightninglib_90ce_init_native_logger_once(`minLevel`: RustBuffer.ByValue,
+    _uniffi_out_err: RustCallStatus
+    ): Unit
+
+    fun lipalightninglib_90ce_generate_secret(`passphrase`: RustBuffer.ByValue,
+    _uniffi_out_err: RustCallStatus
+    ): RustBuffer.ByValue
+
+    fun lipalightninglib_90ce_mnemonic_to_secret(`mnemonicString`: RustBuffer.ByValue,`passphrase`: RustBuffer.ByValue,
+    _uniffi_out_err: RustCallStatus
+    ): RustBuffer.ByValue
+
+    fun lipalightninglib_90ce_words_by_prefix(`prefix`: RustBuffer.ByValue,
+    _uniffi_out_err: RustCallStatus
+    ): RustBuffer.ByValue
+
+    fun lipalightninglib_90ce_accept_terms_and_conditions(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,
+    _uniffi_out_err: RustCallStatus
+    ): Unit
+
+    fun lipalightninglib_90ce_recover_lightning_node(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`localPersistencePath`: RustBuffer.ByValue,
+    _uniffi_out_err: RustCallStatus
+    ): Unit
+
+    fun ffi_lipalightninglib_90ce_rustbuffer_alloc(`size`: Int,
+    _uniffi_out_err: RustCallStatus
+    ): RustBuffer.ByValue
+
+    fun ffi_lipalightninglib_90ce_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,
+    _uniffi_out_err: RustCallStatus
+    ): RustBuffer.ByValue
+
+    fun ffi_lipalightninglib_90ce_rustbuffer_free(`buf`: RustBuffer.ByValue,
+    _uniffi_out_err: RustCallStatus
+    ): Unit
+
+    fun ffi_lipalightninglib_90ce_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Int,
     _uniffi_out_err: RustCallStatus
     ): RustBuffer.ByValue
 
@@ -796,10 +796,10 @@ public interface LightningNodeInterface {
     fun `getPaymentAmountLimits`(): PaymentAmountLimits
     
     @Throws(LnException::class)
-    fun `calculateLspFee`(`amountMsat`: ULong): ULong
+    fun `calculateLspFee`(`amountSat`: ULong): Amount
     
     @Throws(LnException::class)
-    fun `createInvoice`(`amountMsat`: ULong, `description`: String, `metadata`: String): InvoiceDetails
+    fun `createInvoice`(`amountSat`: ULong, `description`: String, `metadata`: String): InvoiceDetails
     
     @Throws(LnException::class)
     fun `decodeInvoice`(`invoice`: String): InvoiceDetails
@@ -808,7 +808,7 @@ public interface LightningNodeInterface {
     fun `payInvoice`(`invoice`: String, `metadata`: String)
     
     @Throws(LnException::class)
-    fun `payOpenInvoice`(`invoice`: String, `amountMsat`: ULong, `metadata`: String)
+    fun `payOpenInvoice`(`invoice`: String, `amountSat`: ULong, `metadata`: String)
     
     @Throws(LnException::class)
     fun `getLatestPayments`(`numberOfPayments`: UInt): List<Payment>
@@ -843,7 +843,7 @@ class LightningNode(
     constructor(`config`: Config, `eventsCallback`: EventsCallback) :
         this(
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_new(FfiConverterTypeConfig.lower(`config`), FfiConverterTypeEventsCallback.lower(`eventsCallback`), _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_new(FfiConverterTypeConfig.lower(`config`), FfiConverterTypeEventsCallback.lower(`eventsCallback`), _status)
 })
 
     /**
@@ -856,14 +856,14 @@ class LightningNode(
      */
     override protected fun freeRustArcPtr() {
         rustCall() { status ->
-            _UniFFILib.INSTANCE.ffi_lipalightninglib_9b5f_LightningNode_object_free(this.pointer, status)
+            _UniFFILib.INSTANCE.ffi_lipalightninglib_90ce_LightningNode_object_free(this.pointer, status)
         }
     }
 
     override fun `getNodeInfo`(): NodeInfo =
         callWithPointer {
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_get_node_info(it,  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_get_node_info(it,  _status)
 }
         }.let {
             FfiConverterTypeNodeInfo.lift(it)
@@ -872,7 +872,7 @@ class LightningNode(
     @Throws(LnException::class)override fun `queryLspFee`(): LspFee =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_query_lsp_fee(it,  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_query_lsp_fee(it,  _status)
 }
         }.let {
             FfiConverterTypeLspFee.lift(it)
@@ -881,25 +881,25 @@ class LightningNode(
     @Throws(LnException::class)override fun `getPaymentAmountLimits`(): PaymentAmountLimits =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_get_payment_amount_limits(it,  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_get_payment_amount_limits(it,  _status)
 }
         }.let {
             FfiConverterTypePaymentAmountLimits.lift(it)
         }
     
-    @Throws(LnException::class)override fun `calculateLspFee`(`amountMsat`: ULong): ULong =
+    @Throws(LnException::class)override fun `calculateLspFee`(`amountSat`: ULong): Amount =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_calculate_lsp_fee(it, FfiConverterULong.lower(`amountMsat`),  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_calculate_lsp_fee(it, FfiConverterULong.lower(`amountSat`),  _status)
 }
         }.let {
-            FfiConverterULong.lift(it)
+            FfiConverterTypeAmount.lift(it)
         }
     
-    @Throws(LnException::class)override fun `createInvoice`(`amountMsat`: ULong, `description`: String, `metadata`: String): InvoiceDetails =
+    @Throws(LnException::class)override fun `createInvoice`(`amountSat`: ULong, `description`: String, `metadata`: String): InvoiceDetails =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_create_invoice(it, FfiConverterULong.lower(`amountMsat`), FfiConverterString.lower(`description`), FfiConverterString.lower(`metadata`),  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_create_invoice(it, FfiConverterULong.lower(`amountSat`), FfiConverterString.lower(`description`), FfiConverterString.lower(`metadata`),  _status)
 }
         }.let {
             FfiConverterTypeInvoiceDetails.lift(it)
@@ -908,7 +908,7 @@ class LightningNode(
     @Throws(LnException::class)override fun `decodeInvoice`(`invoice`: String): InvoiceDetails =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_decode_invoice(it, FfiConverterString.lower(`invoice`),  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_decode_invoice(it, FfiConverterString.lower(`invoice`),  _status)
 }
         }.let {
             FfiConverterTypeInvoiceDetails.lift(it)
@@ -917,15 +917,15 @@ class LightningNode(
     @Throws(LnException::class)override fun `payInvoice`(`invoice`: String, `metadata`: String) =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_pay_invoice(it, FfiConverterString.lower(`invoice`), FfiConverterString.lower(`metadata`),  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_pay_invoice(it, FfiConverterString.lower(`invoice`), FfiConverterString.lower(`metadata`),  _status)
 }
         }
     
     
-    @Throws(LnException::class)override fun `payOpenInvoice`(`invoice`: String, `amountMsat`: ULong, `metadata`: String) =
+    @Throws(LnException::class)override fun `payOpenInvoice`(`invoice`: String, `amountSat`: ULong, `metadata`: String) =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_pay_open_invoice(it, FfiConverterString.lower(`invoice`), FfiConverterULong.lower(`amountMsat`), FfiConverterString.lower(`metadata`),  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_pay_open_invoice(it, FfiConverterString.lower(`invoice`), FfiConverterULong.lower(`amountSat`), FfiConverterString.lower(`metadata`),  _status)
 }
         }
     
@@ -933,7 +933,7 @@ class LightningNode(
     @Throws(LnException::class)override fun `getLatestPayments`(`numberOfPayments`: UInt): List<Payment> =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_get_latest_payments(it, FfiConverterUInt.lower(`numberOfPayments`),  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_get_latest_payments(it, FfiConverterUInt.lower(`numberOfPayments`),  _status)
 }
         }.let {
             FfiConverterSequenceTypePayment.lift(it)
@@ -942,7 +942,7 @@ class LightningNode(
     @Throws(LnException::class)override fun `getPayment`(`hash`: String): Payment =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_get_payment(it, FfiConverterString.lower(`hash`),  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_get_payment(it, FfiConverterString.lower(`hash`),  _status)
 }
         }.let {
             FfiConverterTypePayment.lift(it)
@@ -950,14 +950,14 @@ class LightningNode(
     override fun `foreground`() =
         callWithPointer {
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_foreground(it,  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_foreground(it,  _status)
 }
         }
     
     override fun `background`() =
         callWithPointer {
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_background(it,  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_background(it,  _status)
 }
         }
     
@@ -965,7 +965,7 @@ class LightningNode(
     @Throws(LnException::class)override fun `listCurrencyCodes`(): List<String> =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_list_currency_codes(it,  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_list_currency_codes(it,  _status)
 }
         }.let {
             FfiConverterSequenceString.lift(it)
@@ -973,7 +973,7 @@ class LightningNode(
     override fun `getExchangeRate`(): ExchangeRate? =
         callWithPointer {
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_get_exchange_rate(it,  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_get_exchange_rate(it,  _status)
 }
         }.let {
             FfiConverterOptionalTypeExchangeRate.lift(it)
@@ -981,35 +981,35 @@ class LightningNode(
     override fun `changeFiatCurrency`(`fiatCurrency`: String) =
         callWithPointer {
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_change_fiat_currency(it, FfiConverterString.lower(`fiatCurrency`),  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_change_fiat_currency(it, FfiConverterString.lower(`fiatCurrency`),  _status)
 }
         }
     
     override fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig) =
         callWithPointer {
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_change_timezone_config(it, FfiConverterTypeTzConfig.lower(`timezoneConfig`),  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_change_timezone_config(it, FfiConverterTypeTzConfig.lower(`timezoneConfig`),  _status)
 }
         }
     
     override fun `panicDirectly`() =
         callWithPointer {
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_panic_directly(it,  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_panic_directly(it,  _status)
 }
         }
     
     override fun `panicInBackgroundThread`() =
         callWithPointer {
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_panic_in_background_thread(it,  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_panic_in_background_thread(it,  _status)
 }
         }
     
     override fun `panicInTokio`() =
         callWithPointer {
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_LightningNode_panic_in_tokio(it,  _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_LightningNode_panic_in_tokio(it,  _status)
 }
         }
     
@@ -1043,13 +1043,42 @@ public object FfiConverterTypeLightningNode: FfiConverter<LightningNode, Pointer
 
 
 
+data class Amount (
+    var `sats`: ULong, 
+    var `fiat`: FiatValue?
+) {
+    
+}
+
+public object FfiConverterTypeAmount: FfiConverterRustBuffer<Amount> {
+    override fun read(buf: ByteBuffer): Amount {
+        return Amount(
+            FfiConverterULong.read(buf),
+            FfiConverterOptionalTypeFiatValue.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: Amount) = (
+            FfiConverterULong.allocationSize(value.`sats`) +
+            FfiConverterOptionalTypeFiatValue.allocationSize(value.`fiat`)
+    )
+
+    override fun write(value: Amount, buf: ByteBuffer) {
+            FfiConverterULong.write(value.`sats`, buf)
+            FfiConverterOptionalTypeFiatValue.write(value.`fiat`, buf)
+    }
+}
+
+
+
+
 data class ChannelsInfo (
     var `numChannels`: UShort, 
     var `numUsableChannels`: UShort, 
-    var `localBalanceMsat`: ULong, 
-    var `totalChannelCapacitiesMsat`: ULong, 
-    var `inboundCapacityMsat`: ULong, 
-    var `outboundCapacityMsat`: ULong
+    var `localBalance`: Amount, 
+    var `totalChannelCapacities`: Amount, 
+    var `inboundCapacity`: Amount, 
+    var `outboundCapacity`: Amount
 ) {
     
 }
@@ -1059,29 +1088,29 @@ public object FfiConverterTypeChannelsInfo: FfiConverterRustBuffer<ChannelsInfo>
         return ChannelsInfo(
             FfiConverterUShort.read(buf),
             FfiConverterUShort.read(buf),
-            FfiConverterULong.read(buf),
-            FfiConverterULong.read(buf),
-            FfiConverterULong.read(buf),
-            FfiConverterULong.read(buf),
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeAmount.read(buf),
         )
     }
 
     override fun allocationSize(value: ChannelsInfo) = (
             FfiConverterUShort.allocationSize(value.`numChannels`) +
             FfiConverterUShort.allocationSize(value.`numUsableChannels`) +
-            FfiConverterULong.allocationSize(value.`localBalanceMsat`) +
-            FfiConverterULong.allocationSize(value.`totalChannelCapacitiesMsat`) +
-            FfiConverterULong.allocationSize(value.`inboundCapacityMsat`) +
-            FfiConverterULong.allocationSize(value.`outboundCapacityMsat`)
+            FfiConverterTypeAmount.allocationSize(value.`localBalance`) +
+            FfiConverterTypeAmount.allocationSize(value.`totalChannelCapacities`) +
+            FfiConverterTypeAmount.allocationSize(value.`inboundCapacity`) +
+            FfiConverterTypeAmount.allocationSize(value.`outboundCapacity`)
     )
 
     override fun write(value: ChannelsInfo, buf: ByteBuffer) {
             FfiConverterUShort.write(value.`numChannels`, buf)
             FfiConverterUShort.write(value.`numUsableChannels`, buf)
-            FfiConverterULong.write(value.`localBalanceMsat`, buf)
-            FfiConverterULong.write(value.`totalChannelCapacitiesMsat`, buf)
-            FfiConverterULong.write(value.`inboundCapacityMsat`, buf)
-            FfiConverterULong.write(value.`outboundCapacityMsat`, buf)
+            FfiConverterTypeAmount.write(value.`localBalance`, buf)
+            FfiConverterTypeAmount.write(value.`totalChannelCapacities`, buf)
+            FfiConverterTypeAmount.write(value.`inboundCapacity`, buf)
+            FfiConverterTypeAmount.write(value.`outboundCapacity`, buf)
     }
 }
 
@@ -1162,33 +1191,33 @@ public object FfiConverterTypeExchangeRate: FfiConverterRustBuffer<ExchangeRate>
 
 
 
-data class FiatValues (
-    var `fiat`: String, 
-    var `amount`: ULong, 
-    var `amountUsd`: ULong
+data class FiatValue (
+    var `minorUnits`: ULong, 
+    var `currencyCode`: String, 
+    var `convertedAt`: java.time.Instant
 ) {
     
 }
 
-public object FfiConverterTypeFiatValues: FfiConverterRustBuffer<FiatValues> {
-    override fun read(buf: ByteBuffer): FiatValues {
-        return FiatValues(
+public object FfiConverterTypeFiatValue: FfiConverterRustBuffer<FiatValue> {
+    override fun read(buf: ByteBuffer): FiatValue {
+        return FiatValue(
+            FfiConverterULong.read(buf),
             FfiConverterString.read(buf),
-            FfiConverterULong.read(buf),
-            FfiConverterULong.read(buf),
+            FfiConverterTimestamp.read(buf),
         )
     }
 
-    override fun allocationSize(value: FiatValues) = (
-            FfiConverterString.allocationSize(value.`fiat`) +
-            FfiConverterULong.allocationSize(value.`amount`) +
-            FfiConverterULong.allocationSize(value.`amountUsd`)
+    override fun allocationSize(value: FiatValue) = (
+            FfiConverterULong.allocationSize(value.`minorUnits`) +
+            FfiConverterString.allocationSize(value.`currencyCode`) +
+            FfiConverterTimestamp.allocationSize(value.`convertedAt`)
     )
 
-    override fun write(value: FiatValues, buf: ByteBuffer) {
-            FfiConverterString.write(value.`fiat`, buf)
-            FfiConverterULong.write(value.`amount`, buf)
-            FfiConverterULong.write(value.`amountUsd`, buf)
+    override fun write(value: FiatValue, buf: ByteBuffer) {
+            FfiConverterULong.write(value.`minorUnits`, buf)
+            FfiConverterString.write(value.`currencyCode`, buf)
+            FfiConverterTimestamp.write(value.`convertedAt`, buf)
     }
 }
 
@@ -1197,7 +1226,7 @@ public object FfiConverterTypeFiatValues: FfiConverterRustBuffer<FiatValues> {
 
 data class InvoiceDetails (
     var `invoice`: String, 
-    var `amountMsat`: ULong?, 
+    var `amount`: Amount?, 
     var `description`: String, 
     var `paymentHash`: String, 
     var `payeePubKey`: String, 
@@ -1212,7 +1241,7 @@ public object FfiConverterTypeInvoiceDetails: FfiConverterRustBuffer<InvoiceDeta
     override fun read(buf: ByteBuffer): InvoiceDetails {
         return InvoiceDetails(
             FfiConverterString.read(buf),
-            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalTypeAmount.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
@@ -1224,7 +1253,7 @@ public object FfiConverterTypeInvoiceDetails: FfiConverterRustBuffer<InvoiceDeta
 
     override fun allocationSize(value: InvoiceDetails) = (
             FfiConverterString.allocationSize(value.`invoice`) +
-            FfiConverterOptionalULong.allocationSize(value.`amountMsat`) +
+            FfiConverterOptionalTypeAmount.allocationSize(value.`amount`) +
             FfiConverterString.allocationSize(value.`description`) +
             FfiConverterString.allocationSize(value.`paymentHash`) +
             FfiConverterString.allocationSize(value.`payeePubKey`) +
@@ -1235,7 +1264,7 @@ public object FfiConverterTypeInvoiceDetails: FfiConverterRustBuffer<InvoiceDeta
 
     override fun write(value: InvoiceDetails, buf: ByteBuffer) {
             FfiConverterString.write(value.`invoice`, buf)
-            FfiConverterOptionalULong.write(value.`amountMsat`, buf)
+            FfiConverterOptionalTypeAmount.write(value.`amount`, buf)
             FfiConverterString.write(value.`description`, buf)
             FfiConverterString.write(value.`paymentHash`, buf)
             FfiConverterString.write(value.`payeePubKey`, buf)
@@ -1249,7 +1278,7 @@ public object FfiConverterTypeInvoiceDetails: FfiConverterRustBuffer<InvoiceDeta
 
 
 data class LspFee (
-    var `channelMinimumFeeMsat`: ULong, 
+    var `channelMinimumFee`: Amount, 
     var `channelFeePermyriad`: ULong
 ) {
     
@@ -1258,18 +1287,18 @@ data class LspFee (
 public object FfiConverterTypeLspFee: FfiConverterRustBuffer<LspFee> {
     override fun read(buf: ByteBuffer): LspFee {
         return LspFee(
-            FfiConverterULong.read(buf),
+            FfiConverterTypeAmount.read(buf),
             FfiConverterULong.read(buf),
         )
     }
 
     override fun allocationSize(value: LspFee) = (
-            FfiConverterULong.allocationSize(value.`channelMinimumFeeMsat`) +
+            FfiConverterTypeAmount.allocationSize(value.`channelMinimumFee`) +
             FfiConverterULong.allocationSize(value.`channelFeePermyriad`)
     )
 
     override fun write(value: LspFee, buf: ByteBuffer) {
-            FfiConverterULong.write(value.`channelMinimumFeeMsat`, buf)
+            FfiConverterTypeAmount.write(value.`channelMinimumFee`, buf)
             FfiConverterULong.write(value.`channelFeePermyriad`, buf)
     }
 }
@@ -1314,15 +1343,14 @@ data class Payment (
     var `paymentType`: PaymentType, 
     var `paymentState`: PaymentState, 
     var `hash`: String, 
-    var `amountMsat`: ULong, 
+    var `amount`: Amount, 
     var `invoiceDetails`: InvoiceDetails, 
     var `createdAt`: TzTime, 
     var `latestStateChangeAt`: TzTime, 
     var `description`: String, 
     var `preimage`: String?, 
-    var `networkFeesMsat`: ULong?, 
-    var `lspFeesMsat`: ULong?, 
-    var `fiatValues`: FiatValues?, 
+    var `networkFees`: Amount?, 
+    var `lspFees`: Amount?, 
     var `metadata`: String
 ) {
     
@@ -1334,15 +1362,14 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterTypePaymentType.read(buf),
             FfiConverterTypePaymentState.read(buf),
             FfiConverterString.read(buf),
-            FfiConverterULong.read(buf),
+            FfiConverterTypeAmount.read(buf),
             FfiConverterTypeInvoiceDetails.read(buf),
             FfiConverterTypeTzTime.read(buf),
             FfiConverterTypeTzTime.read(buf),
             FfiConverterString.read(buf),
             FfiConverterOptionalString.read(buf),
-            FfiConverterOptionalULong.read(buf),
-            FfiConverterOptionalULong.read(buf),
-            FfiConverterOptionalTypeFiatValues.read(buf),
+            FfiConverterOptionalTypeAmount.read(buf),
+            FfiConverterOptionalTypeAmount.read(buf),
             FfiConverterString.read(buf),
         )
     }
@@ -1351,15 +1378,14 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterTypePaymentType.allocationSize(value.`paymentType`) +
             FfiConverterTypePaymentState.allocationSize(value.`paymentState`) +
             FfiConverterString.allocationSize(value.`hash`) +
-            FfiConverterULong.allocationSize(value.`amountMsat`) +
+            FfiConverterTypeAmount.allocationSize(value.`amount`) +
             FfiConverterTypeInvoiceDetails.allocationSize(value.`invoiceDetails`) +
             FfiConverterTypeTzTime.allocationSize(value.`createdAt`) +
             FfiConverterTypeTzTime.allocationSize(value.`latestStateChangeAt`) +
             FfiConverterString.allocationSize(value.`description`) +
             FfiConverterOptionalString.allocationSize(value.`preimage`) +
-            FfiConverterOptionalULong.allocationSize(value.`networkFeesMsat`) +
-            FfiConverterOptionalULong.allocationSize(value.`lspFeesMsat`) +
-            FfiConverterOptionalTypeFiatValues.allocationSize(value.`fiatValues`) +
+            FfiConverterOptionalTypeAmount.allocationSize(value.`networkFees`) +
+            FfiConverterOptionalTypeAmount.allocationSize(value.`lspFees`) +
             FfiConverterString.allocationSize(value.`metadata`)
     )
 
@@ -1367,15 +1393,14 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterTypePaymentType.write(value.`paymentType`, buf)
             FfiConverterTypePaymentState.write(value.`paymentState`, buf)
             FfiConverterString.write(value.`hash`, buf)
-            FfiConverterULong.write(value.`amountMsat`, buf)
+            FfiConverterTypeAmount.write(value.`amount`, buf)
             FfiConverterTypeInvoiceDetails.write(value.`invoiceDetails`, buf)
             FfiConverterTypeTzTime.write(value.`createdAt`, buf)
             FfiConverterTypeTzTime.write(value.`latestStateChangeAt`, buf)
             FfiConverterString.write(value.`description`, buf)
             FfiConverterOptionalString.write(value.`preimage`, buf)
-            FfiConverterOptionalULong.write(value.`networkFeesMsat`, buf)
-            FfiConverterOptionalULong.write(value.`lspFeesMsat`, buf)
-            FfiConverterOptionalTypeFiatValues.write(value.`fiatValues`, buf)
+            FfiConverterOptionalTypeAmount.write(value.`networkFees`, buf)
+            FfiConverterOptionalTypeAmount.write(value.`lspFees`, buf)
             FfiConverterString.write(value.`metadata`, buf)
     }
 }
@@ -1384,7 +1409,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
 
 
 data class PaymentAmountLimits (
-    var `maxReceiveSat`: ULong, 
+    var `maxReceive`: Amount, 
     var `liquidityLimit`: LiquidityLimit
 ) {
     
@@ -1393,18 +1418,18 @@ data class PaymentAmountLimits (
 public object FfiConverterTypePaymentAmountLimits: FfiConverterRustBuffer<PaymentAmountLimits> {
     override fun read(buf: ByteBuffer): PaymentAmountLimits {
         return PaymentAmountLimits(
-            FfiConverterULong.read(buf),
+            FfiConverterTypeAmount.read(buf),
             FfiConverterTypeLiquidityLimit.read(buf),
         )
     }
 
     override fun allocationSize(value: PaymentAmountLimits) = (
-            FfiConverterULong.allocationSize(value.`maxReceiveSat`) +
+            FfiConverterTypeAmount.allocationSize(value.`maxReceive`) +
             FfiConverterTypeLiquidityLimit.allocationSize(value.`liquidityLimit`)
     )
 
     override fun write(value: PaymentAmountLimits, buf: ByteBuffer) {
-            FfiConverterULong.write(value.`maxReceiveSat`, buf)
+            FfiConverterTypeAmount.write(value.`maxReceive`, buf)
             FfiConverterTypeLiquidityLimit.write(value.`liquidityLimit`, buf)
     }
 }
@@ -1534,10 +1559,10 @@ sealed class LiquidityLimit {
     object None : LiquidityLimit()
     
     data class MaxFreeReceive(
-        val `satAmount`: ULong
+        val `amount`: Amount
         ) : LiquidityLimit()
     data class MinReceive(
-        val `satAmount`: ULong
+        val `amount`: Amount
         ) : LiquidityLimit()
     
 
@@ -1549,10 +1574,10 @@ public object FfiConverterTypeLiquidityLimit : FfiConverterRustBuffer<LiquidityL
         return when(buf.getInt()) {
             1 -> LiquidityLimit.None
             2 -> LiquidityLimit.MaxFreeReceive(
-                FfiConverterULong.read(buf),
+                FfiConverterTypeAmount.read(buf),
                 )
             3 -> LiquidityLimit.MinReceive(
-                FfiConverterULong.read(buf),
+                FfiConverterTypeAmount.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
         }
@@ -1569,14 +1594,14 @@ public object FfiConverterTypeLiquidityLimit : FfiConverterRustBuffer<LiquidityL
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4
-                + FfiConverterULong.allocationSize(value.`satAmount`)
+                + FfiConverterTypeAmount.allocationSize(value.`amount`)
             )
         }
         is LiquidityLimit.MinReceive -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4
-                + FfiConverterULong.allocationSize(value.`satAmount`)
+                + FfiConverterTypeAmount.allocationSize(value.`amount`)
             )
         }
     }
@@ -1589,12 +1614,12 @@ public object FfiConverterTypeLiquidityLimit : FfiConverterRustBuffer<LiquidityL
             }
             is LiquidityLimit.MaxFreeReceive -> {
                 buf.putInt(2)
-                FfiConverterULong.write(value.`satAmount`, buf)
+                FfiConverterTypeAmount.write(value.`amount`, buf)
                 Unit
             }
             is LiquidityLimit.MinReceive -> {
                 buf.putInt(3)
-                FfiConverterULong.write(value.`satAmount`, buf)
+                FfiConverterTypeAmount.write(value.`amount`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -1876,8 +1901,8 @@ public abstract class FfiConverterCallbackInterface<CallbackInterface>(
 // Declaration and FfiConverters for EventsCallback Callback Interface
 
 public interface EventsCallback {
-    fun `paymentReceived`(`paymentHash`: String, `amountMsat`: ULong)
-    fun `paymentSent`(`paymentHash`: String, `paymentPreimage`: String, `feePaidMsat`: ULong)
+    fun `paymentReceived`(`paymentHash`: String)
+    fun `paymentSent`(`paymentHash`: String, `paymentPreimage`: String)
     fun `paymentFailed`(`paymentHash`: String)
     fun `channelClosed`(`channelId`: String, `reason`: String)
     
@@ -1991,8 +2016,7 @@ internal class ForeignCallbackTypeEventsCallback : ForeignCallback {
         try {
             val buf = args.asByteBuffer() ?: throw InternalException("No ByteBuffer in RustBuffer; this is a Uniffi bug")
             kotlinCallbackInterface.`paymentReceived`(
-                    FfiConverterString.read(buf), 
-                    FfiConverterULong.read(buf)
+                    FfiConverterString.read(buf)
                     )
             .let { RustBuffer.ByValue() }
                 // TODO catch errors and report them back to Rust.
@@ -2007,8 +2031,7 @@ internal class ForeignCallbackTypeEventsCallback : ForeignCallback {
             val buf = args.asByteBuffer() ?: throw InternalException("No ByteBuffer in RustBuffer; this is a Uniffi bug")
             kotlinCallbackInterface.`paymentSent`(
                     FfiConverterString.read(buf), 
-                    FfiConverterString.read(buf), 
-                    FfiConverterULong.read(buf)
+                    FfiConverterString.read(buf)
                     )
             .let { RustBuffer.ByValue() }
                 // TODO catch errors and report them back to Rust.
@@ -2055,36 +2078,7 @@ public object FfiConverterTypeEventsCallback: FfiConverterCallbackInterface<Even
 ) {
     override fun register(lib: _UniFFILib) {
         rustCall() { status ->
-            lib.ffi_lipalightninglib_9b5f_EventsCallback_init_callback(this.foreignCallback, status)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterOptionalULong: FfiConverterRustBuffer<ULong?> {
-    override fun read(buf: ByteBuffer): ULong? {
-        if (buf.get().toInt() == 0) {
-            return null
-        }
-        return FfiConverterULong.read(buf)
-    }
-
-    override fun allocationSize(value: ULong?): Int {
-        if (value == null) {
-            return 1
-        } else {
-            return 1 + FfiConverterULong.allocationSize(value)
-        }
-    }
-
-    override fun write(value: ULong?, buf: ByteBuffer) {
-        if (value == null) {
-            buf.put(0)
-        } else {
-            buf.put(1)
-            FfiConverterULong.write(value, buf)
+            lib.ffi_lipalightninglib_90ce_EventsCallback_init_callback(this.foreignCallback, status)
         }
     }
 }
@@ -2121,6 +2115,35 @@ public object FfiConverterOptionalString: FfiConverterRustBuffer<String?> {
 
 
 
+public object FfiConverterOptionalTypeAmount: FfiConverterRustBuffer<Amount?> {
+    override fun read(buf: ByteBuffer): Amount? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeAmount.read(buf)
+    }
+
+    override fun allocationSize(value: Amount?): Int {
+        if (value == null) {
+            return 1
+        } else {
+            return 1 + FfiConverterTypeAmount.allocationSize(value)
+        }
+    }
+
+    override fun write(value: Amount?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeAmount.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeExchangeRate: FfiConverterRustBuffer<ExchangeRate?> {
     override fun read(buf: ByteBuffer): ExchangeRate? {
         if (buf.get().toInt() == 0) {
@@ -2150,28 +2173,28 @@ public object FfiConverterOptionalTypeExchangeRate: FfiConverterRustBuffer<Excha
 
 
 
-public object FfiConverterOptionalTypeFiatValues: FfiConverterRustBuffer<FiatValues?> {
-    override fun read(buf: ByteBuffer): FiatValues? {
+public object FfiConverterOptionalTypeFiatValue: FfiConverterRustBuffer<FiatValue?> {
+    override fun read(buf: ByteBuffer): FiatValue? {
         if (buf.get().toInt() == 0) {
             return null
         }
-        return FfiConverterTypeFiatValues.read(buf)
+        return FfiConverterTypeFiatValue.read(buf)
     }
 
-    override fun allocationSize(value: FiatValues?): Int {
+    override fun allocationSize(value: FiatValue?): Int {
         if (value == null) {
             return 1
         } else {
-            return 1 + FfiConverterTypeFiatValues.allocationSize(value)
+            return 1 + FfiConverterTypeFiatValue.allocationSize(value)
         }
     }
 
-    override fun write(value: FiatValues?, buf: ByteBuffer) {
+    override fun write(value: FiatValue?, buf: ByteBuffer) {
         if (value == null) {
             buf.put(0)
         } else {
             buf.put(1)
-            FfiConverterTypeFiatValues.write(value, buf)
+            FfiConverterTypeFiatValue.write(value, buf)
         }
     }
 }
@@ -2254,7 +2277,7 @@ public object FfiConverterSequenceTypePayment: FfiConverterRustBuffer<List<Payme
 fun `initNativeLoggerOnce`(`minLevel`: LogLevel) =
     
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_init_native_logger_once(FfiConverterTypeLogLevel.lower(`minLevel`), _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_init_native_logger_once(FfiConverterTypeLogLevel.lower(`minLevel`), _status)
 }
 
 @Throws(LnException::class)
@@ -2262,7 +2285,7 @@ fun `initNativeLoggerOnce`(`minLevel`: LogLevel) =
 fun `generateSecret`(`passphrase`: String): Secret {
     return FfiConverterTypeSecret.lift(
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_generate_secret(FfiConverterString.lower(`passphrase`), _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_generate_secret(FfiConverterString.lower(`passphrase`), _status)
 })
 }
 
@@ -2272,7 +2295,7 @@ fun `generateSecret`(`passphrase`: String): Secret {
 fun `mnemonicToSecret`(`mnemonicString`: List<String>, `passphrase`: String): Secret {
     return FfiConverterTypeSecret.lift(
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_mnemonic_to_secret(FfiConverterSequenceString.lower(`mnemonicString`), FfiConverterString.lower(`passphrase`), _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_mnemonic_to_secret(FfiConverterSequenceString.lower(`mnemonicString`), FfiConverterString.lower(`passphrase`), _status)
 })
 }
 
@@ -2281,7 +2304,7 @@ fun `mnemonicToSecret`(`mnemonicString`: List<String>, `passphrase`: String): Se
 fun `wordsByPrefix`(`prefix`: String): List<String> {
     return FfiConverterSequenceString.lift(
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_words_by_prefix(FfiConverterString.lower(`prefix`), _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_words_by_prefix(FfiConverterString.lower(`prefix`), _status)
 })
 }
 
@@ -2291,7 +2314,7 @@ fun `wordsByPrefix`(`prefix`: String): List<String> {
 fun `acceptTermsAndConditions`(`environment`: EnvironmentCode, `seed`: List<UByte>) =
     
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_accept_terms_and_conditions(FfiConverterTypeEnvironmentCode.lower(`environment`), FfiConverterSequenceUByte.lower(`seed`), _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_accept_terms_and_conditions(FfiConverterTypeEnvironmentCode.lower(`environment`), FfiConverterSequenceUByte.lower(`seed`), _status)
 }
 
 @Throws(LnException::class)
@@ -2299,7 +2322,7 @@ fun `acceptTermsAndConditions`(`environment`: EnvironmentCode, `seed`: List<UByt
 fun `recoverLightningNode`(`environment`: EnvironmentCode, `seed`: List<UByte>, `localPersistencePath`: String) =
     
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.lipalightninglib_9b5f_recover_lightning_node(FfiConverterTypeEnvironmentCode.lower(`environment`), FfiConverterSequenceUByte.lower(`seed`), FfiConverterString.lower(`localPersistencePath`), _status)
+    _UniFFILib.INSTANCE.lipalightninglib_90ce_recover_lightning_node(FfiConverterTypeEnvironmentCode.lower(`environment`), FfiConverterSequenceUByte.lower(`seed`), FfiConverterString.lower(`localPersistencePath`), _status)
 }
 
 
