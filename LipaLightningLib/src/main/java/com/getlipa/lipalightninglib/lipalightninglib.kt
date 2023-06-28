@@ -1591,6 +1591,7 @@ public object FfiConverterTypeNodeInfo: FfiConverterRustBuffer<NodeInfo> {
 data class Payment (
     var `paymentType`: PaymentType, 
     var `paymentState`: PaymentState, 
+    var `failReason`: PayErrorCode?, 
     var `hash`: String, 
     var `amount`: Amount, 
     var `invoiceDetails`: InvoiceDetails, 
@@ -1610,6 +1611,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
         return Payment(
             FfiConverterTypePaymentType.read(buf),
             FfiConverterTypePaymentState.read(buf),
+            FfiConverterOptionalTypePayErrorCode.read(buf),
             FfiConverterString.read(buf),
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeInvoiceDetails.read(buf),
@@ -1626,6 +1628,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
     override fun allocationSize(value: Payment) = (
             FfiConverterTypePaymentType.allocationSize(value.`paymentType`) +
             FfiConverterTypePaymentState.allocationSize(value.`paymentState`) +
+            FfiConverterOptionalTypePayErrorCode.allocationSize(value.`failReason`) +
             FfiConverterString.allocationSize(value.`hash`) +
             FfiConverterTypeAmount.allocationSize(value.`amount`) +
             FfiConverterTypeInvoiceDetails.allocationSize(value.`invoiceDetails`) +
@@ -1641,6 +1644,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
     override fun write(value: Payment, buf: ByteBuffer) {
             FfiConverterTypePaymentType.write(value.`paymentType`, buf)
             FfiConverterTypePaymentState.write(value.`paymentState`, buf)
+            FfiConverterOptionalTypePayErrorCode.write(value.`failReason`, buf)
             FfiConverterString.write(value.`hash`, buf)
             FfiConverterTypeAmount.write(value.`amount`, buf)
             FfiConverterTypeInvoiceDetails.write(value.`invoiceDetails`, buf)
@@ -2411,7 +2415,7 @@ public object FfiConverterTypePayError : FfiConverterRustBuffer<PayException> {
 
 
 enum class PayErrorCode {
-    INVOICE_EXPIRED,ALREADY_USED_INVOICE,PAYING_TO_SELF,NO_ROUTE_FOUND,RECIPIENT_REJECTED,RETRIES_EXHAUSTED,NO_MORE_ROUTES;
+    INVOICE_EXPIRED,ALREADY_USED_INVOICE,PAYING_TO_SELF,NO_ROUTE_FOUND,RECIPIENT_REJECTED,RETRIES_EXHAUSTED,NO_MORE_ROUTES,UNEXPECTED_ERROR;
 }
 
 public object FfiConverterTypePayErrorCode: FfiConverterRustBuffer<PayErrorCode> {
@@ -2930,6 +2934,35 @@ public object FfiConverterOptionalTypeFiatValue: FfiConverterRustBuffer<FiatValu
         } else {
             buf.put(1)
             FfiConverterTypeFiatValue.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypePayErrorCode: FfiConverterRustBuffer<PayErrorCode?> {
+    override fun read(buf: ByteBuffer): PayErrorCode? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypePayErrorCode.read(buf)
+    }
+
+    override fun allocationSize(value: PayErrorCode?): Int {
+        if (value == null) {
+            return 1
+        } else {
+            return 1 + FfiConverterTypePayErrorCode.allocationSize(value)
+        }
+    }
+
+    override fun write(value: PayErrorCode?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypePayErrorCode.write(value, buf)
         }
     }
 }
