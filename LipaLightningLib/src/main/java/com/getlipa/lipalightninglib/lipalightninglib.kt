@@ -592,26 +592,6 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
 // Public interface members begin here.
 
 
-public object FfiConverterUByte: FfiConverter<UByte, Byte> {
-    override fun lift(value: Byte): UByte {
-        return value.toUByte()
-    }
-
-    override fun read(buf: ByteBuffer): UByte {
-        return lift(buf.get())
-    }
-
-    override fun lower(value: UByte): Byte {
-        return value.toByte()
-    }
-
-    override fun allocationSize(value: UByte) = 1
-
-    override fun write(value: UByte, buf: ByteBuffer) {
-        buf.put(value.toByte())
-    }
-}
-
 public object FfiConverterUShort: FfiConverter<UShort, Short> {
     override fun lift(value: Short): UShort {
         return value.toUShort()
@@ -1368,7 +1348,7 @@ public object FfiConverterTypeChannelsInfo: FfiConverterRustBuffer<ChannelsInfo>
 
 data class Config (
     var `environment`: EnvironmentCode, 
-    var `seed`: List<UByte>, 
+    var `seed`: ByteArray, 
     var `fiatCurrency`: String, 
     var `localPersistencePath`: String, 
     var `timezoneConfig`: TzConfig
@@ -1380,7 +1360,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
     override fun read(buf: ByteBuffer): Config {
         return Config(
             FfiConverterTypeEnvironmentCode.read(buf),
-            FfiConverterSequenceUByte.read(buf),
+            FfiConverterByteArray.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterTypeTzConfig.read(buf),
@@ -1389,7 +1369,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
 
     override fun allocationSize(value: Config) = (
             FfiConverterTypeEnvironmentCode.allocationSize(value.`environment`) +
-            FfiConverterSequenceUByte.allocationSize(value.`seed`) +
+            FfiConverterByteArray.allocationSize(value.`seed`) +
             FfiConverterString.allocationSize(value.`fiatCurrency`) +
             FfiConverterString.allocationSize(value.`localPersistencePath`) +
             FfiConverterTypeTzConfig.allocationSize(value.`timezoneConfig`)
@@ -1397,7 +1377,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
 
     override fun write(value: Config, buf: ByteBuffer) {
             FfiConverterTypeEnvironmentCode.write(value.`environment`, buf)
-            FfiConverterSequenceUByte.write(value.`seed`, buf)
+            FfiConverterByteArray.write(value.`seed`, buf)
             FfiConverterString.write(value.`fiatCurrency`, buf)
             FfiConverterString.write(value.`localPersistencePath`, buf)
             FfiConverterTypeTzConfig.write(value.`timezoneConfig`, buf)
@@ -2963,31 +2943,6 @@ public object FfiConverterOptionalTypePayErrorCode: FfiConverterRustBuffer<PayEr
         } else {
             buf.put(1)
             FfiConverterTypePayErrorCode.write(value, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterSequenceUByte: FfiConverterRustBuffer<List<UByte>> {
-    override fun read(buf: ByteBuffer): List<UByte> {
-        val len = buf.getInt()
-        return List<UByte>(len) {
-            FfiConverterUByte.read(buf)
-        }
-    }
-
-    override fun allocationSize(value: List<UByte>): Int {
-        val sizeForLength = 4
-        val sizeForItems = value.map { FfiConverterUByte.allocationSize(it) }.sum()
-        return sizeForLength + sizeForItems
-    }
-
-    override fun write(value: List<UByte>, buf: ByteBuffer) {
-        buf.putInt(value.size)
-        value.forEach {
-            FfiConverterUByte.write(it, buf)
         }
     }
 }
