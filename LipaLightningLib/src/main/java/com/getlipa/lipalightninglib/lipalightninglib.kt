@@ -415,7 +415,7 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_func_init_native_logger_once(`minLevel`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_lipalightninglib_fn_func_init_logger_once(`minLevel`: RustBuffer.ByValue,`path`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_lipalightninglib_fn_func_generate_secret(`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
@@ -435,7 +435,7 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun ffi_lipalightninglib_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Int,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_checksum_func_init_native_logger_once(
+    fun uniffi_lipalightninglib_checksum_func_init_logger_once(
     ): Short
     fun uniffi_lipalightninglib_checksum_func_generate_secret(
     ): Short
@@ -506,7 +506,7 @@ private fun uniffiCheckContractApiVersion(lib: _UniFFILib) {
 
 @Suppress("UNUSED_PARAMETER")
 private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
-    if (lib.uniffi_lipalightninglib_checksum_func_init_native_logger_once() != 61197.toShort()) {
+    if (lib.uniffi_lipalightninglib_checksum_func_init_logger_once() != 51876.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_lipalightninglib_checksum_func_generate_secret() != 15006.toShort()) {
@@ -2997,10 +2997,10 @@ public object FfiConverterSequenceTypePayment: FfiConverterRustBuffer<List<Payme
     }
 }
 
-fun `initNativeLoggerOnce`(`minLevel`: LogLevel) =
+fun `initLoggerOnce`(`minLevel`: LogLevel, `path`: String) =
     
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_func_init_native_logger_once(FfiConverterTypeLogLevel.lower(`minLevel`),_status)
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_func_init_logger_once(FfiConverterTypeLogLevel.lower(`minLevel`),FfiConverterString.lower(`path`),_status)
 }
 
 
