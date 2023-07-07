@@ -2484,7 +2484,7 @@ public object FfiConverterTypeRuntimeErrorCode: FfiConverterRustBuffer<RuntimeEr
 sealed class SimpleException: Exception() {
     // Each variant is a nested class
     
-    class SimpleException(
+    class Simple(
         val `msg`: String
         ) : SimpleException() {
         override val message
@@ -2504,7 +2504,7 @@ public object FfiConverterTypeSimpleError : FfiConverterRustBuffer<SimpleExcepti
         
 
         return when(buf.getInt()) {
-            1 -> SimpleException.SimpleException(
+            1 -> SimpleException.Simple(
                 FfiConverterString.read(buf),
                 )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
@@ -2513,7 +2513,7 @@ public object FfiConverterTypeSimpleError : FfiConverterRustBuffer<SimpleExcepti
 
     override fun allocationSize(value: SimpleException): Int {
         return when(value) {
-            is SimpleException.SimpleException -> (
+            is SimpleException.Simple -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
                 + FfiConverterString.allocationSize(value.`msg`)
@@ -2523,7 +2523,7 @@ public object FfiConverterTypeSimpleError : FfiConverterRustBuffer<SimpleExcepti
 
     override fun write(value: SimpleException, buf: ByteBuffer) {
         when(value) {
-            is SimpleException.SimpleException -> {
+            is SimpleException.Simple -> {
                 buf.putInt(1)
                 FfiConverterString.write(value.`msg`, buf)
                 Unit
