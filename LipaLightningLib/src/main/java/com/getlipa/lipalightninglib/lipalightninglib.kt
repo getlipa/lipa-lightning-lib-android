@@ -1440,6 +1440,7 @@ public object FfiConverterTypeExchangeRate: FfiConverterRustBuffer<ExchangeRate>
 data class FiatValue (
     var `minorUnits`: ULong, 
     var `currencyCode`: String, 
+    var `rate`: UInt, 
     var `convertedAt`: java.time.Instant
 ) {
     
@@ -1450,6 +1451,7 @@ public object FfiConverterTypeFiatValue: FfiConverterRustBuffer<FiatValue> {
         return FiatValue(
             FfiConverterULong.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
             FfiConverterTimestamp.read(buf),
         )
     }
@@ -1457,12 +1459,14 @@ public object FfiConverterTypeFiatValue: FfiConverterRustBuffer<FiatValue> {
     override fun allocationSize(value: FiatValue) = (
             FfiConverterULong.allocationSize(value.`minorUnits`) +
             FfiConverterString.allocationSize(value.`currencyCode`) +
+            FfiConverterUInt.allocationSize(value.`rate`) +
             FfiConverterTimestamp.allocationSize(value.`convertedAt`)
     )
 
     override fun write(value: FiatValue, buf: ByteBuffer) {
             FfiConverterULong.write(value.`minorUnits`, buf)
             FfiConverterString.write(value.`currencyCode`, buf)
+            FfiConverterUInt.write(value.`rate`, buf)
             FfiConverterTimestamp.write(value.`convertedAt`, buf)
     }
 }
