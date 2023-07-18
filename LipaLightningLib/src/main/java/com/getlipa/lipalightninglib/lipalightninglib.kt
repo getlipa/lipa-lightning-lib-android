@@ -407,6 +407,8 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_lipalightninglib_fn_method_lightningnode_change_timezone_config(`ptr`: Pointer,`timezoneConfig`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
+    fun uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Unit
     fun uniffi_lipalightninglib_fn_method_lightningnode_panic_directly(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_lipalightninglib_fn_method_lightningnode_panic_in_background_thread(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
@@ -476,6 +478,8 @@ internal interface _UniFFILib : Library {
     fun uniffi__checksum_method_lightningnode_change_fiat_currency(
     ): Short
     fun uniffi__checksum_method_lightningnode_change_timezone_config(
+    ): Short
+    fun uniffi__checksum_method_lightningnode_accept_pocket_terms_and_conditions(
     ): Short
     fun uniffi__checksum_method_lightningnode_panic_directly(
     ): Short
@@ -566,6 +570,9 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_change_timezone_config() != 43718.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi__checksum_method_lightningnode_accept_pocket_terms_and_conditions() != 46574.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_panic_directly() != 60936.toShort()) {
@@ -1006,7 +1013,8 @@ public interface LightningNodeInterface {
     fun `listCurrencyCodes`(): List<String>
     fun `getExchangeRate`(): ExchangeRate?
     fun `changeFiatCurrency`(`fiatCurrency`: String)
-    fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)
+    fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)@Throws(LnException::class)
+    fun `acceptPocketTermsAndConditions`()
     fun `panicDirectly`()
     fun `panicInBackgroundThread`()
     fun `panicInTokio`()
@@ -1220,6 +1228,17 @@ class LightningNode(
     rustCall() { _status ->
     _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_change_timezone_config(it,
         FfiConverterTypeTzConfig.lower(`timezoneConfig`),
+        _status)
+}
+        }
+    
+    
+    
+    @Throws(LnException::class)override fun `acceptPocketTermsAndConditions`() =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(it,
+        
         _status)
 }
         }
