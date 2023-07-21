@@ -686,6 +686,26 @@ public object FfiConverterULong: FfiConverter<ULong, Long> {
     }
 }
 
+public object FfiConverterDouble: FfiConverter<Double, Double> {
+    override fun lift(value: Double): Double {
+        return value
+    }
+
+    override fun read(buf: ByteBuffer): Double {
+        return buf.getDouble()
+    }
+
+    override fun lower(value: Double): Double {
+        return value
+    }
+
+    override fun allocationSize(value: Double) = 8
+
+    override fun write(value: Double, buf: ByteBuffer) {
+        buf.putDouble(value)
+    }
+}
+
 public object FfiConverterBoolean: FfiConverter<Boolean, Byte> {
     override fun lift(value: Byte): Boolean {
         return value.toInt() != 0
@@ -2467,7 +2487,8 @@ public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
 
 sealed class OfferKind {
     data class Pocket(
-        val `exchangeFee`: FiatValue
+        val `exchangeFee`: FiatValue, 
+        val `exchangeFeeRate`: Double
         ) : OfferKind()
     
 
@@ -2479,6 +2500,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
         return when(buf.getInt()) {
             1 -> OfferKind.Pocket(
                 FfiConverterTypeFiatValue.read(buf),
+                FfiConverterDouble.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
         }
@@ -2490,6 +2512,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
             (
                 4
                 + FfiConverterTypeFiatValue.allocationSize(value.`exchangeFee`)
+                + FfiConverterDouble.allocationSize(value.`exchangeFeeRate`)
             )
         }
     }
@@ -2499,6 +2522,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
             is OfferKind.Pocket -> {
                 buf.putInt(1)
                 FfiConverterTypeFiatValue.write(value.`exchangeFee`, buf)
+                FfiConverterDouble.write(value.`exchangeFeeRate`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
