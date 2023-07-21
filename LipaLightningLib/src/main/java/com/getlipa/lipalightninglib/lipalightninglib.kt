@@ -409,6 +409,10 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
+    fun uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(`ptr`: Pointer,`email`: RustBuffer.ByValue,`userIban`: RustBuffer.ByValue,`userCurrency`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_lipalightninglib_fn_method_lightningnode_query_available_offers(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_lipalightninglib_fn_method_lightningnode_panic_directly(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_lipalightninglib_fn_method_lightningnode_panic_in_background_thread(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
@@ -480,6 +484,10 @@ internal interface _UniFFILib : Library {
     fun uniffi__checksum_method_lightningnode_change_timezone_config(
     ): Short
     fun uniffi__checksum_method_lightningnode_accept_pocket_terms_and_conditions(
+    ): Short
+    fun uniffi__checksum_method_lightningnode_register_fiat_topup(
+    ): Short
+    fun uniffi__checksum_method_lightningnode_query_available_offers(
     ): Short
     fun uniffi__checksum_method_lightningnode_panic_directly(
     ): Short
@@ -573,6 +581,12 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_accept_pocket_terms_and_conditions() != 46574.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi__checksum_method_lightningnode_register_fiat_topup() != 54306.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi__checksum_method_lightningnode_query_available_offers() != 4503.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_panic_directly() != 60936.toShort()) {
@@ -1014,7 +1028,9 @@ public interface LightningNodeInterface {
     fun `getExchangeRate`(): ExchangeRate?
     fun `changeFiatCurrency`(`fiatCurrency`: String)
     fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)@Throws(LnException::class)
-    fun `acceptPocketTermsAndConditions`()
+    fun `acceptPocketTermsAndConditions`()@Throws(LnException::class)
+    fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo@Throws(LnException::class)
+    fun `queryAvailableOffers`(): List<OfferInfo>
     fun `panicDirectly`()
     fun `panicInBackgroundThread`()
     fun `panicInTokio`()
@@ -1244,6 +1260,30 @@ class LightningNode(
         }
     
     
+    
+    @Throws(LnException::class)override fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(it,
+        FfiConverterOptionalString.lower(`email`),FfiConverterString.lower(`userIban`),FfiConverterTypeTopupCurrency.lower(`userCurrency`),
+        _status)
+}
+        }.let {
+            FfiConverterTypeFiatTopupInfo.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `queryAvailableOffers`(): List<OfferInfo> =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_query_available_offers(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterSequenceTypeOfferInfo.lift(it)
+        }
+    
     override fun `panicDirectly`() =
         callWithPointer {
     rustCall() { _status ->
@@ -1456,6 +1496,79 @@ public object FfiConverterTypeExchangeRate: FfiConverterRustBuffer<ExchangeRate>
 
 
 
+data class FiatTopupInfo (
+    var `debitorIban`: String, 
+    var `creditorIban`: String, 
+    var `creditorBankName`: String, 
+    var `creditorBankStreet`: String, 
+    var `creditorBankPostalCode`: String, 
+    var `creditorBankTown`: String, 
+    var `creditorBankCountry`: String, 
+    var `creditorBankBic`: String, 
+    var `creditorName`: String, 
+    var `creditorStreet`: String, 
+    var `creditorPostalCode`: String, 
+    var `creditorTown`: String, 
+    var `creditorCountry`: String
+) {
+    
+}
+
+public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInfo> {
+    override fun read(buf: ByteBuffer): FiatTopupInfo {
+        return FiatTopupInfo(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FiatTopupInfo) = (
+            FfiConverterString.allocationSize(value.`debitorIban`) +
+            FfiConverterString.allocationSize(value.`creditorIban`) +
+            FfiConverterString.allocationSize(value.`creditorBankName`) +
+            FfiConverterString.allocationSize(value.`creditorBankStreet`) +
+            FfiConverterString.allocationSize(value.`creditorBankPostalCode`) +
+            FfiConverterString.allocationSize(value.`creditorBankTown`) +
+            FfiConverterString.allocationSize(value.`creditorBankCountry`) +
+            FfiConverterString.allocationSize(value.`creditorBankBic`) +
+            FfiConverterString.allocationSize(value.`creditorName`) +
+            FfiConverterString.allocationSize(value.`creditorStreet`) +
+            FfiConverterString.allocationSize(value.`creditorPostalCode`) +
+            FfiConverterString.allocationSize(value.`creditorTown`) +
+            FfiConverterString.allocationSize(value.`creditorCountry`)
+    )
+
+    override fun write(value: FiatTopupInfo, buf: ByteBuffer) {
+            FfiConverterString.write(value.`debitorIban`, buf)
+            FfiConverterString.write(value.`creditorIban`, buf)
+            FfiConverterString.write(value.`creditorBankName`, buf)
+            FfiConverterString.write(value.`creditorBankStreet`, buf)
+            FfiConverterString.write(value.`creditorBankPostalCode`, buf)
+            FfiConverterString.write(value.`creditorBankTown`, buf)
+            FfiConverterString.write(value.`creditorBankCountry`, buf)
+            FfiConverterString.write(value.`creditorBankBic`, buf)
+            FfiConverterString.write(value.`creditorName`, buf)
+            FfiConverterString.write(value.`creditorStreet`, buf)
+            FfiConverterString.write(value.`creditorPostalCode`, buf)
+            FfiConverterString.write(value.`creditorTown`, buf)
+            FfiConverterString.write(value.`creditorCountry`, buf)
+    }
+}
+
+
+
+
 data class FiatValue (
     var `minorUnits`: ULong, 
     var `currencyCode`: String, 
@@ -1602,6 +1715,47 @@ public object FfiConverterTypeNodeInfo: FfiConverterRustBuffer<NodeInfo> {
             FfiConverterByteArray.write(value.`nodePubkey`, buf)
             FfiConverterUShort.write(value.`numPeers`, buf)
             FfiConverterTypeChannelsInfo.write(value.`channelsInfo`, buf)
+    }
+}
+
+
+
+
+data class OfferInfo (
+    var `offerKind`: OfferKind, 
+    var `amount`: Amount, 
+    var `lnurlw`: String, 
+    var `createdAt`: java.time.Instant, 
+    var `expiresAt`: java.time.Instant
+) {
+    
+}
+
+public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
+    override fun read(buf: ByteBuffer): OfferInfo {
+        return OfferInfo(
+            FfiConverterTypeOfferKind.read(buf),
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterTimestamp.read(buf),
+            FfiConverterTimestamp.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: OfferInfo) = (
+            FfiConverterTypeOfferKind.allocationSize(value.`offerKind`) +
+            FfiConverterTypeAmount.allocationSize(value.`amount`) +
+            FfiConverterString.allocationSize(value.`lnurlw`) +
+            FfiConverterTimestamp.allocationSize(value.`createdAt`) +
+            FfiConverterTimestamp.allocationSize(value.`expiresAt`)
+    )
+
+    override fun write(value: OfferInfo, buf: ByteBuffer) {
+            FfiConverterTypeOfferKind.write(value.`offerKind`, buf)
+            FfiConverterTypeAmount.write(value.`amount`, buf)
+            FfiConverterString.write(value.`lnurlw`, buf)
+            FfiConverterTimestamp.write(value.`createdAt`, buf)
+            FfiConverterTimestamp.write(value.`expiresAt`, buf)
     }
 }
 
@@ -2311,6 +2465,51 @@ public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
 
 
 
+sealed class OfferKind {
+    data class Pocket(
+        val `exchangeFee`: FiatValue
+        ) : OfferKind()
+    
+
+    
+}
+
+public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
+    override fun read(buf: ByteBuffer): OfferKind {
+        return when(buf.getInt()) {
+            1 -> OfferKind.Pocket(
+                FfiConverterTypeFiatValue.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: OfferKind) = when(value) {
+        is OfferKind.Pocket -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypeFiatValue.allocationSize(value.`exchangeFee`)
+            )
+        }
+    }
+
+    override fun write(value: OfferKind, buf: ByteBuffer) {
+        when(value) {
+            is OfferKind.Pocket -> {
+                buf.putInt(1)
+                FfiConverterTypeFiatValue.write(value.`exchangeFee`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+
 
 sealed class PayException: Exception() {
     // Each variant is a nested class
@@ -2481,7 +2680,7 @@ public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
 
 
 enum class RuntimeErrorCode {
-    AUTH_SERVICE_UNVAILABLE,ESPLORA_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,REMOTE_STORAGE_ERROR,NON_EXISTING_WALLET;
+    AUTH_SERVICE_UNAVAILABLE,TOPUP_SERVICE_UNAVAILABLE,ESPLORA_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,REMOTE_STORAGE_ERROR,NON_EXISTING_WALLET;
 }
 
 public object FfiConverterTypeRuntimeErrorCode: FfiConverterRustBuffer<RuntimeErrorCode> {
@@ -2555,6 +2754,29 @@ public object FfiConverterTypeSimpleError : FfiConverterRustBuffer<SimpleExcepti
     }
 
 }
+
+
+
+
+enum class TopupCurrency {
+    EUR,CHF,GBP;
+}
+
+public object FfiConverterTypeTopupCurrency: FfiConverterRustBuffer<TopupCurrency> {
+    override fun read(buf: ByteBuffer) = try {
+        TopupCurrency.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: TopupCurrency) = 4
+
+    override fun write(value: TopupCurrency, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
 
 
 
@@ -2985,6 +3207,31 @@ public object FfiConverterSequenceString: FfiConverterRustBuffer<List<String>> {
         buf.putInt(value.size)
         value.forEach {
             FfiConverterString.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeOfferInfo: FfiConverterRustBuffer<List<OfferInfo>> {
+    override fun read(buf: ByteBuffer): List<OfferInfo> {
+        val len = buf.getInt()
+        return List<OfferInfo>(len) {
+            FfiConverterTypeOfferInfo.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<OfferInfo>): Int {
+        val sizeForLength = 4
+        val sizeForItems = value.map { FfiConverterTypeOfferInfo.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<OfferInfo>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.forEach {
+            FfiConverterTypeOfferInfo.write(it, buf)
         }
     }
 }
