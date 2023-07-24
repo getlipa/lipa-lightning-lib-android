@@ -1518,6 +1518,7 @@ public object FfiConverterTypeExchangeRate: FfiConverterRustBuffer<ExchangeRate>
 
 data class FiatTopupInfo (
     var `debitorIban`: String, 
+    var `creditorReference`: String, 
     var `creditorIban`: String, 
     var `creditorBankName`: String, 
     var `creditorBankStreet`: String, 
@@ -1550,11 +1551,13 @@ public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInf
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
         )
     }
 
     override fun allocationSize(value: FiatTopupInfo) = (
             FfiConverterString.allocationSize(value.`debitorIban`) +
+            FfiConverterString.allocationSize(value.`creditorReference`) +
             FfiConverterString.allocationSize(value.`creditorIban`) +
             FfiConverterString.allocationSize(value.`creditorBankName`) +
             FfiConverterString.allocationSize(value.`creditorBankStreet`) +
@@ -1571,6 +1574,7 @@ public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInf
 
     override fun write(value: FiatTopupInfo, buf: ByteBuffer) {
             FfiConverterString.write(value.`debitorIban`, buf)
+            FfiConverterString.write(value.`creditorReference`, buf)
             FfiConverterString.write(value.`creditorIban`, buf)
             FfiConverterString.write(value.`creditorBankName`, buf)
             FfiConverterString.write(value.`creditorBankStreet`, buf)
