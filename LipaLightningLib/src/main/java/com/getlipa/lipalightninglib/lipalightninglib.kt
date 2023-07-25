@@ -413,12 +413,6 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_lipalightninglib_fn_method_lightningnode_query_available_offers(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_panic_directly(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
-    ): Unit
-    fun uniffi_lipalightninglib_fn_method_lightningnode_panic_in_background_thread(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
-    ): Unit
-    fun uniffi_lipalightninglib_fn_method_lightningnode_panic_in_tokio(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
-    ): Unit
     fun uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_lipalightninglib_fn_func_generate_secret(`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
@@ -488,12 +482,6 @@ internal interface _UniFFILib : Library {
     fun uniffi__checksum_method_lightningnode_register_fiat_topup(
     ): Short
     fun uniffi__checksum_method_lightningnode_query_available_offers(
-    ): Short
-    fun uniffi__checksum_method_lightningnode_panic_directly(
-    ): Short
-    fun uniffi__checksum_method_lightningnode_panic_in_background_thread(
-    ): Short
-    fun uniffi__checksum_method_lightningnode_panic_in_tokio(
     ): Short
     fun uniffi__checksum_constructor_lightningnode_new(
     ): Short
@@ -587,15 +575,6 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_query_available_offers() != 4503.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi__checksum_method_lightningnode_panic_directly() != 60936.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi__checksum_method_lightningnode_panic_in_background_thread() != 9780.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi__checksum_method_lightningnode_panic_in_tokio() != 40682.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_constructor_lightningnode_new() != 50158.toShort()) {
@@ -1051,9 +1030,6 @@ public interface LightningNodeInterface {
     fun `acceptPocketTermsAndConditions`()@Throws(LnException::class)
     fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo@Throws(LnException::class)
     fun `queryAvailableOffers`(): List<OfferInfo>
-    fun `panicDirectly`()
-    fun `panicInBackgroundThread`()
-    fun `panicInTokio`()
 }
 
 class LightningNode(
@@ -1303,36 +1279,6 @@ class LightningNode(
         }.let {
             FfiConverterSequenceTypeOfferInfo.lift(it)
         }
-    
-    override fun `panicDirectly`() =
-        callWithPointer {
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_panic_directly(it,
-        
-        _status)
-}
-        }
-    
-    
-    override fun `panicInBackgroundThread`() =
-        callWithPointer {
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_panic_in_background_thread(it,
-        
-        _status)
-}
-        }
-    
-    
-    override fun `panicInTokio`() =
-        callWithPointer {
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_panic_in_tokio(it,
-        
-        _status)
-}
-        }
-    
     
     
 
