@@ -2417,6 +2417,7 @@ public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
 
 sealed class OfferKind {
     data class Pocket(
+        val `topupValue`: FiatValue, 
         val `exchangeFee`: FiatValue, 
         val `exchangeFeeRatePermyriad`: UShort
         ) : OfferKind()
@@ -2430,6 +2431,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
         return when(buf.getInt()) {
             1 -> OfferKind.Pocket(
                 FfiConverterTypeFiatValue.read(buf),
+                FfiConverterTypeFiatValue.read(buf),
                 FfiConverterUShort.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
@@ -2441,6 +2443,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4
+                + FfiConverterTypeFiatValue.allocationSize(value.`topupValue`)
                 + FfiConverterTypeFiatValue.allocationSize(value.`exchangeFee`)
                 + FfiConverterUShort.allocationSize(value.`exchangeFeeRatePermyriad`)
             )
@@ -2451,6 +2454,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
         when(value) {
             is OfferKind.Pocket -> {
                 buf.putInt(1)
+                FfiConverterTypeFiatValue.write(value.`topupValue`, buf)
                 FfiConverterTypeFiatValue.write(value.`exchangeFee`, buf)
                 FfiConverterUShort.write(value.`exchangeFeeRatePermyriad`, buf)
                 Unit
