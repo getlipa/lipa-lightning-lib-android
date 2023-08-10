@@ -413,6 +413,10 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_lipalightninglib_fn_method_lightningnode_query_available_offers(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(`ptr`: Pointer,`offer`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(`ptr`: Pointer,`notificationToken`: RustBuffer.ByValue,`language`: RustBuffer.ByValue,`country`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): Unit
     fun uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_lipalightninglib_fn_func_generate_secret(`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
@@ -482,6 +486,10 @@ internal interface _UniFFILib : Library {
     fun uniffi__checksum_method_lightningnode_register_fiat_topup(
     ): Short
     fun uniffi__checksum_method_lightningnode_query_available_offers(
+    ): Short
+    fun uniffi__checksum_method_lightningnode_request_offer_collection(
+    ): Short
+    fun uniffi__checksum_method_lightningnode_register_notification_token(
     ): Short
     fun uniffi__checksum_constructor_lightningnode_new(
     ): Short
@@ -575,6 +583,12 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_query_available_offers() != 4503.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi__checksum_method_lightningnode_request_offer_collection() != 1522.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi__checksum_method_lightningnode_register_notification_token() != 60328.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_constructor_lightningnode_new() != 50158.toShort()) {
@@ -1009,7 +1023,9 @@ public interface LightningNodeInterface {
     fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)@Throws(LnException::class)
     fun `acceptPocketTermsAndConditions`()@Throws(LnException::class)
     fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo@Throws(LnException::class)
-    fun `queryAvailableOffers`(): List<OfferInfo>
+    fun `queryAvailableOffers`(): List<OfferInfo>@Throws(LnException::class)
+    fun `requestOfferCollection`(`offer`: OfferInfo): String@Throws(LnException::class)
+    fun `registerNotificationToken`(`notificationToken`: String, `language`: LanguageCode, `country`: CountryCode)
 }
 
 class LightningNode(
@@ -1259,6 +1275,29 @@ class LightningNode(
         }.let {
             FfiConverterSequenceTypeOfferInfo.lift(it)
         }
+    
+    
+    @Throws(LnException::class)override fun `requestOfferCollection`(`offer`: OfferInfo): String =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(it,
+        FfiConverterTypeOfferInfo.lower(`offer`),
+        _status)
+}
+        }.let {
+            FfiConverterString.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `registerNotificationToken`(`notificationToken`: String, `language`: LanguageCode, `country`: CountryCode) =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(it,
+        FfiConverterString.lower(`notificationToken`),FfiConverterTypeLanguageCode.lower(`language`),FfiConverterTypeCountryCode.lower(`country`),
+        _status)
+}
+        }
+    
     
     
 
@@ -1639,8 +1678,8 @@ public object FfiConverterTypeLspFee: FfiConverterRustBuffer<LspFee> {
 
 
 data class NodeInfo (
-    var `nodePubkey`: ByteArray, 
-    var `numPeers`: UShort, 
+    var `nodePubkey`: String, 
+    var `peers`: List<String>, 
     var `channelsInfo`: ChannelsInfo
 ) {
     
@@ -1649,21 +1688,21 @@ data class NodeInfo (
 public object FfiConverterTypeNodeInfo: FfiConverterRustBuffer<NodeInfo> {
     override fun read(buf: ByteBuffer): NodeInfo {
         return NodeInfo(
-            FfiConverterByteArray.read(buf),
-            FfiConverterUShort.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterSequenceString.read(buf),
             FfiConverterTypeChannelsInfo.read(buf),
         )
     }
 
     override fun allocationSize(value: NodeInfo) = (
-            FfiConverterByteArray.allocationSize(value.`nodePubkey`) +
-            FfiConverterUShort.allocationSize(value.`numPeers`) +
+            FfiConverterString.allocationSize(value.`nodePubkey`) +
+            FfiConverterSequenceString.allocationSize(value.`peers`) +
             FfiConverterTypeChannelsInfo.allocationSize(value.`channelsInfo`)
     )
 
     override fun write(value: NodeInfo, buf: ByteBuffer) {
-            FfiConverterByteArray.write(value.`nodePubkey`, buf)
-            FfiConverterUShort.write(value.`numPeers`, buf)
+            FfiConverterString.write(value.`nodePubkey`, buf)
+            FfiConverterSequenceString.write(value.`peers`, buf)
             FfiConverterTypeChannelsInfo.write(value.`channelsInfo`, buf)
     }
 }
@@ -1725,6 +1764,7 @@ data class Payment (
     var `preimage`: String?, 
     var `networkFees`: Amount?, 
     var `lspFees`: Amount?, 
+    var `offer`: OfferKind?, 
     var `metadata`: String
 ) {
     
@@ -1745,6 +1785,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalTypeAmount.read(buf),
             FfiConverterOptionalTypeAmount.read(buf),
+            FfiConverterOptionalTypeOfferKind.read(buf),
             FfiConverterString.read(buf),
         )
     }
@@ -1762,6 +1803,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterOptionalString.allocationSize(value.`preimage`) +
             FfiConverterOptionalTypeAmount.allocationSize(value.`networkFees`) +
             FfiConverterOptionalTypeAmount.allocationSize(value.`lspFees`) +
+            FfiConverterOptionalTypeOfferKind.allocationSize(value.`offer`) +
             FfiConverterString.allocationSize(value.`metadata`)
     )
 
@@ -1778,6 +1820,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterOptionalString.write(value.`preimage`, buf)
             FfiConverterOptionalTypeAmount.write(value.`networkFees`, buf)
             FfiConverterOptionalTypeAmount.write(value.`lspFees`, buf)
+            FfiConverterOptionalTypeOfferKind.write(value.`offer`, buf)
             FfiConverterString.write(value.`metadata`, buf)
     }
 }
@@ -1909,6 +1952,29 @@ public object FfiConverterTypeTzTime: FfiConverterRustBuffer<TzTime> {
 
 
 
+enum class CountryCode {
+    AFG,ALA,ALB,DZA,ASM,AND,AGO,AIA,ATA,ATG,ARG,ARM,ABW,AUS,AUT,AZE,BHS,BHR,BGD,BRB,BLR,BEL,BLZ,BEN,BMU,BTN,BOL,BES,BIH,BWA,BVT,BRA,IOT,BRN,BGR,BFA,BDI,CPV,KHM,CMR,CAN,CYM,CAF,TCD,CHL,CHN,CXR,CCK,COL,COM,COG,COD,COK,CRI,CIV,HRV,CUB,CUW,CYP,CZE,DNK,DJI,DMA,DOM,ECU,EGY,SLV,GNQ,ERI,EST,ETH,FLK,FRO,FJI,FIN,FRA,GUF,PYF,ATF,GAB,GMB,GEO,DEU,GHA,GIB,GRC,GRL,GRD,GLP,GUM,GTM,GGY,GIN,GNB,GUY,HTI,HMD,VAT,HND,HKG,HUN,ISL,IND,IDN,IRN,IRQ,IRL,IMN,ISR,ITA,JAM,JPN,JEY,JOR,KAZ,KEN,KIR,PRK,KOR,KWT,KGZ,LAO,LVA,LBN,LSO,LBR,LBY,LIE,LTU,LUX,MAC,MKD,MDG,MWI,MYS,MDV,MLI,MLT,MHL,MTQ,MRT,MUS,MYT,MEX,FSM,MDA,MCO,MNG,MNE,MSR,MAR,MOZ,MMR,NAM,NRU,NPL,NLD,NCL,NZL,NIC,NER,NGA,NIU,NFK,MNP,NOR,OMN,PAK,PLW,PSE,PAN,PNG,PRY,PER,PHL,PCN,POL,PRT,PRI,QAT,REU,ROU,RUS,RWA,BLM,SHN,KNA,LCA,MAF,SPM,VCT,WSM,SMR,STP,SAU,SEN,SRB,SYC,SLE,SGP,SXM,SVK,SVN,SLB,SOM,ZAF,SGS,SSD,ESP,LKA,SDN,SUR,SJM,SWZ,SWE,CHE,SYR,TWN,TJK,TZA,THA,TLS,TGO,TKL,TON,TTO,TUN,TUR,TKM,TCA,TUV,UGA,UKR,ARE,GBR,USA,UMI,URY,UZB,VUT,VEN,VNM,VGB,VIR,WLF,ESH,YEM,ZMB,ZWE;
+}
+
+public object FfiConverterTypeCountryCode: FfiConverterRustBuffer<CountryCode> {
+    override fun read(buf: ByteBuffer) = try {
+        CountryCode.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: CountryCode) = 4
+
+    override fun write(value: CountryCode, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
 
 sealed class DecodeInvoiceException: Exception() {
     // Each variant is a nested class
@@ -2023,6 +2089,29 @@ public object FfiConverterTypeEnvironmentCode: FfiConverterRustBuffer<Environmen
     override fun allocationSize(value: EnvironmentCode) = 4
 
     override fun write(value: EnvironmentCode, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
+enum class LanguageCode {
+    AA,AB,AE,AF,AK,AM,AN,AR,AS,AV,AY,AZ,BA,BE,BG,BH,BI,BM,BN,BO,BR,BS,CA,CE,CH,CO,CR,CS,CU,CV,CY,DA,DE,DV,DZ,EE,EL,EN,EO,ES,ET,EU,FA,FF,FI,FJ,FO,FR,FY,GA,GD,GL,GN,GU,GV,HA,HE,HI,HO,HR,HT,HU,HY,HZ,IA,ID,IE,IG,II,IK,IO,IS,IT,IU,JA,JV,KA,KG,KI,KJ,KK,KL,KM,KN,KO,KR,KS,KU,KV,KW,KY,LA,LB,LG,LI,LN,LO,LT,LU,LV,MG,MH,MI,MK,ML,MN,MR,MS,MT,MY,NA,NB,ND,NE,NG,NL,NN,NO,NR,NV,NY,OC,OJ,OM,OR,OS,PA,PI,PL,PS,PT,QU,RM,RN,RO,RU,RW,SA,SC,SD,SE,SG,SI,SK,SL,SM,SN,SO,SQ,SR,SS,ST,SU,SV,SW,TA,TE,TG,TH,TI,TK,TL,TN,TO,TR,TS,TT,TW,TY,UG,UK,UR,UZ,VE,VI,VO,WA,WO,XH,YI,YO,ZA,ZH,ZU;
+}
+
+public object FfiConverterTypeLanguageCode: FfiConverterRustBuffer<LanguageCode> {
+    override fun read(buf: ByteBuffer) = try {
+        LanguageCode.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: LanguageCode) = 4
+
+    override fun write(value: LanguageCode, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
@@ -2417,8 +2506,10 @@ public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
 
 sealed class OfferKind {
     data class Pocket(
-        val `topupValue`: FiatValue, 
-        val `exchangeFee`: FiatValue, 
+        val `id`: String, 
+        val `exchangeRate`: ExchangeRate, 
+        val `topupValueMinorUnits`: ULong, 
+        val `exchangeFeeMinorUnits`: ULong, 
         val `exchangeFeeRatePermyriad`: UShort
         ) : OfferKind()
     
@@ -2430,8 +2521,10 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
     override fun read(buf: ByteBuffer): OfferKind {
         return when(buf.getInt()) {
             1 -> OfferKind.Pocket(
-                FfiConverterTypeFiatValue.read(buf),
-                FfiConverterTypeFiatValue.read(buf),
+                FfiConverterString.read(buf),
+                FfiConverterTypeExchangeRate.read(buf),
+                FfiConverterULong.read(buf),
+                FfiConverterULong.read(buf),
                 FfiConverterUShort.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
@@ -2443,8 +2536,10 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4
-                + FfiConverterTypeFiatValue.allocationSize(value.`topupValue`)
-                + FfiConverterTypeFiatValue.allocationSize(value.`exchangeFee`)
+                + FfiConverterString.allocationSize(value.`id`)
+                + FfiConverterTypeExchangeRate.allocationSize(value.`exchangeRate`)
+                + FfiConverterULong.allocationSize(value.`topupValueMinorUnits`)
+                + FfiConverterULong.allocationSize(value.`exchangeFeeMinorUnits`)
                 + FfiConverterUShort.allocationSize(value.`exchangeFeeRatePermyriad`)
             )
         }
@@ -2454,8 +2549,10 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
         when(value) {
             is OfferKind.Pocket -> {
                 buf.putInt(1)
-                FfiConverterTypeFiatValue.write(value.`topupValue`, buf)
-                FfiConverterTypeFiatValue.write(value.`exchangeFee`, buf)
+                FfiConverterString.write(value.`id`, buf)
+                FfiConverterTypeExchangeRate.write(value.`exchangeRate`, buf)
+                FfiConverterULong.write(value.`topupValueMinorUnits`, buf)
+                FfiConverterULong.write(value.`exchangeFeeMinorUnits`, buf)
                 FfiConverterUShort.write(value.`exchangeFeeRatePermyriad`, buf)
                 Unit
             }
@@ -2638,7 +2735,7 @@ public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
 
 
 enum class RuntimeErrorCode {
-    AUTH_SERVICE_UNAVAILABLE,TOPUP_SERVICE_UNAVAILABLE,ESPLORA_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,REMOTE_STORAGE_ERROR,NON_EXISTING_WALLET;
+    AUTH_SERVICE_UNAVAILABLE,OFFER_SERVICE_UNAVAILABLE,ESPLORA_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,REMOTE_STORAGE_ERROR,NON_EXISTING_WALLET;
 }
 
 public object FfiConverterTypeRuntimeErrorCode: FfiConverterRustBuffer<RuntimeErrorCode> {
@@ -3111,6 +3208,35 @@ public object FfiConverterOptionalTypeFiatValue: FfiConverterRustBuffer<FiatValu
         } else {
             buf.put(1)
             FfiConverterTypeFiatValue.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeOfferKind: FfiConverterRustBuffer<OfferKind?> {
+    override fun read(buf: ByteBuffer): OfferKind? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeOfferKind.read(buf)
+    }
+
+    override fun allocationSize(value: OfferKind?): Int {
+        if (value == null) {
+            return 1
+        } else {
+            return 1 + FfiConverterTypeOfferKind.allocationSize(value)
+        }
+    }
+
+    override fun write(value: OfferKind?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeOfferKind.write(value, buf)
         }
     }
 }
