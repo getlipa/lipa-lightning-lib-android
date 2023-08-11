@@ -415,7 +415,7 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(`ptr`: Pointer,`offer`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(`ptr`: Pointer,`notificationToken`: RustBuffer.ByValue,`language`: RustBuffer.ByValue,`country`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(`ptr`: Pointer,`notificationToken`: RustBuffer.ByValue,`languageIso6391`: RustBuffer.ByValue,`countryIso31661Alpha2`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
     ): Unit
@@ -588,7 +588,7 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi__checksum_method_lightningnode_request_offer_collection() != 1522.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_register_notification_token() != 60328.toShort()) {
+    if (lib.uniffi__checksum_method_lightningnode_register_notification_token() != 12567.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_constructor_lightningnode_new() != 50158.toShort()) {
@@ -1025,7 +1025,7 @@ public interface LightningNodeInterface {
     fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo@Throws(LnException::class)
     fun `queryAvailableOffers`(): List<OfferInfo>@Throws(LnException::class)
     fun `requestOfferCollection`(`offer`: OfferInfo): String@Throws(LnException::class)
-    fun `registerNotificationToken`(`notificationToken`: String, `language`: LanguageCode, `country`: CountryCode)
+    fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)
 }
 
 class LightningNode(
@@ -1289,11 +1289,11 @@ class LightningNode(
         }
     
     
-    @Throws(LnException::class)override fun `registerNotificationToken`(`notificationToken`: String, `language`: LanguageCode, `country`: CountryCode) =
+    @Throws(LnException::class)override fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String) =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
     _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(it,
-        FfiConverterString.lower(`notificationToken`),FfiConverterTypeLanguageCode.lower(`language`),FfiConverterTypeCountryCode.lower(`country`),
+        FfiConverterString.lower(`notificationToken`),FfiConverterString.lower(`languageIso6391`),FfiConverterString.lower(`countryIso31661Alpha2`),
         _status)
 }
         }
@@ -1952,29 +1952,6 @@ public object FfiConverterTypeTzTime: FfiConverterRustBuffer<TzTime> {
 
 
 
-enum class CountryCode {
-    AFG,ALA,ALB,DZA,ASM,AND,AGO,AIA,ATA,ATG,ARG,ARM,ABW,AUS,AUT,AZE,BHS,BHR,BGD,BRB,BLR,BEL,BLZ,BEN,BMU,BTN,BOL,BES,BIH,BWA,BVT,BRA,IOT,BRN,BGR,BFA,BDI,CPV,KHM,CMR,CAN,CYM,CAF,TCD,CHL,CHN,CXR,CCK,COL,COM,COG,COD,COK,CRI,CIV,HRV,CUB,CUW,CYP,CZE,DNK,DJI,DMA,DOM,ECU,EGY,SLV,GNQ,ERI,EST,ETH,FLK,FRO,FJI,FIN,FRA,GUF,PYF,ATF,GAB,GMB,GEO,DEU,GHA,GIB,GRC,GRL,GRD,GLP,GUM,GTM,GGY,GIN,GNB,GUY,HTI,HMD,VAT,HND,HKG,HUN,ISL,IND,IDN,IRN,IRQ,IRL,IMN,ISR,ITA,JAM,JPN,JEY,JOR,KAZ,KEN,KIR,PRK,KOR,KWT,KGZ,LAO,LVA,LBN,LSO,LBR,LBY,LIE,LTU,LUX,MAC,MKD,MDG,MWI,MYS,MDV,MLI,MLT,MHL,MTQ,MRT,MUS,MYT,MEX,FSM,MDA,MCO,MNG,MNE,MSR,MAR,MOZ,MMR,NAM,NRU,NPL,NLD,NCL,NZL,NIC,NER,NGA,NIU,NFK,MNP,NOR,OMN,PAK,PLW,PSE,PAN,PNG,PRY,PER,PHL,PCN,POL,PRT,PRI,QAT,REU,ROU,RUS,RWA,BLM,SHN,KNA,LCA,MAF,SPM,VCT,WSM,SMR,STP,SAU,SEN,SRB,SYC,SLE,SGP,SXM,SVK,SVN,SLB,SOM,ZAF,SGS,SSD,ESP,LKA,SDN,SUR,SJM,SWZ,SWE,CHE,SYR,TWN,TJK,TZA,THA,TLS,TGO,TKL,TON,TTO,TUN,TUR,TKM,TCA,TUV,UGA,UKR,ARE,GBR,USA,UMI,URY,UZB,VUT,VEN,VNM,VGB,VIR,WLF,ESH,YEM,ZMB,ZWE;
-}
-
-public object FfiConverterTypeCountryCode: FfiConverterRustBuffer<CountryCode> {
-    override fun read(buf: ByteBuffer) = try {
-        CountryCode.values()[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: CountryCode) = 4
-
-    override fun write(value: CountryCode, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
-    }
-}
-
-
-
-
-
-
 
 sealed class DecodeInvoiceException: Exception() {
     // Each variant is a nested class
@@ -2089,29 +2066,6 @@ public object FfiConverterTypeEnvironmentCode: FfiConverterRustBuffer<Environmen
     override fun allocationSize(value: EnvironmentCode) = 4
 
     override fun write(value: EnvironmentCode, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
-    }
-}
-
-
-
-
-
-
-enum class LanguageCode {
-    AA,AB,AE,AF,AK,AM,AN,AR,AS,AV,AY,AZ,BA,BE,BG,BH,BI,BM,BN,BO,BR,BS,CA,CE,CH,CO,CR,CS,CU,CV,CY,DA,DE,DV,DZ,EE,EL,EN,EO,ES,ET,EU,FA,FF,FI,FJ,FO,FR,FY,GA,GD,GL,GN,GU,GV,HA,HE,HI,HO,HR,HT,HU,HY,HZ,IA,ID,IE,IG,II,IK,IO,IS,IT,IU,JA,JV,KA,KG,KI,KJ,KK,KL,KM,KN,KO,KR,KS,KU,KV,KW,KY,LA,LB,LG,LI,LN,LO,LT,LU,LV,MG,MH,MI,MK,ML,MN,MR,MS,MT,MY,NA,NB,ND,NE,NG,NL,NN,NO,NR,NV,NY,OC,OJ,OM,OR,OS,PA,PI,PL,PS,PT,QU,RM,RN,RO,RU,RW,SA,SC,SD,SE,SG,SI,SK,SL,SM,SN,SO,SQ,SR,SS,ST,SU,SV,SW,TA,TE,TG,TH,TI,TK,TL,TN,TO,TR,TS,TT,TW,TY,UG,UK,UR,UZ,VE,VI,VO,WA,WO,XH,YI,YO,ZA,ZH,ZU;
-}
-
-public object FfiConverterTypeLanguageCode: FfiConverterRustBuffer<LanguageCode> {
-    override fun read(buf: ByteBuffer) = try {
-        LanguageCode.values()[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: LanguageCode) = 4
-
-    override fun write(value: LanguageCode, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
