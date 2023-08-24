@@ -417,6 +417,8 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(`ptr`: Pointer,`notificationToken`: RustBuffer.ByValue,`languageIso6391`: RustBuffer.ByValue,`countryIso31661Alpha2`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
+    fun uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_lipalightninglib_fn_func_generate_secret(`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
@@ -490,6 +492,8 @@ internal interface _UniFFILib : Library {
     fun uniffi__checksum_method_lightningnode_request_offer_collection(
     ): Short
     fun uniffi__checksum_method_lightningnode_register_notification_token(
+    ): Short
+    fun uniffi__checksum_method_lightningnode_get_wallet_pubkey_id(
     ): Short
     fun uniffi__checksum_constructor_lightningnode_new(
     ): Short
@@ -589,6 +593,9 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_register_notification_token() != 12567.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi__checksum_method_lightningnode_get_wallet_pubkey_id() != 62577.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_constructor_lightningnode_new() != 50158.toShort()) {
@@ -1026,6 +1033,7 @@ public interface LightningNodeInterface {
     fun `queryAvailableOffers`(): List<OfferInfo>@Throws(LnException::class)
     fun `requestOfferCollection`(`offer`: OfferInfo): String@Throws(LnException::class)
     fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)
+    fun `getWalletPubkeyId`(): String?
 }
 
 class LightningNode(
@@ -1298,6 +1306,17 @@ class LightningNode(
 }
         }
     
+    
+    override fun `getWalletPubkeyId`(): String? =
+        callWithPointer {
+    rustCall() { _status ->
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterOptionalString.lift(it)
+        }
     
     
 
@@ -1715,7 +1734,8 @@ data class OfferInfo (
     var `amount`: Amount, 
     var `lnurlw`: String, 
     var `createdAt`: java.time.Instant, 
-    var `expiresAt`: java.time.Instant
+    var `expiresAt`: java.time.Instant, 
+    var `status`: OfferStatus
 ) {
     
 }
@@ -1728,6 +1748,7 @@ public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
             FfiConverterString.read(buf),
             FfiConverterTimestamp.read(buf),
             FfiConverterTimestamp.read(buf),
+            FfiConverterTypeOfferStatus.read(buf),
         )
     }
 
@@ -1736,7 +1757,8 @@ public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
             FfiConverterTypeAmount.allocationSize(value.`amount`) +
             FfiConverterString.allocationSize(value.`lnurlw`) +
             FfiConverterTimestamp.allocationSize(value.`createdAt`) +
-            FfiConverterTimestamp.allocationSize(value.`expiresAt`)
+            FfiConverterTimestamp.allocationSize(value.`expiresAt`) +
+            FfiConverterTypeOfferStatus.allocationSize(value.`status`)
     )
 
     override fun write(value: OfferInfo, buf: ByteBuffer) {
@@ -1745,6 +1767,7 @@ public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
             FfiConverterString.write(value.`lnurlw`, buf)
             FfiConverterTimestamp.write(value.`createdAt`, buf)
             FfiConverterTimestamp.write(value.`expiresAt`, buf)
+            FfiConverterTypeOfferStatus.write(value.`status`, buf)
     }
 }
 
@@ -2511,6 +2534,29 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+
+enum class OfferStatus {
+    READY,FAILED,SETTLED;
+}
+
+public object FfiConverterTypeOfferStatus: FfiConverterRustBuffer<OfferStatus> {
+    override fun read(buf: ByteBuffer) = try {
+        OfferStatus.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: OfferStatus) = 4
+
+    override fun write(value: OfferStatus, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
     }
 }
 
