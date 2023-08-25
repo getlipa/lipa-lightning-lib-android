@@ -419,6 +419,8 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_lipalightninglib_fn_method_lightningnode_get_payment_uuid(`ptr`: Pointer,`paymentHash`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_lipalightninglib_fn_func_generate_secret(`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
@@ -494,6 +496,8 @@ internal interface _UniFFILib : Library {
     fun uniffi__checksum_method_lightningnode_register_notification_token(
     ): Short
     fun uniffi__checksum_method_lightningnode_get_wallet_pubkey_id(
+    ): Short
+    fun uniffi__checksum_method_lightningnode_get_payment_uuid(
     ): Short
     fun uniffi__checksum_constructor_lightningnode_new(
     ): Short
@@ -596,6 +600,9 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_get_wallet_pubkey_id() != 62577.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi__checksum_method_lightningnode_get_payment_uuid() != 21036.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_constructor_lightningnode_new() != 50158.toShort()) {
@@ -1033,7 +1040,8 @@ public interface LightningNodeInterface {
     fun `queryAvailableOffers`(): List<OfferInfo>@Throws(LnException::class)
     fun `requestOfferCollection`(`offer`: OfferInfo): String@Throws(LnException::class)
     fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)
-    fun `getWalletPubkeyId`(): String?
+    fun `getWalletPubkeyId`(): String?@Throws(LnException::class)
+    fun `getPaymentUuid`(`paymentHash`: String): String
 }
 
 class LightningNode(
@@ -1316,6 +1324,18 @@ class LightningNode(
 }
         }.let {
             FfiConverterOptionalString.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `getPaymentUuid`(`paymentHash`: String): String =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_get_payment_uuid(it,
+        FfiConverterString.lower(`paymentHash`),
+        _status)
+}
+        }.let {
+            FfiConverterString.lift(it)
         }
     
     
