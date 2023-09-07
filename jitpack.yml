@@ -3,7 +3,7 @@ before_install:
   - if [ $(shasum -a 256 jniLibs.zip | sed 's/ .*//') != '97288dc0b37c9bdece76259715e42572032145fa96b19bfe47ca78691d5b9363' ]; then exit 1; fi
   - unzip -o jniLibs.zip
   - mv jniLibs LipaLightningLib/src/main/jniLibs
-  - rm -rf LipaBusinessLib/src/main/jniLibs/arm64
+  - rm -rf LipaLightningLib/src/main/jniLibs/arm64
   - wget https://github.com/java-native-access/jna/archive/refs/tags/5.13.0.zip
   - unzip 5.13.0.zip
   - unzip -o jna-5.13.0/dist/android-aarch64.jar
