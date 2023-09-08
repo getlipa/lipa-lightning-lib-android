@@ -411,7 +411,7 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(`ptr`: Pointer,`email`: RustBuffer.ByValue,`userIban`: RustBuffer.ByValue,`userCurrency`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_query_available_offers(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_lipalightninglib_fn_method_lightningnode_query_uncompleted_offers(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(`ptr`: Pointer,`offer`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
@@ -489,7 +489,7 @@ internal interface _UniFFILib : Library {
     ): Short
     fun uniffi__checksum_method_lightningnode_register_fiat_topup(
     ): Short
-    fun uniffi__checksum_method_lightningnode_query_available_offers(
+    fun uniffi__checksum_method_lightningnode_query_uncompleted_offers(
     ): Short
     fun uniffi__checksum_method_lightningnode_request_offer_collection(
     ): Short
@@ -590,7 +590,7 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi__checksum_method_lightningnode_register_fiat_topup() != 54306.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_query_available_offers() != 4503.toShort()) {
+    if (lib.uniffi__checksum_method_lightningnode_query_uncompleted_offers() != 58970.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_request_offer_collection() != 1522.toShort()) {
@@ -1037,7 +1037,7 @@ public interface LightningNodeInterface {
     fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)@Throws(LnException::class)
     fun `acceptPocketTermsAndConditions`()@Throws(LnException::class)
     fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo@Throws(LnException::class)
-    fun `queryAvailableOffers`(): List<OfferInfo>@Throws(LnException::class)
+    fun `queryUncompletedOffers`(): List<OfferInfo>@Throws(LnException::class)
     fun `requestOfferCollection`(`offer`: OfferInfo): String@Throws(LnException::class)
     fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)
     fun `getWalletPubkeyId`(): String?@Throws(LnException::class)
@@ -1281,10 +1281,10 @@ class LightningNode(
         }
     
     
-    @Throws(LnException::class)override fun `queryAvailableOffers`(): List<OfferInfo> =
+    @Throws(LnException::class)override fun `queryUncompletedOffers`(): List<OfferInfo> =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_query_available_offers(it,
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_query_uncompleted_offers(it,
         
         _status)
 }
@@ -2563,7 +2563,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
 
 
 enum class OfferStatus {
-    READY,FAILED,SETTLED;
+    READY,FAILED,REFUNDED,SETTLED;
 }
 
 public object FfiConverterTypeOfferStatus: FfiConverterRustBuffer<OfferStatus> {
