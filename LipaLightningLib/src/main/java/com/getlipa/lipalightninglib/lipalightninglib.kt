@@ -533,7 +533,7 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_lipalightninglib_checksum_func_recover_lightning_node() != 45132.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_get_node_info() != 55691.toShort()) {
+    if (lib.uniffi__checksum_method_lightningnode_get_node_info() != 12147.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_query_lsp_fee() != 61148.toShort()) {
@@ -1017,7 +1017,7 @@ abstract class FFIObject(
 }
 
 public interface LightningNodeInterface {
-    
+    @Throws(LnException::class)
     fun `getNodeInfo`(): NodeInfo@Throws(LnException::class)
     fun `queryLspFee`(): LspFee@Throws(LnException::class)
     fun `getPaymentAmountLimits`(): PaymentAmountLimits@Throws(LnException::class)
@@ -1067,9 +1067,10 @@ class LightningNode(
         }
     }
 
-    override fun `getNodeInfo`(): NodeInfo =
+    
+    @Throws(LnException::class)override fun `getNodeInfo`(): NodeInfo =
         callWithPointer {
-    rustCall() { _status ->
+    rustCallWithError(LnException) { _status ->
     _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_get_node_info(it,
         
         _status)
@@ -1445,6 +1446,7 @@ public object FfiConverterTypeChannelsInfo: FfiConverterRustBuffer<ChannelsInfo>
 data class Config (
     var `environment`: EnvironmentCode, 
     var `seed`: ByteArray, 
+    var `inviteCode`: String?, 
     var `fiatCurrency`: String, 
     var `localPersistencePath`: String, 
     var `timezoneConfig`: TzConfig, 
@@ -1458,6 +1460,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
         return Config(
             FfiConverterTypeEnvironmentCode.read(buf),
             FfiConverterByteArray.read(buf),
+            FfiConverterOptionalString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterTypeTzConfig.read(buf),
@@ -1468,6 +1471,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
     override fun allocationSize(value: Config) = (
             FfiConverterTypeEnvironmentCode.allocationSize(value.`environment`) +
             FfiConverterByteArray.allocationSize(value.`seed`) +
+            FfiConverterOptionalString.allocationSize(value.`inviteCode`) +
             FfiConverterString.allocationSize(value.`fiatCurrency`) +
             FfiConverterString.allocationSize(value.`localPersistencePath`) +
             FfiConverterTypeTzConfig.allocationSize(value.`timezoneConfig`) +
@@ -1477,6 +1481,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
     override fun write(value: Config, buf: ByteBuffer) {
             FfiConverterTypeEnvironmentCode.write(value.`environment`, buf)
             FfiConverterByteArray.write(value.`seed`, buf)
+            FfiConverterOptionalString.write(value.`inviteCode`, buf)
             FfiConverterString.write(value.`fiatCurrency`, buf)
             FfiConverterString.write(value.`localPersistencePath`, buf)
             FfiConverterTypeTzConfig.write(value.`timezoneConfig`, buf)
@@ -2755,7 +2760,7 @@ public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
 
 
 enum class RuntimeErrorCode {
-    AUTH_SERVICE_UNAVAILABLE,OFFER_SERVICE_UNAVAILABLE,ESPLORA_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,REMOTE_STORAGE_ERROR,NON_EXISTING_WALLET;
+    AUTH_SERVICE_UNAVAILABLE,OFFER_SERVICE_UNAVAILABLE,EXCHANGE_RATE_PROVIDER_UNAVAILABLE,ESPLORA_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,REMOTE_STORAGE_ERROR,NODE_UNAVAILABLE,NON_EXISTING_WALLET;
 }
 
 public object FfiConverterTypeRuntimeErrorCode: FfiConverterRustBuffer<RuntimeErrorCode> {
