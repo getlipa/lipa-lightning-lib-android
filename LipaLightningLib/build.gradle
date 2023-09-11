@@ -20,8 +20,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++14 -fexceptions -frtti"
-                arguments "-DANDROID_ARM_NEON=TRUE",'-DANDROID_STL=c++_shared'
+                arguments '-DANDROID_STL=c++_shared', '-DANDROID_TOOLCHAIN=clang', '-DANDROID_PLATFORM=android-26'
             }
         }
     }
