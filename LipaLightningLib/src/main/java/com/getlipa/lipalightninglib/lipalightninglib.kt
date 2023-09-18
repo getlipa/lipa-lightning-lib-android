@@ -381,7 +381,7 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_lipalightninglib_fn_method_lightningnode_calculate_lsp_fee(`ptr`: Pointer,`amountSat`: Long,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_create_invoice(`ptr`: Pointer,`amountSat`: Long,`description`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_lipalightninglib_fn_method_lightningnode_create_invoice(`ptr`: Pointer,`amountSat`: Long,`lspFeeParams`: RustBuffer.ByValue,`description`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_lipalightninglib_fn_method_lightningnode_decode_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
@@ -542,10 +542,10 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi__checksum_method_lightningnode_get_payment_amount_limits() != 53157.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_calculate_lsp_fee() != 14363.toShort()) {
+    if (lib.uniffi__checksum_method_lightningnode_calculate_lsp_fee() != 23979.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_create_invoice() != 1149.toShort()) {
+    if (lib.uniffi__checksum_method_lightningnode_create_invoice() != 20136.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_decode_invoice() != 60020.toShort()) {
@@ -1021,8 +1021,8 @@ public interface LightningNodeInterface {
     fun `getNodeInfo`(): NodeInfo@Throws(LnException::class)
     fun `queryLspFee`(): LspFee@Throws(LnException::class)
     fun `getPaymentAmountLimits`(): PaymentAmountLimits@Throws(LnException::class)
-    fun `calculateLspFee`(`amountSat`: ULong): Amount@Throws(LnException::class)
-    fun `createInvoice`(`amountSat`: ULong, `description`: String, `metadata`: String): InvoiceDetails@Throws(DecodeInvoiceException::class)
+    fun `calculateLspFee`(`amountSat`: ULong): CalculateLspFeeResponse@Throws(LnException::class)
+    fun `createInvoice`(`amountSat`: ULong, `lspFeeParams`: OpeningFeeParams?, `description`: String, `metadata`: String): InvoiceDetails@Throws(DecodeInvoiceException::class)
     fun `decodeInvoice`(`invoice`: String): InvoiceDetails
     fun `getPaymentMaxRoutingFeeMode`(`amountSat`: ULong): MaxRoutingFeeMode@Throws(PayException::class)
     fun `payInvoice`(`invoice`: String, `metadata`: String)@Throws(PayException::class)
@@ -1104,7 +1104,7 @@ class LightningNode(
         }
     
     
-    @Throws(LnException::class)override fun `calculateLspFee`(`amountSat`: ULong): Amount =
+    @Throws(LnException::class)override fun `calculateLspFee`(`amountSat`: ULong): CalculateLspFeeResponse =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
     _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_calculate_lsp_fee(it,
@@ -1112,15 +1112,15 @@ class LightningNode(
         _status)
 }
         }.let {
-            FfiConverterTypeAmount.lift(it)
+            FfiConverterTypeCalculateLspFeeResponse.lift(it)
         }
     
     
-    @Throws(LnException::class)override fun `createInvoice`(`amountSat`: ULong, `description`: String, `metadata`: String): InvoiceDetails =
+    @Throws(LnException::class)override fun `createInvoice`(`amountSat`: ULong, `lspFeeParams`: OpeningFeeParams?, `description`: String, `metadata`: String): InvoiceDetails =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
     _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_create_invoice(it,
-        FfiConverterULong.lower(`amountSat`),FfiConverterString.lower(`description`),FfiConverterString.lower(`metadata`),
+        FfiConverterULong.lower(`amountSat`),FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),FfiConverterString.lower(`description`),FfiConverterString.lower(`metadata`),
         _status)
 }
         }.let {
@@ -1392,6 +1392,35 @@ public object FfiConverterTypeAmount: FfiConverterRustBuffer<Amount> {
     override fun write(value: Amount, buf: ByteBuffer) {
             FfiConverterULong.write(value.`sats`, buf)
             FfiConverterOptionalTypeFiatValue.write(value.`fiat`, buf)
+    }
+}
+
+
+
+
+data class CalculateLspFeeResponse (
+    var `lspFee`: Amount, 
+    var `lspFeeParams`: OpeningFeeParams?
+) {
+    
+}
+
+public object FfiConverterTypeCalculateLspFeeResponse: FfiConverterRustBuffer<CalculateLspFeeResponse> {
+    override fun read(buf: ByteBuffer): CalculateLspFeeResponse {
+        return CalculateLspFeeResponse(
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterOptionalTypeOpeningFeeParams.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: CalculateLspFeeResponse) = (
+            FfiConverterTypeAmount.allocationSize(value.`lspFee`) +
+            FfiConverterOptionalTypeOpeningFeeParams.allocationSize(value.`lspFeeParams`)
+    )
+
+    override fun write(value: CalculateLspFeeResponse, buf: ByteBuffer) {
+            FfiConverterTypeAmount.write(value.`lspFee`, buf)
+            FfiConverterOptionalTypeOpeningFeeParams.write(value.`lspFeeParams`, buf)
     }
 }
 
@@ -1793,6 +1822,51 @@ public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
             FfiConverterTimestamp.write(value.`createdAt`, buf)
             FfiConverterTimestamp.write(value.`expiresAt`, buf)
             FfiConverterTypeOfferStatus.write(value.`status`, buf)
+    }
+}
+
+
+
+
+data class OpeningFeeParams (
+    var `minMsat`: ULong, 
+    var `proportional`: UInt, 
+    var `validUntil`: String, 
+    var `maxIdleTime`: UInt, 
+    var `maxClientToSelfDelay`: UInt, 
+    var `promise`: String
+) {
+    
+}
+
+public object FfiConverterTypeOpeningFeeParams: FfiConverterRustBuffer<OpeningFeeParams> {
+    override fun read(buf: ByteBuffer): OpeningFeeParams {
+        return OpeningFeeParams(
+            FfiConverterULong.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: OpeningFeeParams) = (
+            FfiConverterULong.allocationSize(value.`minMsat`) +
+            FfiConverterUInt.allocationSize(value.`proportional`) +
+            FfiConverterString.allocationSize(value.`validUntil`) +
+            FfiConverterUInt.allocationSize(value.`maxIdleTime`) +
+            FfiConverterUInt.allocationSize(value.`maxClientToSelfDelay`) +
+            FfiConverterString.allocationSize(value.`promise`)
+    )
+
+    override fun write(value: OpeningFeeParams, buf: ByteBuffer) {
+            FfiConverterULong.write(value.`minMsat`, buf)
+            FfiConverterUInt.write(value.`proportional`, buf)
+            FfiConverterString.write(value.`validUntil`, buf)
+            FfiConverterUInt.write(value.`maxIdleTime`, buf)
+            FfiConverterUInt.write(value.`maxClientToSelfDelay`, buf)
+            FfiConverterString.write(value.`promise`, buf)
     }
 }
 
@@ -2760,7 +2834,7 @@ public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
 
 
 enum class RuntimeErrorCode {
-    AUTH_SERVICE_UNAVAILABLE,OFFER_SERVICE_UNAVAILABLE,EXCHANGE_RATE_PROVIDER_UNAVAILABLE,ESPLORA_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,REMOTE_STORAGE_ERROR,NODE_UNAVAILABLE,NON_EXISTING_WALLET;
+    AUTH_SERVICE_UNAVAILABLE,OFFER_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,NODE_UNAVAILABLE;
 }
 
 public object FfiConverterTypeRuntimeErrorCode: FfiConverterRustBuffer<RuntimeErrorCode> {
@@ -3233,6 +3307,35 @@ public object FfiConverterOptionalTypeFiatValue: FfiConverterRustBuffer<FiatValu
         } else {
             buf.put(1)
             FfiConverterTypeFiatValue.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeOpeningFeeParams: FfiConverterRustBuffer<OpeningFeeParams?> {
+    override fun read(buf: ByteBuffer): OpeningFeeParams? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeOpeningFeeParams.read(buf)
+    }
+
+    override fun allocationSize(value: OpeningFeeParams?): Int {
+        if (value == null) {
+            return 1
+        } else {
+            return 1 + FfiConverterTypeOpeningFeeParams.allocationSize(value)
+        }
+    }
+
+    override fun write(value: OpeningFeeParams?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeOpeningFeeParams.write(value, buf)
         }
     }
 }
