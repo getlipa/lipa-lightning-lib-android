@@ -1475,7 +1475,6 @@ public object FfiConverterTypeChannelsInfo: FfiConverterRustBuffer<ChannelsInfo>
 data class Config (
     var `environment`: EnvironmentCode, 
     var `seed`: ByteArray, 
-    var `inviteCode`: String?, 
     var `fiatCurrency`: String, 
     var `localPersistencePath`: String, 
     var `timezoneConfig`: TzConfig, 
@@ -1489,7 +1488,6 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
         return Config(
             FfiConverterTypeEnvironmentCode.read(buf),
             FfiConverterByteArray.read(buf),
-            FfiConverterOptionalString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterTypeTzConfig.read(buf),
@@ -1500,7 +1498,6 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
     override fun allocationSize(value: Config) = (
             FfiConverterTypeEnvironmentCode.allocationSize(value.`environment`) +
             FfiConverterByteArray.allocationSize(value.`seed`) +
-            FfiConverterOptionalString.allocationSize(value.`inviteCode`) +
             FfiConverterString.allocationSize(value.`fiatCurrency`) +
             FfiConverterString.allocationSize(value.`localPersistencePath`) +
             FfiConverterTypeTzConfig.allocationSize(value.`timezoneConfig`) +
@@ -1510,7 +1507,6 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
     override fun write(value: Config, buf: ByteBuffer) {
             FfiConverterTypeEnvironmentCode.write(value.`environment`, buf)
             FfiConverterByteArray.write(value.`seed`, buf)
-            FfiConverterOptionalString.write(value.`inviteCode`, buf)
             FfiConverterString.write(value.`fiatCurrency`, buf)
             FfiConverterString.write(value.`localPersistencePath`, buf)
             FfiConverterTypeTzConfig.write(value.`timezoneConfig`, buf)
@@ -2834,7 +2830,7 @@ public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
 
 
 enum class RuntimeErrorCode {
-    AUTH_SERVICE_UNAVAILABLE,OFFER_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,NODE_UNAVAILABLE;
+    AUTH_SERVICE_UNAVAILABLE,OFFER_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,NODE_UNAVAILABLE,FAILED_FUND_MIGRATION;
 }
 
 public object FfiConverterTypeRuntimeErrorCode: FfiConverterRustBuffer<RuntimeErrorCode> {
