@@ -1,6 +1,6 @@
 before_install:
-  - wget https://github.com/getlipa/lipa-lightning-lib-android/releases/download/v0.17.0-breez-alpha6/jniLibs.zip
-  - if [ $(shasum -a 256 jniLibs.zip | sed 's/ .*//') != '72ab10ba7e76e1068777827cad43d20515c46527d4c737e9db366b3a1a504370' ]; then exit 1; fi
+  - wget https://github.com/getlipa/lipa-lightning-lib-android/releases/download/v0.17.0-breez-alpha7/jniLibs.zip
+  - if [ $(shasum -a 256 jniLibs.zip | sed 's/ .*//') != '1e190d6f08e33360c6a31f572d74cd9c1ea3b055f944b1a38f0cc6da585cd9df' ]; then exit 1; fi
   - unzip -o jniLibs.zip
   - mv jniLibs LipaLightningLib/src/main/jniLibs
   - wget https://github.com/java-native-access/jna/archive/refs/tags/5.13.0.zip
