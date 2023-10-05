@@ -421,6 +421,12 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_lipalightninglib_fn_method_lightningnode_get_payment_uuid(`ptr`: Pointer,`paymentHash`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Int
+    fun uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`address`: RustBuffer.ByValue,`onchainFee`: Int,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Unit
     fun uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_lipalightninglib_fn_func_generate_secret(`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
@@ -498,6 +504,12 @@ internal interface _UniFFILib : Library {
     fun uniffi__checksum_method_lightningnode_get_wallet_pubkey_id(
     ): Short
     fun uniffi__checksum_method_lightningnode_get_payment_uuid(
+    ): Short
+    fun uniffi__checksum_method_lightningnode_query_onchain_fee(
+    ): Short
+    fun uniffi__checksum_method_lightningnode_sweep(
+    ): Short
+    fun uniffi__checksum_method_lightningnode_log_debug_info(
     ): Short
     fun uniffi__checksum_constructor_lightningnode_new(
     ): Short
@@ -603,6 +615,15 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_get_payment_uuid() != 21036.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi__checksum_method_lightningnode_query_onchain_fee() != 41435.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi__checksum_method_lightningnode_sweep() != 55829.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi__checksum_method_lightningnode_log_debug_info() != 32127.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_constructor_lightningnode_new() != 50158.toShort()) {
@@ -1041,7 +1062,10 @@ public interface LightningNodeInterface {
     fun `requestOfferCollection`(`offer`: OfferInfo): String@Throws(LnException::class)
     fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)
     fun `getWalletPubkeyId`(): String?@Throws(LnException::class)
-    fun `getPaymentUuid`(`paymentHash`: String): String
+    fun `getPaymentUuid`(`paymentHash`: String): String@Throws(LnException::class)
+    fun `queryOnchainFee`(): UInt@Throws(LnException::class)
+    fun `sweep`(`address`: String, `onchainFee`: UInt): String@Throws(LnException::class)
+    fun `logDebugInfo`()
 }
 
 class LightningNode(
@@ -1340,6 +1364,41 @@ class LightningNode(
         }
     
     
+    @Throws(LnException::class)override fun `queryOnchainFee`(): UInt =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterUInt.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `sweep`(`address`: String, `onchainFee`: UInt): String =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_sweep(it,
+        FfiConverterString.lower(`address`),FfiConverterUInt.lower(`onchainFee`),
+        _status)
+}
+        }.let {
+            FfiConverterString.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `logDebugInfo`() =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(it,
+        
+        _status)
+}
+        }
+    
+    
+    
 
     
 }
@@ -1551,6 +1610,7 @@ public object FfiConverterTypeExchangeRate: FfiConverterRustBuffer<ExchangeRate>
 
 
 data class FiatTopupInfo (
+    var `orderId`: String, 
     var `debitorIban`: String, 
     var `creditorReference`: String, 
     var `creditorIban`: String, 
@@ -1586,10 +1646,12 @@ public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInf
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
         )
     }
 
     override fun allocationSize(value: FiatTopupInfo) = (
+            FfiConverterString.allocationSize(value.`orderId`) +
             FfiConverterString.allocationSize(value.`debitorIban`) +
             FfiConverterString.allocationSize(value.`creditorReference`) +
             FfiConverterString.allocationSize(value.`creditorIban`) +
@@ -1607,6 +1669,7 @@ public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInf
     )
 
     override fun write(value: FiatTopupInfo, buf: ByteBuffer) {
+            FfiConverterString.write(value.`orderId`, buf)
             FfiConverterString.write(value.`debitorIban`, buf)
             FfiConverterString.write(value.`creditorReference`, buf)
             FfiConverterString.write(value.`creditorIban`, buf)
@@ -1749,6 +1812,7 @@ public object FfiConverterTypeLspFee: FfiConverterRustBuffer<LspFee> {
 data class NodeInfo (
     var `nodePubkey`: String, 
     var `peers`: List<String>, 
+    var `onchainBalance`: Amount, 
     var `channelsInfo`: ChannelsInfo
 ) {
     
@@ -1759,6 +1823,7 @@ public object FfiConverterTypeNodeInfo: FfiConverterRustBuffer<NodeInfo> {
         return NodeInfo(
             FfiConverterString.read(buf),
             FfiConverterSequenceString.read(buf),
+            FfiConverterTypeAmount.read(buf),
             FfiConverterTypeChannelsInfo.read(buf),
         )
     }
@@ -1766,12 +1831,14 @@ public object FfiConverterTypeNodeInfo: FfiConverterRustBuffer<NodeInfo> {
     override fun allocationSize(value: NodeInfo) = (
             FfiConverterString.allocationSize(value.`nodePubkey`) +
             FfiConverterSequenceString.allocationSize(value.`peers`) +
+            FfiConverterTypeAmount.allocationSize(value.`onchainBalance`) +
             FfiConverterTypeChannelsInfo.allocationSize(value.`channelsInfo`)
     )
 
     override fun write(value: NodeInfo, buf: ByteBuffer) {
             FfiConverterString.write(value.`nodePubkey`, buf)
             FfiConverterSequenceString.write(value.`peers`, buf)
+            FfiConverterTypeAmount.write(value.`onchainBalance`, buf)
             FfiConverterTypeChannelsInfo.write(value.`channelsInfo`, buf)
     }
 }
