@@ -425,6 +425,8 @@ internal interface _UniFFILib : Library {
     ): Int
     fun uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`address`: RustBuffer.ByValue,`onchainFee`: Int,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_lipalightninglib_fn_method_lightningnode_hide_topup(`ptr`: Pointer,`id`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): Unit
     fun uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
@@ -508,6 +510,8 @@ internal interface _UniFFILib : Library {
     fun uniffi__checksum_method_lightningnode_query_onchain_fee(
     ): Short
     fun uniffi__checksum_method_lightningnode_sweep(
+    ): Short
+    fun uniffi__checksum_method_lightningnode_hide_topup(
     ): Short
     fun uniffi__checksum_method_lightningnode_log_debug_info(
     ): Short
@@ -621,6 +625,9 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_sweep() != 55829.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi__checksum_method_lightningnode_hide_topup() != 39078.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi__checksum_method_lightningnode_log_debug_info() != 32127.toShort()) {
@@ -1065,6 +1072,7 @@ public interface LightningNodeInterface {
     fun `getPaymentUuid`(`paymentHash`: String): String@Throws(LnException::class)
     fun `queryOnchainFee`(): UInt@Throws(LnException::class)
     fun `sweep`(`address`: String, `onchainFee`: UInt): String@Throws(LnException::class)
+    fun `hideTopup`(`id`: String)@Throws(LnException::class)
     fun `logDebugInfo`()
 }
 
@@ -1386,6 +1394,17 @@ class LightningNode(
         }.let {
             FfiConverterString.lift(it)
         }
+    
+    
+    @Throws(LnException::class)override fun `hideTopup`(`id`: String) =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_hide_topup(it,
+        FfiConverterString.lower(`id`),
+        _status)
+}
+        }
+    
     
     
     @Throws(LnException::class)override fun `logDebugInfo`() =
