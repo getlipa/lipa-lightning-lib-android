@@ -1506,10 +1506,7 @@ public object FfiConverterTypeCalculateLspFeeResponse: FfiConverterRustBuffer<Ca
 
 
 data class ChannelsInfo (
-    var `numChannels`: UShort, 
-    var `numUsableChannels`: UShort, 
     var `localBalance`: Amount, 
-    var `totalChannelCapacities`: Amount, 
     var `inboundCapacity`: Amount, 
     var `outboundCapacity`: Amount
 ) {
@@ -1519,9 +1516,6 @@ data class ChannelsInfo (
 public object FfiConverterTypeChannelsInfo: FfiConverterRustBuffer<ChannelsInfo> {
     override fun read(buf: ByteBuffer): ChannelsInfo {
         return ChannelsInfo(
-            FfiConverterUShort.read(buf),
-            FfiConverterUShort.read(buf),
-            FfiConverterTypeAmount.read(buf),
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeAmount.read(buf),
@@ -1529,19 +1523,13 @@ public object FfiConverterTypeChannelsInfo: FfiConverterRustBuffer<ChannelsInfo>
     }
 
     override fun allocationSize(value: ChannelsInfo) = (
-            FfiConverterUShort.allocationSize(value.`numChannels`) +
-            FfiConverterUShort.allocationSize(value.`numUsableChannels`) +
             FfiConverterTypeAmount.allocationSize(value.`localBalance`) +
-            FfiConverterTypeAmount.allocationSize(value.`totalChannelCapacities`) +
             FfiConverterTypeAmount.allocationSize(value.`inboundCapacity`) +
             FfiConverterTypeAmount.allocationSize(value.`outboundCapacity`)
     )
 
     override fun write(value: ChannelsInfo, buf: ByteBuffer) {
-            FfiConverterUShort.write(value.`numChannels`, buf)
-            FfiConverterUShort.write(value.`numUsableChannels`, buf)
             FfiConverterTypeAmount.write(value.`localBalance`, buf)
-            FfiConverterTypeAmount.write(value.`totalChannelCapacities`, buf)
             FfiConverterTypeAmount.write(value.`inboundCapacity`, buf)
             FfiConverterTypeAmount.write(value.`outboundCapacity`, buf)
     }
@@ -1963,7 +1951,6 @@ data class Payment (
     var `amount`: Amount, 
     var `invoiceDetails`: InvoiceDetails, 
     var `createdAt`: TzTime, 
-    var `latestStateChangeAt`: TzTime, 
     var `description`: String, 
     var `preimage`: String?, 
     var `networkFees`: Amount?, 
@@ -1984,7 +1971,6 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeInvoiceDetails.read(buf),
             FfiConverterTypeTzTime.read(buf),
-            FfiConverterTypeTzTime.read(buf),
             FfiConverterString.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalTypeAmount.read(buf),
@@ -2002,7 +1988,6 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterTypeAmount.allocationSize(value.`amount`) +
             FfiConverterTypeInvoiceDetails.allocationSize(value.`invoiceDetails`) +
             FfiConverterTypeTzTime.allocationSize(value.`createdAt`) +
-            FfiConverterTypeTzTime.allocationSize(value.`latestStateChangeAt`) +
             FfiConverterString.allocationSize(value.`description`) +
             FfiConverterOptionalString.allocationSize(value.`preimage`) +
             FfiConverterOptionalTypeAmount.allocationSize(value.`networkFees`) +
@@ -2019,7 +2004,6 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterTypeAmount.write(value.`amount`, buf)
             FfiConverterTypeInvoiceDetails.write(value.`invoiceDetails`, buf)
             FfiConverterTypeTzTime.write(value.`createdAt`, buf)
-            FfiConverterTypeTzTime.write(value.`latestStateChangeAt`, buf)
             FfiConverterString.write(value.`description`, buf)
             FfiConverterOptionalString.write(value.`preimage`, buf)
             FfiConverterOptionalTypeAmount.write(value.`networkFees`, buf)
