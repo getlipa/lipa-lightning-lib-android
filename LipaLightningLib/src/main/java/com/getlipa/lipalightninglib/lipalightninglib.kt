@@ -10,7 +10,7 @@ package uniffi.lipalightninglib;
 // Ideally this would live in a separate .kt file where it can be unittested etc
 // in isolation, and perhaps even published as a re-useable package.
 //
-// However, it's important that the detils of how this helper code works (e.g. the
+// However, it's important that the details of how this helper code works (e.g. the
 // way that different builtin types are passed across the FFI) exactly match what's
 // expected by the Rust code on the other side of the interface. In practice right
 // now that means coming from the exact some version of `uniffi` that was used to
@@ -26,6 +26,8 @@ import com.sun.jna.Callback
 import com.sun.jna.ptr.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.CharBuffer
+import java.nio.charset.CodingErrorAction
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
@@ -47,15 +49,15 @@ open class RustBuffer : Structure() {
 
     companion object {
         internal fun alloc(size: Int = 0) = rustCall() { status ->
-            _UniFFILib.INSTANCE.ffi_lipalightninglib_rustbuffer_alloc(size, status).also {
-                if(it.data == null) {
-                   throw RuntimeException("RustBuffer.alloc() returned null data pointer (size=${size})")
-               }
-            }
+            _UniFFILib.INSTANCE.ffi_uniffi_lipalightninglib_rustbuffer_alloc(size, status)
+        }.also {
+            if(it.data == null) {
+               throw RuntimeException("RustBuffer.alloc() returned null data pointer (size=${size})")
+           }
         }
 
         internal fun free(buf: RustBuffer.ByValue) = rustCall() { status ->
-            _UniFFILib.INSTANCE.ffi_lipalightninglib_rustbuffer_free(buf, status)
+            _UniFFILib.INSTANCE.ffi_uniffi_lipalightninglib_rustbuffer_free(buf, status)
         }
     }
 
@@ -261,6 +263,8 @@ private inline fun <U> rustCall(callback: (RustCallStatus) -> U): U {
 public class USize(value: Long = 0) : IntegerType(Native.SIZE_T_SIZE, value, true) {
     // This is needed to fill in the gaps of IntegerType's implementation of Number for Kotlin.
     override fun toByte() = toInt().toByte()
+    // Needed until https://youtrack.jetbrains.com/issue/KT-47902 is fixed.
+    @Deprecated("`toInt().toChar()` is deprecated")
     override fun toChar() = toInt().toChar()
     override fun toShort() = toInt().toShort()
 
@@ -332,9 +336,14 @@ internal class UniFfiHandleMap<T: Any> {
         return map.get(handle)
     }
 
-    fun remove(handle: USize) {
-        map.remove(handle)
+    fun remove(handle: USize): T? {
+        return map.remove(handle)
     }
+}
+
+// FFI type for Rust future continuations
+internal interface UniFffiRustFutureContinuationCallbackType : com.sun.jna.Callback {
+    fun callback(continuationHandle: USize, pollResult: Short);
 }
 
 // Contains loading, initialization code,
@@ -369,164 +378,278 @@ internal interface _UniFFILib : Library {
         }
     }
 
-    fun uniffi_lipalightninglib_fn_free_lightningnode(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_free_lightningnode(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_constructor_lightningnode_new(`config`: RustBuffer.ByValue,`eventsCallback`: Long,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_constructor_lightningnode_new(`config`: RustBuffer.ByValue,`eventsCallback`: Long,_uniffi_out_err: RustCallStatus, 
     ): Pointer
-    fun uniffi_lipalightninglib_fn_method_lightningnode_get_node_info(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_query_lsp_fee(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_get_payment_amount_limits(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_calculate_lsp_fee(`ptr`: Pointer,`amountSat`: Long,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_create_invoice(`ptr`: Pointer,`amountSat`: Long,`lspFeeParams`: RustBuffer.ByValue,`description`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_decode_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_get_payment_max_routing_fee_mode(`ptr`: Pointer,`amountSat`: Long,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_method_lightningnode_pay_open_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,`amountSat`: Long,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_background(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_method_lightningnode_get_latest_payments(`ptr`: Pointer,`numberOfPayments`: Int,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_calculate_lsp_fee(`ptr`: Pointer,`amountSat`: Long,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_get_payment(`ptr`: Pointer,`hash`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_foreground(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_change_fiat_currency(`ptr`: Pointer,`fiatCurrency`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_method_lightningnode_background(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_change_timezone_config(`ptr`: Pointer,`timezoneConfig`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_create_invoice(`ptr`: Pointer,`amountSat`: Long,`lspFeeParams`: RustBuffer.ByValue,`description`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_get_exchange_rate(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_change_fiat_currency(`ptr`: Pointer,`fiatCurrency`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_foreground(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_method_lightningnode_change_timezone_config(`ptr`: Pointer,`timezoneConfig`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_exchange_rate(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_latest_payments(`ptr`: Pointer,`numberOfPayments`: Int,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_node_info(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment(`ptr`: Pointer,`hash`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_amount_limits(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_max_routing_fee_mode(`ptr`: Pointer,`amountSat`: Long,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_uuid(`ptr`: Pointer,`paymentHash`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_topup(`ptr`: Pointer,`id`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(`ptr`: Pointer,`email`: RustBuffer.ByValue,`userIban`: RustBuffer.ByValue,`userCurrency`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_query_uncompleted_offers(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(`ptr`: Pointer,`offer`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(`ptr`: Pointer,`notificationToken`: RustBuffer.ByValue,`languageIso6391`: RustBuffer.ByValue,`countryIso31661Alpha2`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_open_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,`amountSat`: Long,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_lsp_fee(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_get_payment_uuid(`ptr`: Pointer,`paymentHash`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Int
-    fun uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`address`: RustBuffer.ByValue,`onchainFee`: Int,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_uncompleted_offers(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_method_lightningnode_hide_topup(`ptr`: Pointer,`id`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(`ptr`: Pointer,`email`: RustBuffer.ByValue,`userIban`: RustBuffer.ByValue,`userCurrency`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(`ptr`: Pointer,`notificationToken`: RustBuffer.ByValue,`languageIso6391`: RustBuffer.ByValue,`countryIso31661Alpha2`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(`ptr`: Pointer,`offer`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`address`: RustBuffer.ByValue,`onchainFee`: Int,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_func_generate_secret(`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_generate_secret(`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_func_mnemonic_to_secret(`mnemonicString`: RustBuffer.ByValue,`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_mnemonic_to_secret(`mnemonicString`: RustBuffer.ByValue,`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_func_words_by_prefix(`prefix`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`localPersistencePath`: RustBuffer.ByValue,`enableFileLogging`: Byte,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_lipalightninglib_fn_func_recover_lightning_node(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`localPersistencePath`: RustBuffer.ByValue,`enableFileLogging`: Byte,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_words_by_prefix(`prefix`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun ffi_uniffi_lipalightninglib_rustbuffer_alloc(`size`: Int,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun ffi_uniffi_lipalightninglib_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun ffi_uniffi_lipalightninglib_rustbuffer_free(`buf`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun ffi_lipalightninglib_rustbuffer_alloc(`size`: Int,_uniffi_out_err: RustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Int,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun ffi_lipalightninglib_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun ffi_lipalightninglib_rustbuffer_free(`buf`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_continuation_callback_set(`callback`: UniFffiRustFutureContinuationCallbackType,
     ): Unit
-    fun ffi_lipalightninglib_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Int,_uniffi_out_err: RustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_u8(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_u8(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_u8(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_u8(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Byte
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_i8(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_i8(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_i8(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_i8(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Byte
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_u16(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_u16(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_u16(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_u16(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Short
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_i16(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_i16(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_i16(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_i16(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Short
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_u32(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_u32(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_u32(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_u32(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Int
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_i32(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_i32(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_i32(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_i32(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Int
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_u64(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_u64(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_u64(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_u64(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Long
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_i64(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_i64(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_i64(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_i64(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Long
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_f32(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_f32(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_f32(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_f32(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Float
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_f64(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_f64(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_f64(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_f64(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Double
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_pointer(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_pointer(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_pointer(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_pointer(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Pointer
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_rust_buffer(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_rust_buffer(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_rust_buffer(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_rust_buffer(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_lipalightninglib_checksum_func_generate_secret(
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_void(`handle`: Pointer,`uniffiCallback`: USize,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_void(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_free_void(`handle`: Pointer,
+    ): Unit
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_void(`handle`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_checksum_func_accept_terms_and_conditions(
     ): Short
-    fun uniffi_lipalightninglib_checksum_func_mnemonic_to_secret(
+    fun uniffi_uniffi_lipalightninglib_checksum_func_generate_secret(
     ): Short
-    fun uniffi_lipalightninglib_checksum_func_words_by_prefix(
+    fun uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret(
     ): Short
-    fun uniffi_lipalightninglib_checksum_func_accept_terms_and_conditions(
+    fun uniffi_uniffi_lipalightninglib_checksum_func_recover_lightning_node(
     ): Short
-    fun uniffi_lipalightninglib_checksum_func_recover_lightning_node(
+    fun uniffi_uniffi_lipalightninglib_checksum_func_words_by_prefix(
     ): Short
-    fun uniffi__checksum_method_lightningnode_get_node_info(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_accept_pocket_terms_and_conditions(
     ): Short
-    fun uniffi__checksum_method_lightningnode_query_lsp_fee(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_background(
     ): Short
-    fun uniffi__checksum_method_lightningnode_get_payment_amount_limits(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_calculate_lsp_fee(
     ): Short
-    fun uniffi__checksum_method_lightningnode_calculate_lsp_fee(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_change_fiat_currency(
     ): Short
-    fun uniffi__checksum_method_lightningnode_create_invoice(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_change_timezone_config(
     ): Short
-    fun uniffi__checksum_method_lightningnode_decode_invoice(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_create_invoice(
     ): Short
-    fun uniffi__checksum_method_lightningnode_get_payment_max_routing_fee_mode(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_invoice(
     ): Short
-    fun uniffi__checksum_method_lightningnode_pay_invoice(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_foreground(
     ): Short
-    fun uniffi__checksum_method_lightningnode_pay_open_invoice(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_exchange_rate(
     ): Short
-    fun uniffi__checksum_method_lightningnode_get_latest_payments(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_latest_payments(
     ): Short
-    fun uniffi__checksum_method_lightningnode_get_payment(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_node_info(
     ): Short
-    fun uniffi__checksum_method_lightningnode_foreground(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment(
     ): Short
-    fun uniffi__checksum_method_lightningnode_background(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_amount_limits(
     ): Short
-    fun uniffi__checksum_method_lightningnode_list_currency_codes(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_max_routing_fee_mode(
     ): Short
-    fun uniffi__checksum_method_lightningnode_get_exchange_rate(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_uuid(
     ): Short
-    fun uniffi__checksum_method_lightningnode_change_fiat_currency(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_wallet_pubkey_id(
     ): Short
-    fun uniffi__checksum_method_lightningnode_change_timezone_config(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_topup(
     ): Short
-    fun uniffi__checksum_method_lightningnode_accept_pocket_terms_and_conditions(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_currency_codes(
     ): Short
-    fun uniffi__checksum_method_lightningnode_register_fiat_topup(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_log_debug_info(
     ): Short
-    fun uniffi__checksum_method_lightningnode_query_uncompleted_offers(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice(
     ): Short
-    fun uniffi__checksum_method_lightningnode_request_offer_collection(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_open_invoice(
     ): Short
-    fun uniffi__checksum_method_lightningnode_register_notification_token(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lsp_fee(
     ): Short
-    fun uniffi__checksum_method_lightningnode_get_wallet_pubkey_id(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_onchain_fee(
     ): Short
-    fun uniffi__checksum_method_lightningnode_get_payment_uuid(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_uncompleted_offers(
     ): Short
-    fun uniffi__checksum_method_lightningnode_query_onchain_fee(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_fiat_topup(
     ): Short
-    fun uniffi__checksum_method_lightningnode_sweep(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_notification_token(
     ): Short
-    fun uniffi__checksum_method_lightningnode_hide_topup(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_request_offer_collection(
     ): Short
-    fun uniffi__checksum_method_lightningnode_log_debug_info(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep(
     ): Short
-    fun uniffi__checksum_constructor_lightningnode_new(
+    fun uniffi_uniffi_lipalightninglib_checksum_constructor_lightningnode_new(
     ): Short
-    fun ffi_lipalightninglib_uniffi_contract_version(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_payment_received(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_payment_sent(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_payment_failed(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_channel_closed(
+    ): Short
+    fun ffi_uniffi_lipalightninglib_uniffi_contract_version(
     ): Int
     
 }
 
 private fun uniffiCheckContractApiVersion(lib: _UniFFILib) {
     // Get the bindings contract version from our ComponentInterface
-    val bindings_contract_version = 22
+    val bindings_contract_version = 24
     // Get the scaffolding contract version by calling the into the dylib
-    val scaffolding_contract_version = lib.ffi_lipalightninglib_uniffi_contract_version()
+    val scaffolding_contract_version = lib.ffi_uniffi_lipalightninglib_uniffi_contract_version()
     if (bindings_contract_version != scaffolding_contract_version) {
         throw RuntimeException("UniFFI contract version mismatch: try cleaning and rebuilding your project")
     }
@@ -534,109 +657,123 @@ private fun uniffiCheckContractApiVersion(lib: _UniFFILib) {
 
 @Suppress("UNUSED_PARAMETER")
 private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
-    if (lib.uniffi_lipalightninglib_checksum_func_generate_secret() != 15006.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_accept_terms_and_conditions() != 8141.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_lipalightninglib_checksum_func_mnemonic_to_secret() != 25762.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_generate_secret() != 21258.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_lipalightninglib_checksum_func_words_by_prefix() != 34207.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret() != 57197.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_lipalightninglib_checksum_func_accept_terms_and_conditions() != 17154.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_recover_lightning_node() != 12517.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_lipalightninglib_checksum_func_recover_lightning_node() != 45132.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_words_by_prefix() != 60220.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_get_node_info() != 12147.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_accept_pocket_terms_and_conditions() != 23597.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_query_lsp_fee() != 61148.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_background() != 28178.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_get_payment_amount_limits() != 53157.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_calculate_lsp_fee() != 45291.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_calculate_lsp_fee() != 23979.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_change_fiat_currency() != 45001.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_create_invoice() != 20136.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_change_timezone_config() != 57386.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_decode_invoice() != 60020.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_create_invoice() != 54850.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_get_payment_max_routing_fee_mode() != 50733.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_invoice() != 15690.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_pay_invoice() != 31001.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_foreground() != 21792.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_pay_open_invoice() != 11184.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_exchange_rate() != 49547.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_get_latest_payments() != 24636.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_latest_payments() != 59043.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_get_payment() != 43694.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_node_info() != 317.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_foreground() != 42852.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment() != 16303.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_background() != 34125.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_amount_limits() != 55816.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_list_currency_codes() != 13397.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_max_routing_fee_mode() != 17096.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_get_exchange_rate() != 41970.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_uuid() != 30652.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_change_fiat_currency() != 57000.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_wallet_pubkey_id() != 19158.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_change_timezone_config() != 43718.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_topup() != 47963.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_accept_pocket_terms_and_conditions() != 46574.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_currency_codes() != 24226.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_register_fiat_topup() != 54306.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_log_debug_info() != 32021.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_query_uncompleted_offers() != 58970.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice() != 28301.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_request_offer_collection() != 1522.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_open_invoice() != 15570.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_register_notification_token() != 12567.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lsp_fee() != 32123.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_get_wallet_pubkey_id() != 62577.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_onchain_fee() != 10555.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_get_payment_uuid() != 21036.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_uncompleted_offers() != 12739.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_query_onchain_fee() != 41435.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_fiat_topup() != 8599.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_sweep() != 55829.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_notification_token() != 50051.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_hide_topup() != 39078.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_request_offer_collection() != 59716.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_method_lightningnode_log_debug_info() != 32127.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep() != 4970.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi__checksum_constructor_lightningnode_new() != 50158.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_constructor_lightningnode_new() != 348.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_payment_received() != 64243.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_payment_sent() != 26372.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_payment_failed() != 7221.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_channel_closed() != 22287.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
+
+// Async support
 
 // Public interface members begin here.
 
@@ -762,17 +899,25 @@ public object FfiConverterString: FfiConverter<String, RustBuffer.ByValue> {
         return byteArr.toString(Charsets.UTF_8)
     }
 
+    fun toUtf8(value: String): ByteBuffer {
+        // Make sure we don't have invalid UTF-16, check for lone surrogates.
+        return Charsets.UTF_8.newEncoder().run {
+            onMalformedInput(CodingErrorAction.REPORT)
+            encode(CharBuffer.wrap(value))
+        }
+    }
+
     override fun lower(value: String): RustBuffer.ByValue {
-        val byteArr = value.toByteArray(Charsets.UTF_8)
+        val byteBuf = toUtf8(value)
         // Ideally we'd pass these bytes to `ffi_bytebuffer_from_bytes`, but doing so would require us
         // to copy them into a JNA `Memory`. So we might as well directly copy them into a `RustBuffer`.
-        val rbuf = RustBuffer.alloc(byteArr.size)
-        rbuf.asByteBuffer()!!.put(byteArr)
+        val rbuf = RustBuffer.alloc(byteBuf.limit())
+        rbuf.asByteBuffer()!!.put(byteBuf)
         return rbuf
     }
 
     // We aren't sure exactly how many bytes our string will be once it's UTF-8
-    // encoded.  Allocate 3 bytes per unicode codepoint which will always be
+    // encoded.  Allocate 3 bytes per UTF-16 code unit which will always be
     // enough.
     override fun allocationSize(value: String): Int {
         val sizeForLength = 4
@@ -781,9 +926,9 @@ public object FfiConverterString: FfiConverter<String, RustBuffer.ByValue> {
     }
 
     override fun write(value: String, buf: ByteBuffer) {
-        val byteArr = value.toByteArray(Charsets.UTF_8)
-        buf.putInt(byteArr.size)
-        buf.put(byteArr)
+        val byteBuf = toUtf8(value)
+        buf.putInt(byteBuf.limit())
+        buf.put(byteBuf)
     }
 }
 
@@ -1046,34 +1191,35 @@ abstract class FFIObject(
 
 public interface LightningNodeInterface {
     @Throws(LnException::class)
-    fun `getNodeInfo`(): NodeInfo@Throws(LnException::class)
-    fun `queryLspFee`(): LspFee@Throws(LnException::class)
-    fun `getPaymentAmountLimits`(): PaymentAmountLimits@Throws(LnException::class)
-    fun `calculateLspFee`(`amountSat`: ULong): CalculateLspFeeResponse@Throws(LnException::class)
-    fun `createInvoice`(`amountSat`: ULong, `lspFeeParams`: OpeningFeeParams?, `description`: String, `metadata`: String): InvoiceDetails@Throws(DecodeInvoiceException::class)
-    fun `decodeInvoice`(`invoice`: String): InvoiceDetails
-    fun `getPaymentMaxRoutingFeeMode`(`amountSat`: ULong): MaxRoutingFeeMode@Throws(PayException::class)
-    fun `payInvoice`(`invoice`: String, `metadata`: String)@Throws(PayException::class)
-    fun `payOpenInvoice`(`invoice`: String, `amountSat`: ULong, `metadata`: String)@Throws(LnException::class)
-    fun `getLatestPayments`(`numberOfPayments`: UInt): List<Payment>@Throws(LnException::class)
-    fun `getPayment`(`hash`: String): Payment
-    fun `foreground`()
-    fun `background`()
-    fun `listCurrencyCodes`(): List<String>
-    fun `getExchangeRate`(): ExchangeRate?
+    fun `acceptPocketTermsAndConditions`()
+    fun `background`()@Throws(LnException::class)
+    fun `calculateLspFee`(`amountSat`: ULong): CalculateLspFeeResponse
     fun `changeFiatCurrency`(`fiatCurrency`: String)
     fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)@Throws(LnException::class)
-    fun `acceptPocketTermsAndConditions`()@Throws(LnException::class)
-    fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo@Throws(LnException::class)
-    fun `queryUncompletedOffers`(): List<OfferInfo>@Throws(LnException::class)
-    fun `requestOfferCollection`(`offer`: OfferInfo): String@Throws(LnException::class)
-    fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)
+    fun `createInvoice`(`amountSat`: ULong, `lspFeeParams`: OpeningFeeParams?, `description`: String, `metadata`: String): InvoiceDetails@Throws(DecodeInvoiceException::class)
+    fun `decodeInvoice`(`invoice`: String): InvoiceDetails
+    fun `foreground`()
+    fun `getExchangeRate`(): ExchangeRate?@Throws(LnException::class)
+    fun `getLatestPayments`(`numberOfPayments`: UInt): List<Payment>@Throws(LnException::class)
+    fun `getNodeInfo`(): NodeInfo@Throws(LnException::class)
+    fun `getPayment`(`hash`: String): Payment@Throws(LnException::class)
+    fun `getPaymentAmountLimits`(): PaymentAmountLimits
+    fun `getPaymentMaxRoutingFeeMode`(`amountSat`: ULong): MaxRoutingFeeMode@Throws(LnException::class)
+    fun `getPaymentUuid`(`paymentHash`: String): String
     fun `getWalletPubkeyId`(): String?@Throws(LnException::class)
-    fun `getPaymentUuid`(`paymentHash`: String): String@Throws(LnException::class)
+    fun `hideTopup`(`id`: String)
+    fun `listCurrencyCodes`(): List<String>@Throws(LnException::class)
+    fun `logDebugInfo`()@Throws(PayException::class)
+    fun `payInvoice`(`invoice`: String, `metadata`: String)@Throws(PayException::class)
+    fun `payOpenInvoice`(`invoice`: String, `amountSat`: ULong, `metadata`: String)@Throws(LnException::class)
+    fun `queryLspFee`(): LspFee@Throws(LnException::class)
     fun `queryOnchainFee`(): UInt@Throws(LnException::class)
-    fun `sweep`(`address`: String, `onchainFee`: UInt): String@Throws(LnException::class)
-    fun `hideTopup`(`id`: String)@Throws(LnException::class)
-    fun `logDebugInfo`()
+    fun `queryUncompletedOffers`(): List<OfferInfo>@Throws(LnException::class)
+    fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo@Throws(LnException::class)
+    fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)@Throws(LnException::class)
+    fun `requestOfferCollection`(`offer`: OfferInfo): String@Throws(LnException::class)
+    fun `sweep`(`address`: String, `onchainFee`: UInt): String
+    companion object
 }
 
 class LightningNode(
@@ -1082,7 +1228,7 @@ class LightningNode(
     constructor(`config`: Config, `eventsCallback`: EventsCallback) :
         this(
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_constructor_lightningnode_new(FfiConverterTypeConfig.lower(`config`),FfiConverterTypeEventsCallback.lower(`eventsCallback`),_status)
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_constructor_lightningnode_new(FfiConverterTypeConfig.lower(`config`),FfiConverterTypeEventsCallback.lower(`eventsCallback`),_status)
 })
 
     /**
@@ -1095,51 +1241,36 @@ class LightningNode(
      */
     override protected fun freeRustArcPtr() {
         rustCall() { status ->
-            _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_free_lightningnode(this.pointer, status)
+            _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_free_lightningnode(this.pointer, status)
         }
     }
 
     
-    @Throws(LnException::class)override fun `getNodeInfo`(): NodeInfo =
+    @Throws(LnException::class)override fun `acceptPocketTermsAndConditions`() =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_get_node_info(it,
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(it,
         
         _status)
 }
-        }.let {
-            FfiConverterTypeNodeInfo.lift(it)
         }
     
     
-    @Throws(LnException::class)override fun `queryLspFee`(): LspFee =
+    override fun `background`() =
         callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_query_lsp_fee(it,
+    rustCall() { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_background(it,
         
         _status)
 }
-        }.let {
-            FfiConverterTypeLspFee.lift(it)
         }
     
-    
-    @Throws(LnException::class)override fun `getPaymentAmountLimits`(): PaymentAmountLimits =
-        callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_get_payment_amount_limits(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterTypePaymentAmountLimits.lift(it)
-        }
     
     
     @Throws(LnException::class)override fun `calculateLspFee`(`amountSat`: ULong): CalculateLspFeeResponse =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_calculate_lsp_fee(it,
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_calculate_lsp_fee(it,
         FfiConverterULong.lower(`amountSat`),
         _status)
 }
@@ -1147,11 +1278,31 @@ class LightningNode(
             FfiConverterTypeCalculateLspFeeResponse.lift(it)
         }
     
+    override fun `changeFiatCurrency`(`fiatCurrency`: String) =
+        callWithPointer {
+    rustCall() { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_change_fiat_currency(it,
+        FfiConverterString.lower(`fiatCurrency`),
+        _status)
+}
+        }
+    
+    
+    override fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig) =
+        callWithPointer {
+    rustCall() { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_change_timezone_config(it,
+        FfiConverterTypeTzConfig.lower(`timezoneConfig`),
+        _status)
+}
+        }
+    
+    
     
     @Throws(LnException::class)override fun `createInvoice`(`amountSat`: ULong, `lspFeeParams`: OpeningFeeParams?, `description`: String, `metadata`: String): InvoiceDetails =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_create_invoice(it,
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_create_invoice(it,
         FfiConverterULong.lower(`amountSat`),FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),FfiConverterString.lower(`description`),FfiConverterString.lower(`metadata`),
         _status)
 }
@@ -1163,7 +1314,7 @@ class LightningNode(
     @Throws(DecodeInvoiceException::class)override fun `decodeInvoice`(`invoice`: String): InvoiceDetails =
         callWithPointer {
     rustCallWithError(DecodeInvoiceException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_decode_invoice(it,
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_invoice(it,
         FfiConverterString.lower(`invoice`),
         _status)
 }
@@ -1171,10 +1322,79 @@ class LightningNode(
             FfiConverterTypeInvoiceDetails.lift(it)
         }
     
+    override fun `foreground`() =
+        callWithPointer {
+    rustCall() { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_foreground(it,
+        
+        _status)
+}
+        }
+    
+    
+    override fun `getExchangeRate`(): ExchangeRate? =
+        callWithPointer {
+    rustCall() { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_exchange_rate(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterOptionalTypeExchangeRate.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `getLatestPayments`(`numberOfPayments`: UInt): List<Payment> =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_latest_payments(it,
+        FfiConverterUInt.lower(`numberOfPayments`),
+        _status)
+}
+        }.let {
+            FfiConverterSequenceTypePayment.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `getNodeInfo`(): NodeInfo =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_node_info(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterTypeNodeInfo.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `getPayment`(`hash`: String): Payment =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment(it,
+        FfiConverterString.lower(`hash`),
+        _status)
+}
+        }.let {
+            FfiConverterTypePayment.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `getPaymentAmountLimits`(): PaymentAmountLimits =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_amount_limits(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterTypePaymentAmountLimits.lift(it)
+        }
+    
     override fun `getPaymentMaxRoutingFeeMode`(`amountSat`: ULong): MaxRoutingFeeMode =
         callWithPointer {
     rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_get_payment_max_routing_fee_mode(it,
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_max_routing_fee_mode(it,
         FfiConverterULong.lower(`amountSat`),
         _status)
 }
@@ -1183,10 +1403,66 @@ class LightningNode(
         }
     
     
+    @Throws(LnException::class)override fun `getPaymentUuid`(`paymentHash`: String): String =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_uuid(it,
+        FfiConverterString.lower(`paymentHash`),
+        _status)
+}
+        }.let {
+            FfiConverterString.lift(it)
+        }
+    
+    override fun `getWalletPubkeyId`(): String? =
+        callWithPointer {
+    rustCall() { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterOptionalString.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `hideTopup`(`id`: String) =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_topup(it,
+        FfiConverterString.lower(`id`),
+        _status)
+}
+        }
+    
+    
+    override fun `listCurrencyCodes`(): List<String> =
+        callWithPointer {
+    rustCall() { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterSequenceString.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `logDebugInfo`() =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(it,
+        
+        _status)
+}
+        }
+    
+    
+    
     @Throws(PayException::class)override fun `payInvoice`(`invoice`: String, `metadata`: String) =
         callWithPointer {
     rustCallWithError(PayException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(it,
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(it,
         FfiConverterString.lower(`invoice`),FfiConverterString.lower(`metadata`),
         _status)
 }
@@ -1197,7 +1473,7 @@ class LightningNode(
     @Throws(PayException::class)override fun `payOpenInvoice`(`invoice`: String, `amountSat`: ULong, `metadata`: String) =
         callWithPointer {
     rustCallWithError(PayException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_pay_open_invoice(it,
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_open_invoice(it,
         FfiConverterString.lower(`invoice`),FfiConverterULong.lower(`amountSat`),FfiConverterString.lower(`metadata`),
         _status)
 }
@@ -1205,177 +1481,22 @@ class LightningNode(
     
     
     
-    @Throws(LnException::class)override fun `getLatestPayments`(`numberOfPayments`: UInt): List<Payment> =
+    @Throws(LnException::class)override fun `queryLspFee`(): LspFee =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_get_latest_payments(it,
-        FfiConverterUInt.lower(`numberOfPayments`),
-        _status)
-}
-        }.let {
-            FfiConverterSequenceTypePayment.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getPayment`(`hash`: String): Payment =
-        callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_get_payment(it,
-        FfiConverterString.lower(`hash`),
-        _status)
-}
-        }.let {
-            FfiConverterTypePayment.lift(it)
-        }
-    
-    override fun `foreground`() =
-        callWithPointer {
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_foreground(it,
-        
-        _status)
-}
-        }
-    
-    
-    override fun `background`() =
-        callWithPointer {
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_background(it,
-        
-        _status)
-}
-        }
-    
-    
-    override fun `listCurrencyCodes`(): List<String> =
-        callWithPointer {
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(it,
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_lsp_fee(it,
         
         _status)
 }
         }.let {
-            FfiConverterSequenceString.lift(it)
-        }
-    
-    override fun `getExchangeRate`(): ExchangeRate? =
-        callWithPointer {
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_get_exchange_rate(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterOptionalTypeExchangeRate.lift(it)
-        }
-    
-    override fun `changeFiatCurrency`(`fiatCurrency`: String) =
-        callWithPointer {
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_change_fiat_currency(it,
-        FfiConverterString.lower(`fiatCurrency`),
-        _status)
-}
-        }
-    
-    
-    override fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig) =
-        callWithPointer {
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_change_timezone_config(it,
-        FfiConverterTypeTzConfig.lower(`timezoneConfig`),
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(LnException::class)override fun `acceptPocketTermsAndConditions`() =
-        callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(it,
-        
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(LnException::class)override fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo =
-        callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(it,
-        FfiConverterOptionalString.lower(`email`),FfiConverterString.lower(`userIban`),FfiConverterTypeTopupCurrency.lower(`userCurrency`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeFiatTopupInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `queryUncompletedOffers`(): List<OfferInfo> =
-        callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_query_uncompleted_offers(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterSequenceTypeOfferInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `requestOfferCollection`(`offer`: OfferInfo): String =
-        callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(it,
-        FfiConverterTypeOfferInfo.lower(`offer`),
-        _status)
-}
-        }.let {
-            FfiConverterString.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String) =
-        callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(it,
-        FfiConverterString.lower(`notificationToken`),FfiConverterString.lower(`languageIso6391`),FfiConverterString.lower(`countryIso31661Alpha2`),
-        _status)
-}
-        }
-    
-    
-    override fun `getWalletPubkeyId`(): String? =
-        callWithPointer {
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterOptionalString.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getPaymentUuid`(`paymentHash`: String): String =
-        callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_get_payment_uuid(it,
-        FfiConverterString.lower(`paymentHash`),
-        _status)
-}
-        }.let {
-            FfiConverterString.lift(it)
+            FfiConverterTypeLspFee.lift(it)
         }
     
     
     @Throws(LnException::class)override fun `queryOnchainFee`(): UInt =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee(it,
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee(it,
         
         _status)
 }
@@ -1384,10 +1505,57 @@ class LightningNode(
         }
     
     
+    @Throws(LnException::class)override fun `queryUncompletedOffers`(): List<OfferInfo> =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_uncompleted_offers(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterSequenceTypeOfferInfo.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(it,
+        FfiConverterOptionalString.lower(`email`),FfiConverterString.lower(`userIban`),FfiConverterTypeTopupCurrency.lower(`userCurrency`),
+        _status)
+}
+        }.let {
+            FfiConverterTypeFiatTopupInfo.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String) =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(it,
+        FfiConverterString.lower(`notificationToken`),FfiConverterString.lower(`languageIso6391`),FfiConverterString.lower(`countryIso31661Alpha2`),
+        _status)
+}
+        }
+    
+    
+    
+    @Throws(LnException::class)override fun `requestOfferCollection`(`offer`: OfferInfo): String =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(it,
+        FfiConverterTypeOfferInfo.lower(`offer`),
+        _status)
+}
+        }.let {
+            FfiConverterString.lift(it)
+        }
+    
+    
     @Throws(LnException::class)override fun `sweep`(`address`: String, `onchainFee`: UInt): String =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_sweep(it,
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(it,
         FfiConverterString.lower(`address`),FfiConverterUInt.lower(`onchainFee`),
         _status)
 }
@@ -1396,29 +1564,9 @@ class LightningNode(
         }
     
     
-    @Throws(LnException::class)override fun `hideTopup`(`id`: String) =
-        callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_hide_topup(it,
-        FfiConverterString.lower(`id`),
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(LnException::class)override fun `logDebugInfo`() =
-        callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(it,
-        
-        _status)
-}
-        }
-    
-    
-    
 
+    
+    companion object
     
 }
 
@@ -1452,6 +1600,7 @@ data class Amount (
     var `fiat`: FiatValue?
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeAmount: FfiConverterRustBuffer<Amount> {
@@ -1481,6 +1630,7 @@ data class CalculateLspFeeResponse (
     var `lspFeeParams`: OpeningFeeParams?
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeCalculateLspFeeResponse: FfiConverterRustBuffer<CalculateLspFeeResponse> {
@@ -1511,6 +1661,7 @@ data class ChannelsInfo (
     var `outboundCapacity`: Amount
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeChannelsInfo: FfiConverterRustBuffer<ChannelsInfo> {
@@ -1547,6 +1698,7 @@ data class Config (
     var `enableFileLogging`: Boolean
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
@@ -1589,6 +1741,7 @@ data class ExchangeRate (
     var `updatedAt`: java.time.Instant
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeExchangeRate: FfiConverterRustBuffer<ExchangeRate> {
@@ -1634,6 +1787,7 @@ data class FiatTopupInfo (
     var `creditorCountry`: String
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInfo> {
@@ -1704,6 +1858,7 @@ data class FiatValue (
     var `convertedAt`: java.time.Instant
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeFiatValue: FfiConverterRustBuffer<FiatValue> {
@@ -1745,6 +1900,7 @@ data class InvoiceDetails (
     var `expiryTimestamp`: java.time.Instant
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeInvoiceDetails: FfiConverterRustBuffer<InvoiceDetails> {
@@ -1792,6 +1948,7 @@ data class LspFee (
     var `channelFeePermyriad`: ULong
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeLspFee: FfiConverterRustBuffer<LspFee> {
@@ -1823,6 +1980,7 @@ data class NodeInfo (
     var `channelsInfo`: ChannelsInfo
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeNodeInfo: FfiConverterRustBuffer<NodeInfo> {
@@ -1856,12 +2014,13 @@ public object FfiConverterTypeNodeInfo: FfiConverterRustBuffer<NodeInfo> {
 data class OfferInfo (
     var `offerKind`: OfferKind, 
     var `amount`: Amount, 
-    var `lnurlw`: String, 
+    var `lnurlw`: String?, 
     var `createdAt`: java.time.Instant, 
-    var `expiresAt`: java.time.Instant, 
+    var `expiresAt`: java.time.Instant?, 
     var `status`: OfferStatus
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
@@ -1869,9 +2028,9 @@ public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
         return OfferInfo(
             FfiConverterTypeOfferKind.read(buf),
             FfiConverterTypeAmount.read(buf),
-            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
             FfiConverterTimestamp.read(buf),
-            FfiConverterTimestamp.read(buf),
+            FfiConverterOptionalTimestamp.read(buf),
             FfiConverterTypeOfferStatus.read(buf),
         )
     }
@@ -1879,18 +2038,18 @@ public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
     override fun allocationSize(value: OfferInfo) = (
             FfiConverterTypeOfferKind.allocationSize(value.`offerKind`) +
             FfiConverterTypeAmount.allocationSize(value.`amount`) +
-            FfiConverterString.allocationSize(value.`lnurlw`) +
+            FfiConverterOptionalString.allocationSize(value.`lnurlw`) +
             FfiConverterTimestamp.allocationSize(value.`createdAt`) +
-            FfiConverterTimestamp.allocationSize(value.`expiresAt`) +
+            FfiConverterOptionalTimestamp.allocationSize(value.`expiresAt`) +
             FfiConverterTypeOfferStatus.allocationSize(value.`status`)
     )
 
     override fun write(value: OfferInfo, buf: ByteBuffer) {
             FfiConverterTypeOfferKind.write(value.`offerKind`, buf)
             FfiConverterTypeAmount.write(value.`amount`, buf)
-            FfiConverterString.write(value.`lnurlw`, buf)
+            FfiConverterOptionalString.write(value.`lnurlw`, buf)
             FfiConverterTimestamp.write(value.`createdAt`, buf)
-            FfiConverterTimestamp.write(value.`expiresAt`, buf)
+            FfiConverterOptionalTimestamp.write(value.`expiresAt`, buf)
             FfiConverterTypeOfferStatus.write(value.`status`, buf)
     }
 }
@@ -1907,6 +2066,7 @@ data class OpeningFeeParams (
     var `promise`: String
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeOpeningFeeParams: FfiConverterRustBuffer<OpeningFeeParams> {
@@ -1959,6 +2119,7 @@ data class Payment (
     var `metadata`: String
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
@@ -2021,6 +2182,7 @@ data class PaymentAmountLimits (
     var `liquidityLimit`: LiquidityLimit
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypePaymentAmountLimits: FfiConverterRustBuffer<PaymentAmountLimits> {
@@ -2051,6 +2213,7 @@ data class Secret (
     var `seed`: ByteArray
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeSecret: FfiConverterRustBuffer<Secret> {
@@ -2083,6 +2246,7 @@ data class TzConfig (
     var `timezoneUtcOffsetSecs`: Int
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeTzConfig: FfiConverterRustBuffer<TzConfig> {
@@ -2113,6 +2277,7 @@ data class TzTime (
     var `timezoneUtcOffsetSecs`: Int
 ) {
     
+    companion object
 }
 
 public object FfiConverterTypeTzTime: FfiConverterRustBuffer<TzTime> {
@@ -2242,6 +2407,7 @@ public object FfiConverterTypeDecodeInvoiceError : FfiConverterRustBuffer<Decode
 
 enum class EnvironmentCode {
     LOCAL,DEV,STAGE,PROD;
+    companion object
 }
 
 public object FfiConverterTypeEnvironmentCode: FfiConverterRustBuffer<EnvironmentCode> {
@@ -2268,13 +2434,18 @@ sealed class LiquidityLimit {
     
     data class MaxFreeReceive(
         val `amount`: Amount
-        ) : LiquidityLimit()
+        ) : LiquidityLimit() {
+        companion object
+    }
     data class MinReceive(
         val `amount`: Amount
-        ) : LiquidityLimit()
+        ) : LiquidityLimit() {
+        companion object
+    }
     
 
     
+    companion object
 }
 
 public object FfiConverterTypeLiquidityLimit : FfiConverterRustBuffer<LiquidityLimit>{
@@ -2442,13 +2613,18 @@ public object FfiConverterTypeLnError : FfiConverterRustBuffer<LnException> {
 sealed class MaxRoutingFeeMode {
     data class Relative(
         val `maxFeePermyriad`: UShort
-        ) : MaxRoutingFeeMode()
+        ) : MaxRoutingFeeMode() {
+        companion object
+    }
     data class Absolute(
         val `maxFeeAmount`: Amount
-        ) : MaxRoutingFeeMode()
+        ) : MaxRoutingFeeMode() {
+        companion object
+    }
     
 
     
+    companion object
 }
 
 public object FfiConverterTypeMaxRoutingFeeMode : FfiConverterRustBuffer<MaxRoutingFeeMode>{
@@ -2625,6 +2801,7 @@ public object FfiConverterTypeMnemonicError : FfiConverterRustBuffer<MnemonicExc
 
 enum class Network {
     BITCOIN,TESTNET,SIGNET,REGTEST;
+    companion object
 }
 
 public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
@@ -2653,10 +2830,13 @@ sealed class OfferKind {
         val `topupValueMinorUnits`: ULong, 
         val `exchangeFeeMinorUnits`: ULong, 
         val `exchangeFeeRatePermyriad`: UShort
-        ) : OfferKind()
+        ) : OfferKind() {
+        companion object
+    }
     
 
     
+    companion object
 }
 
 public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
@@ -2709,6 +2889,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
 
 enum class OfferStatus {
     READY,FAILED,REFUNDED,SETTLED;
+    companion object
 }
 
 public object FfiConverterTypeOfferStatus: FfiConverterRustBuffer<OfferStatus> {
@@ -2832,6 +3013,7 @@ public object FfiConverterTypePayError : FfiConverterRustBuffer<PayException> {
 
 enum class PayErrorCode {
     INVOICE_EXPIRED,ALREADY_USED_INVOICE,PAYING_TO_SELF,NO_ROUTE_FOUND,RECIPIENT_REJECTED,RETRIES_EXHAUSTED,NO_MORE_ROUTES,UNEXPECTED_ERROR;
+    companion object
 }
 
 public object FfiConverterTypePayErrorCode: FfiConverterRustBuffer<PayErrorCode> {
@@ -2855,6 +3037,7 @@ public object FfiConverterTypePayErrorCode: FfiConverterRustBuffer<PayErrorCode>
 
 enum class PaymentState {
     CREATED,SUCCEEDED,FAILED,RETRIED,INVOICE_EXPIRED;
+    companion object
 }
 
 public object FfiConverterTypePaymentState: FfiConverterRustBuffer<PaymentState> {
@@ -2878,6 +3061,7 @@ public object FfiConverterTypePaymentState: FfiConverterRustBuffer<PaymentState>
 
 enum class PaymentType {
     RECEIVING,SENDING;
+    companion object
 }
 
 public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
@@ -2901,6 +3085,7 @@ public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
 
 enum class RuntimeErrorCode {
     AUTH_SERVICE_UNAVAILABLE,OFFER_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,NODE_UNAVAILABLE,FAILED_FUND_MIGRATION;
+    companion object
 }
 
 public object FfiConverterTypeRuntimeErrorCode: FfiConverterRustBuffer<RuntimeErrorCode> {
@@ -2980,6 +3165,7 @@ public object FfiConverterTypeSimpleError : FfiConverterRustBuffer<SimpleExcepti
 
 enum class TopupCurrency {
     EUR,CHF,GBP;
+    companion object
 }
 
 public object FfiConverterTypeTopupCurrency: FfiConverterRustBuffer<TopupCurrency> {
@@ -3038,7 +3224,7 @@ internal class ConcurrentHandleMap<T>(
 }
 
 interface ForeignCallback : com.sun.jna.Callback {
-    public fun invoke(handle: Handle, method: Int, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int
+    public fun callback(handle: Handle, method: Int, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int
 }
 
 // Magic number for the Rust proxy to call using the same mechanism as every other method,
@@ -3088,12 +3274,13 @@ public interface EventsCallback {
     fun `paymentFailed`(`paymentHash`: String)
     fun `channelClosed`(`channelId`: String, `reason`: String)
     
+    companion object
 }
 
 // The ForeignCallback that is passed to Rust.
 internal class ForeignCallbackTypeEventsCallback : ForeignCallback {
     @Suppress("TooGenericExceptionCaught")
-    override fun invoke(handle: Handle, method: Int, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
+    override fun callback(handle: Handle, method: Int, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
         val cb = FfiConverterTypeEventsCallback.lift(handle)
         return when (method) {
             IDX_CALLBACK_FREE -> {
@@ -3256,7 +3443,7 @@ public object FfiConverterTypeEventsCallback: FfiConverterCallbackInterface<Even
 ) {
     override fun register(lib: _UniFFILib) {
         rustCall() { status ->
-            lib.uniffi_lipalightninglib_fn_init_callback_eventscallback(this.foreignCallback, status)
+            lib.uniffi_uniffi_lipalightninglib_fn_init_callback_eventscallback(this.foreignCallback, status)
         }
     }
 }
@@ -3286,6 +3473,35 @@ public object FfiConverterOptionalString: FfiConverterRustBuffer<String?> {
         } else {
             buf.put(1)
             FfiConverterString.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTimestamp: FfiConverterRustBuffer<java.time.Instant?> {
+    override fun read(buf: ByteBuffer): java.time.Instant? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTimestamp.read(buf)
+    }
+
+    override fun allocationSize(value: java.time.Instant?): Int {
+        if (value == null) {
+            return 1
+        } else {
+            return 1 + FfiConverterTimestamp.allocationSize(value)
+        }
+    }
+
+    override fun write(value: java.time.Instant?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTimestamp.write(value, buf)
         }
     }
 }
@@ -3538,12 +3754,21 @@ public object FfiConverterSequenceTypePayment: FfiConverterRustBuffer<List<Payme
         }
     }
 }
+@Throws(LnException::class)
+
+fun `acceptTermsAndConditions`(`environment`: EnvironmentCode, `seed`: ByteArray) =
+    
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),_status)
+}
+
+
 @Throws(SimpleException::class)
 
 fun `generateSecret`(`passphrase`: String): Secret {
     return FfiConverterTypeSecret.lift(
     rustCallWithError(SimpleException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_func_generate_secret(FfiConverterString.lower(`passphrase`),_status)
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_generate_secret(FfiConverterString.lower(`passphrase`),_status)
 })
 }
 
@@ -3552,34 +3777,25 @@ fun `generateSecret`(`passphrase`: String): Secret {
 fun `mnemonicToSecret`(`mnemonicString`: List<String>, `passphrase`: String): Secret {
     return FfiConverterTypeSecret.lift(
     rustCallWithError(MnemonicException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_func_mnemonic_to_secret(FfiConverterSequenceString.lower(`mnemonicString`),FfiConverterString.lower(`passphrase`),_status)
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_mnemonic_to_secret(FfiConverterSequenceString.lower(`mnemonicString`),FfiConverterString.lower(`passphrase`),_status)
 })
 }
-
-
-fun `wordsByPrefix`(`prefix`: String): List<String> {
-    return FfiConverterSequenceString.lift(
-    rustCall() { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_func_words_by_prefix(FfiConverterString.lower(`prefix`),_status)
-})
-}
-
-@Throws(LnException::class)
-
-fun `acceptTermsAndConditions`(`environment`: EnvironmentCode, `seed`: ByteArray) =
-    
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),_status)
-}
-
 
 @Throws(LnException::class)
 
 fun `recoverLightningNode`(`environment`: EnvironmentCode, `seed`: ByteArray, `localPersistencePath`: String, `enableFileLogging`: Boolean) =
     
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_lipalightninglib_fn_func_recover_lightning_node(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterString.lower(`localPersistencePath`),FfiConverterBoolean.lower(`enableFileLogging`),_status)
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterString.lower(`localPersistencePath`),FfiConverterBoolean.lower(`enableFileLogging`),_status)
 }
 
+
+
+fun `wordsByPrefix`(`prefix`: String): List<String> {
+    return FfiConverterSequenceString.lift(
+    rustCall() { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_words_by_prefix(FfiConverterString.lower(`prefix`),_status)
+})
+}
 
 
