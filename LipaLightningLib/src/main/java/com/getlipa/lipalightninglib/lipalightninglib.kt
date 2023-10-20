@@ -2829,7 +2829,8 @@ sealed class OfferKind {
         val `exchangeRate`: ExchangeRate, 
         val `topupValueMinorUnits`: ULong, 
         val `exchangeFeeMinorUnits`: ULong, 
-        val `exchangeFeeRatePermyriad`: UShort
+        val `exchangeFeeRatePermyriad`: UShort, 
+        val `error`: PocketOfferError?
         ) : OfferKind() {
         companion object
     }
@@ -2848,6 +2849,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
                 FfiConverterULong.read(buf),
                 FfiConverterULong.read(buf),
                 FfiConverterUShort.read(buf),
+                FfiConverterOptionalTypePocketOfferError.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
         }
@@ -2863,6 +2865,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
                 + FfiConverterULong.allocationSize(value.`topupValueMinorUnits`)
                 + FfiConverterULong.allocationSize(value.`exchangeFeeMinorUnits`)
                 + FfiConverterUShort.allocationSize(value.`exchangeFeeRatePermyriad`)
+                + FfiConverterOptionalTypePocketOfferError.allocationSize(value.`error`)
             )
         }
     }
@@ -2876,6 +2879,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
                 FfiConverterULong.write(value.`topupValueMinorUnits`, buf)
                 FfiConverterULong.write(value.`exchangeFeeMinorUnits`, buf)
                 FfiConverterUShort.write(value.`exchangeFeeRatePermyriad`, buf)
+                FfiConverterOptionalTypePocketOfferError.write(value.`error`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -3083,6 +3087,98 @@ public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
 
 
 
+enum class PermanentFailureCode {
+    THRESHOLD_EXCEEDED,ORDER_INACTIVE,COMPANIES_UNSUPPORTED,COUNTRY_UNSUPPORTED,OTHER_RISK_DETECTED,CUSTOMER_REQUESTED,ACCOUNT_NOT_MATCHING,PAYOUT_EXPIRED;
+    companion object
+}
+
+public object FfiConverterTypePermanentFailureCode: FfiConverterRustBuffer<PermanentFailureCode> {
+    override fun read(buf: ByteBuffer) = try {
+        PermanentFailureCode.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: PermanentFailureCode) = 4
+
+    override fun write(value: PermanentFailureCode, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
+sealed class PocketOfferError {
+    data class TemporaryFailure(
+        val `code`: TemporaryFailureCode
+        ) : PocketOfferError() {
+        companion object
+    }
+    data class PermanentFailure(
+        val `code`: PermanentFailureCode
+        ) : PocketOfferError() {
+        companion object
+    }
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypePocketOfferError : FfiConverterRustBuffer<PocketOfferError>{
+    override fun read(buf: ByteBuffer): PocketOfferError {
+        return when(buf.getInt()) {
+            1 -> PocketOfferError.TemporaryFailure(
+                FfiConverterTypeTemporaryFailureCode.read(buf),
+                )
+            2 -> PocketOfferError.PermanentFailure(
+                FfiConverterTypePermanentFailureCode.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: PocketOfferError) = when(value) {
+        is PocketOfferError.TemporaryFailure -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypeTemporaryFailureCode.allocationSize(value.`code`)
+            )
+        }
+        is PocketOfferError.PermanentFailure -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypePermanentFailureCode.allocationSize(value.`code`)
+            )
+        }
+    }
+
+    override fun write(value: PocketOfferError, buf: ByteBuffer) {
+        when(value) {
+            is PocketOfferError.TemporaryFailure -> {
+                buf.putInt(1)
+                FfiConverterTypeTemporaryFailureCode.write(value.`code`, buf)
+                Unit
+            }
+            is PocketOfferError.PermanentFailure -> {
+                buf.putInt(2)
+                FfiConverterTypePermanentFailureCode.write(value.`code`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+
 enum class RuntimeErrorCode {
     AUTH_SERVICE_UNAVAILABLE,OFFER_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,NODE_UNAVAILABLE,FAILED_FUND_MIGRATION;
     companion object
@@ -3159,6 +3255,93 @@ public object FfiConverterTypeSimpleError : FfiConverterRustBuffer<SimpleExcepti
     }
 
 }
+
+
+
+
+sealed class TemporaryFailureCode {
+    object NoRoute : TemporaryFailureCode()
+    
+    object InvoiceExpired : TemporaryFailureCode()
+    
+    object Unexpected : TemporaryFailureCode()
+    
+    data class Unknown(
+        val `msg`: String
+        ) : TemporaryFailureCode() {
+        companion object
+    }
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypeTemporaryFailureCode : FfiConverterRustBuffer<TemporaryFailureCode>{
+    override fun read(buf: ByteBuffer): TemporaryFailureCode {
+        return when(buf.getInt()) {
+            1 -> TemporaryFailureCode.NoRoute
+            2 -> TemporaryFailureCode.InvoiceExpired
+            3 -> TemporaryFailureCode.Unexpected
+            4 -> TemporaryFailureCode.Unknown(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: TemporaryFailureCode) = when(value) {
+        is TemporaryFailureCode.NoRoute -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+            )
+        }
+        is TemporaryFailureCode.InvoiceExpired -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+            )
+        }
+        is TemporaryFailureCode.Unexpected -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+            )
+        }
+        is TemporaryFailureCode.Unknown -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
+        }
+    }
+
+    override fun write(value: TemporaryFailureCode, buf: ByteBuffer) {
+        when(value) {
+            is TemporaryFailureCode.NoRoute -> {
+                buf.putInt(1)
+                Unit
+            }
+            is TemporaryFailureCode.InvoiceExpired -> {
+                buf.putInt(2)
+                Unit
+            }
+            is TemporaryFailureCode.Unexpected -> {
+                buf.putInt(3)
+                Unit
+            }
+            is TemporaryFailureCode.Unknown -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`msg`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
 
 
 
@@ -3676,6 +3859,35 @@ public object FfiConverterOptionalTypePayErrorCode: FfiConverterRustBuffer<PayEr
         } else {
             buf.put(1)
             FfiConverterTypePayErrorCode.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypePocketOfferError: FfiConverterRustBuffer<PocketOfferError?> {
+    override fun read(buf: ByteBuffer): PocketOfferError? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypePocketOfferError.read(buf)
+    }
+
+    override fun allocationSize(value: PocketOfferError?): Int {
+        if (value == null) {
+            return 1
+        } else {
+            return 1 + FfiConverterTypePocketOfferError.allocationSize(value)
+        }
+    }
+
+    override fun write(value: PocketOfferError?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypePocketOfferError.write(value, buf)
         }
     }
 }
