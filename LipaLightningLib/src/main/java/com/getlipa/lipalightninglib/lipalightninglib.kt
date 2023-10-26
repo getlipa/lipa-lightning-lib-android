@@ -394,10 +394,14 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_create_invoice(`ptr`: Pointer,`amountSat`: Long,`lspFeeParams`: RustBuffer.ByValue,`description`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_data(`ptr`: Pointer,`data`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_foreground(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_generate_swap_address(`ptr`: Pointer,`lspFeeParams`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_exchange_rate(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_latest_payments(`ptr`: Pointer,`numberOfPayments`: Int,_uniffi_out_err: RustCallStatus, 
@@ -412,6 +416,8 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_uuid(`ptr`: Pointer,`paymentHash`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_unresolved_failed_swaps(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_topup(`ptr`: Pointer,`id`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
@@ -422,11 +428,13 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_lnurlp(`ptr`: Pointer,`amountSat`: Long,`lnurlPayRequestData`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_open_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,`amountSat`: Long,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_lsp_fee(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee_rate(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Int
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_uncompleted_offers(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
@@ -436,7 +444,9 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(`ptr`: Pointer,`offer`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`address`: RustBuffer.ByValue,`onchainFee`: Int,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_resolve_failed_swap(`ptr`: Pointer,`failedSwapAddress`: RustBuffer.ByValue,`toAddress`: RustBuffer.ByValue,`onchainFeeRate`: Int,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`address`: RustBuffer.ByValue,`onchainFeeRate`: Int,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
     ): Unit
@@ -586,9 +596,13 @@ internal interface _UniFFILib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_create_invoice(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_data(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_invoice(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_foreground(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_generate_swap_address(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_exchange_rate(
     ): Short
@@ -604,6 +618,8 @@ internal interface _UniFFILib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_uuid(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_unresolved_failed_swaps(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_wallet_pubkey_id(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_topup(
@@ -614,11 +630,13 @@ internal interface _UniFFILib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_lnurlp(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_open_invoice(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lsp_fee(
     ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_onchain_fee(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_onchain_fee_rate(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_uncompleted_offers(
     ): Short
@@ -627,6 +645,8 @@ internal interface _UniFFILib : Library {
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_notification_token(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_request_offer_collection(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_resolve_failed_swap(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep(
     ): Short
@@ -690,10 +710,16 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_create_invoice() != 54850.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_data() != 25610.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_invoice() != 15690.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_foreground() != 21792.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_generate_swap_address() != 4902.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_exchange_rate() != 49547.toShort()) {
@@ -717,6 +743,9 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_uuid() != 30652.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_unresolved_failed_swaps() != 8758.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_wallet_pubkey_id() != 19158.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -732,13 +761,16 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice() != 28301.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_lnurlp() != 36530.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_open_invoice() != 15570.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lsp_fee() != 32123.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_onchain_fee() != 10555.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_onchain_fee_rate() != 14720.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_uncompleted_offers() != 12739.toShort()) {
@@ -753,7 +785,10 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_request_offer_collection() != 59716.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep() != 4970.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_resolve_failed_swap() != 33836.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep() != 38276.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_constructor_lightningnode_new() != 348.toShort()) {
@@ -1196,29 +1231,34 @@ public interface LightningNodeInterface {
     fun `calculateLspFee`(`amountSat`: ULong): CalculateLspFeeResponse
     fun `changeFiatCurrency`(`fiatCurrency`: String)
     fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)@Throws(LnException::class)
-    fun `createInvoice`(`amountSat`: ULong, `lspFeeParams`: OpeningFeeParams?, `description`: String, `metadata`: String): InvoiceDetails@Throws(DecodeInvoiceException::class)
+    fun `createInvoice`(`amountSat`: ULong, `lspFeeParams`: OpeningFeeParams?, `description`: String, `metadata`: String): InvoiceDetails@Throws(LnException::class)
+    fun `decodeData`(`data`: String): DecodedData@Throws(DecodeInvoiceException::class)
     fun `decodeInvoice`(`invoice`: String): InvoiceDetails
-    fun `foreground`()
+    fun `foreground`()@Throws(LnException::class)
+    fun `generateSwapAddress`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo
     fun `getExchangeRate`(): ExchangeRate?@Throws(LnException::class)
     fun `getLatestPayments`(`numberOfPayments`: UInt): List<Payment>@Throws(LnException::class)
     fun `getNodeInfo`(): NodeInfo@Throws(LnException::class)
     fun `getPayment`(`hash`: String): Payment@Throws(LnException::class)
     fun `getPaymentAmountLimits`(): PaymentAmountLimits
     fun `getPaymentMaxRoutingFeeMode`(`amountSat`: ULong): MaxRoutingFeeMode@Throws(LnException::class)
-    fun `getPaymentUuid`(`paymentHash`: String): String
+    fun `getPaymentUuid`(`paymentHash`: String): String@Throws(LnException::class)
+    fun `getUnresolvedFailedSwaps`(): List<FailedSwapInfo>
     fun `getWalletPubkeyId`(): String?@Throws(LnException::class)
     fun `hideTopup`(`id`: String)
     fun `listCurrencyCodes`(): List<String>@Throws(LnException::class)
     fun `logDebugInfo`()@Throws(PayException::class)
-    fun `payInvoice`(`invoice`: String, `metadata`: String)@Throws(PayException::class)
+    fun `payInvoice`(`invoice`: String, `metadata`: String)@Throws(LnException::class)
+    fun `payLnurlp`(`amountSat`: ULong, `lnurlPayRequestData`: LnUrlPayRequestData): String@Throws(PayException::class)
     fun `payOpenInvoice`(`invoice`: String, `amountSat`: ULong, `metadata`: String)@Throws(LnException::class)
     fun `queryLspFee`(): LspFee@Throws(LnException::class)
-    fun `queryOnchainFee`(): UInt@Throws(LnException::class)
+    fun `queryOnchainFeeRate`(): UInt@Throws(LnException::class)
     fun `queryUncompletedOffers`(): List<OfferInfo>@Throws(LnException::class)
     fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo@Throws(LnException::class)
     fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)@Throws(LnException::class)
     fun `requestOfferCollection`(`offer`: OfferInfo): String@Throws(LnException::class)
-    fun `sweep`(`address`: String, `onchainFee`: UInt): String
+    fun `resolveFailedSwap`(`failedSwapAddress`: String, `toAddress`: String, `onchainFeeRate`: UInt): String@Throws(LnException::class)
+    fun `sweep`(`address`: String, `onchainFeeRate`: UInt): String
     companion object
 }
 
@@ -1311,6 +1351,18 @@ class LightningNode(
         }
     
     
+    @Throws(LnException::class)override fun `decodeData`(`data`: String): DecodedData =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_data(it,
+        FfiConverterString.lower(`data`),
+        _status)
+}
+        }.let {
+            FfiConverterTypeDecodedData.lift(it)
+        }
+    
+    
     @Throws(DecodeInvoiceException::class)override fun `decodeInvoice`(`invoice`: String): InvoiceDetails =
         callWithPointer {
     rustCallWithError(DecodeInvoiceException) { _status ->
@@ -1331,6 +1383,18 @@ class LightningNode(
 }
         }
     
+    
+    
+    @Throws(LnException::class)override fun `generateSwapAddress`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_generate_swap_address(it,
+        FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),
+        _status)
+}
+        }.let {
+            FfiConverterTypeSwapAddressInfo.lift(it)
+        }
     
     override fun `getExchangeRate`(): ExchangeRate? =
         callWithPointer {
@@ -1414,6 +1478,18 @@ class LightningNode(
             FfiConverterString.lift(it)
         }
     
+    
+    @Throws(LnException::class)override fun `getUnresolvedFailedSwaps`(): List<FailedSwapInfo> =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_unresolved_failed_swaps(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterSequenceTypeFailedSwapInfo.lift(it)
+        }
+    
     override fun `getWalletPubkeyId`(): String? =
         callWithPointer {
     rustCall() { _status ->
@@ -1470,6 +1546,18 @@ class LightningNode(
     
     
     
+    @Throws(LnException::class)override fun `payLnurlp`(`amountSat`: ULong, `lnurlPayRequestData`: LnUrlPayRequestData): String =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_lnurlp(it,
+        FfiConverterULong.lower(`amountSat`),FfiConverterTypeLnUrlPayRequestData.lower(`lnurlPayRequestData`),
+        _status)
+}
+        }.let {
+            FfiConverterString.lift(it)
+        }
+    
+    
     @Throws(PayException::class)override fun `payOpenInvoice`(`invoice`: String, `amountSat`: ULong, `metadata`: String) =
         callWithPointer {
     rustCallWithError(PayException) { _status ->
@@ -1493,10 +1581,10 @@ class LightningNode(
         }
     
     
-    @Throws(LnException::class)override fun `queryOnchainFee`(): UInt =
+    @Throws(LnException::class)override fun `queryOnchainFeeRate`(): UInt =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee(it,
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee_rate(it,
         
         _status)
 }
@@ -1552,11 +1640,23 @@ class LightningNode(
         }
     
     
-    @Throws(LnException::class)override fun `sweep`(`address`: String, `onchainFee`: UInt): String =
+    @Throws(LnException::class)override fun `resolveFailedSwap`(`failedSwapAddress`: String, `toAddress`: String, `onchainFeeRate`: UInt): String =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_resolve_failed_swap(it,
+        FfiConverterString.lower(`failedSwapAddress`),FfiConverterString.lower(`toAddress`),FfiConverterUInt.lower(`onchainFeeRate`),
+        _status)
+}
+        }.let {
+            FfiConverterString.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `sweep`(`address`: String, `onchainFeeRate`: UInt): String =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
     _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(it,
-        FfiConverterString.lower(`address`),FfiConverterUInt.lower(`onchainFee`),
+        FfiConverterString.lower(`address`),FfiConverterUInt.lower(`onchainFeeRate`),
         _status)
 }
         }.let {
@@ -1769,6 +1869,40 @@ public object FfiConverterTypeExchangeRate: FfiConverterRustBuffer<ExchangeRate>
 
 
 
+data class FailedSwapInfo (
+    var `address`: String, 
+    var `amount`: Amount, 
+    var `createdAt`: java.time.Instant
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeFailedSwapInfo: FfiConverterRustBuffer<FailedSwapInfo> {
+    override fun read(buf: ByteBuffer): FailedSwapInfo {
+        return FailedSwapInfo(
+            FfiConverterString.read(buf),
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTimestamp.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FailedSwapInfo) = (
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterTypeAmount.allocationSize(value.`amount`) +
+            FfiConverterTimestamp.allocationSize(value.`createdAt`)
+    )
+
+    override fun write(value: FailedSwapInfo, buf: ByteBuffer) {
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterTypeAmount.write(value.`amount`, buf)
+            FfiConverterTimestamp.write(value.`createdAt`, buf)
+    }
+}
+
+
+
+
 data class FiatTopupInfo (
     var `orderId`: String, 
     var `debitorIban`: String, 
@@ -1937,6 +2071,90 @@ public object FfiConverterTypeInvoiceDetails: FfiConverterRustBuffer<InvoiceDeta
             FfiConverterTimestamp.write(value.`creationTimestamp`, buf)
             FfiConverterDuration.write(value.`expiryInterval`, buf)
             FfiConverterTimestamp.write(value.`expiryTimestamp`, buf)
+    }
+}
+
+
+
+
+data class LnUrlPayDetails (
+    var `minSendable`: Amount, 
+    var `maxSendable`: Amount, 
+    var `requestData`: LnUrlPayRequestData
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeLnUrlPayDetails: FfiConverterRustBuffer<LnUrlPayDetails> {
+    override fun read(buf: ByteBuffer): LnUrlPayDetails {
+        return LnUrlPayDetails(
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeLnUrlPayRequestData.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: LnUrlPayDetails) = (
+            FfiConverterTypeAmount.allocationSize(value.`minSendable`) +
+            FfiConverterTypeAmount.allocationSize(value.`maxSendable`) +
+            FfiConverterTypeLnUrlPayRequestData.allocationSize(value.`requestData`)
+    )
+
+    override fun write(value: LnUrlPayDetails, buf: ByteBuffer) {
+            FfiConverterTypeAmount.write(value.`minSendable`, buf)
+            FfiConverterTypeAmount.write(value.`maxSendable`, buf)
+            FfiConverterTypeLnUrlPayRequestData.write(value.`requestData`, buf)
+    }
+}
+
+
+
+
+data class LnUrlPayRequestData (
+    var `callback`: String, 
+    var `minSendable`: ULong, 
+    var `maxSendable`: ULong, 
+    var `metadataStr`: String, 
+    var `commentAllowed`: UShort, 
+    var `domain`: String, 
+    var `lnAddress`: String?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeLnUrlPayRequestData: FfiConverterRustBuffer<LnUrlPayRequestData> {
+    override fun read(buf: ByteBuffer): LnUrlPayRequestData {
+        return LnUrlPayRequestData(
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUShort.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: LnUrlPayRequestData) = (
+            FfiConverterString.allocationSize(value.`callback`) +
+            FfiConverterULong.allocationSize(value.`minSendable`) +
+            FfiConverterULong.allocationSize(value.`maxSendable`) +
+            FfiConverterString.allocationSize(value.`metadataStr`) +
+            FfiConverterUShort.allocationSize(value.`commentAllowed`) +
+            FfiConverterString.allocationSize(value.`domain`) +
+            FfiConverterOptionalString.allocationSize(value.`lnAddress`)
+    )
+
+    override fun write(value: LnUrlPayRequestData, buf: ByteBuffer) {
+            FfiConverterString.write(value.`callback`, buf)
+            FfiConverterULong.write(value.`minSendable`, buf)
+            FfiConverterULong.write(value.`maxSendable`, buf)
+            FfiConverterString.write(value.`metadataStr`, buf)
+            FfiConverterUShort.write(value.`commentAllowed`, buf)
+            FfiConverterString.write(value.`domain`, buf)
+            FfiConverterOptionalString.write(value.`lnAddress`, buf)
     }
 }
 
@@ -2241,6 +2459,40 @@ public object FfiConverterTypeSecret: FfiConverterRustBuffer<Secret> {
 
 
 
+data class SwapAddressInfo (
+    var `address`: String, 
+    var `minDeposit`: Amount, 
+    var `maxDeposit`: Amount
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeSwapAddressInfo: FfiConverterRustBuffer<SwapAddressInfo> {
+    override fun read(buf: ByteBuffer): SwapAddressInfo {
+        return SwapAddressInfo(
+            FfiConverterString.read(buf),
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeAmount.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SwapAddressInfo) = (
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterTypeAmount.allocationSize(value.`minDeposit`) +
+            FfiConverterTypeAmount.allocationSize(value.`maxDeposit`)
+    )
+
+    override fun write(value: SwapAddressInfo, buf: ByteBuffer) {
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterTypeAmount.write(value.`minDeposit`, buf)
+            FfiConverterTypeAmount.write(value.`maxDeposit`, buf)
+    }
+}
+
+
+
+
 data class TzConfig (
     var `timezoneId`: String, 
     var `timezoneUtcOffsetSecs`: Int
@@ -2401,6 +2653,74 @@ public object FfiConverterTypeDecodeInvoiceError : FfiConverterRustBuffer<Decode
     }
 
 }
+
+
+
+
+sealed class DecodedData {
+    data class Bolt11Invoice(
+        val `invoiceDetails`: InvoiceDetails
+        ) : DecodedData() {
+        companion object
+    }
+    data class LnUrlPay(
+        val `lnurlPayDetails`: LnUrlPayDetails
+        ) : DecodedData() {
+        companion object
+    }
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypeDecodedData : FfiConverterRustBuffer<DecodedData>{
+    override fun read(buf: ByteBuffer): DecodedData {
+        return when(buf.getInt()) {
+            1 -> DecodedData.Bolt11Invoice(
+                FfiConverterTypeInvoiceDetails.read(buf),
+                )
+            2 -> DecodedData.LnUrlPay(
+                FfiConverterTypeLnUrlPayDetails.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: DecodedData) = when(value) {
+        is DecodedData.Bolt11Invoice -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypeInvoiceDetails.allocationSize(value.`invoiceDetails`)
+            )
+        }
+        is DecodedData.LnUrlPay -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypeLnUrlPayDetails.allocationSize(value.`lnurlPayDetails`)
+            )
+        }
+    }
+
+    override fun write(value: DecodedData, buf: ByteBuffer) {
+        when(value) {
+            is DecodedData.Bolt11Invoice -> {
+                buf.putInt(1)
+                FfiConverterTypeInvoiceDetails.write(value.`invoiceDetails`, buf)
+                Unit
+            }
+            is DecodedData.LnUrlPay -> {
+                buf.putInt(2)
+                FfiConverterTypeLnUrlPayDetails.write(value.`lnurlPayDetails`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
 
 
 
@@ -3913,6 +4233,31 @@ public object FfiConverterSequenceString: FfiConverterRustBuffer<List<String>> {
         buf.putInt(value.size)
         value.forEach {
             FfiConverterString.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeFailedSwapInfo: FfiConverterRustBuffer<List<FailedSwapInfo>> {
+    override fun read(buf: ByteBuffer): List<FailedSwapInfo> {
+        val len = buf.getInt()
+        return List<FailedSwapInfo>(len) {
+            FfiConverterTypeFailedSwapInfo.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<FailedSwapInfo>): Int {
+        val sizeForLength = 4
+        val sizeForItems = value.map { FfiConverterTypeFailedSwapInfo.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<FailedSwapInfo>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.forEach {
+            FfiConverterTypeFailedSwapInfo.write(it, buf)
         }
     }
 }
