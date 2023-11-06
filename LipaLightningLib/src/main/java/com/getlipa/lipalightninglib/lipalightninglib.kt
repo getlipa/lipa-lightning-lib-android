@@ -426,11 +426,11 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(`ptr`: Pointer,`invoiceDetails`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_lnurlp(`ptr`: Pointer,`amountSat`: Long,`lnurlPayRequestData`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_open_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,`amountSat`: Long,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_open_invoice(`ptr`: Pointer,`invoiceDetails`: RustBuffer.ByValue,`amountSat`: Long,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_lsp_fee(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
@@ -758,13 +758,13 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_log_debug_info() != 32021.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice() != 28301.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice() != 29249.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_lnurlp() != 36530.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_open_invoice() != 15570.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_open_invoice() != 21669.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lsp_fee() != 32123.toShort()) {
@@ -776,7 +776,7 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_uncompleted_offers() != 12739.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_fiat_topup() != 8599.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_fiat_topup() != 14793.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_notification_token() != 50051.toShort()) {
@@ -1248,13 +1248,13 @@ public interface LightningNodeInterface {
     fun `hideTopup`(`id`: String)
     fun `listCurrencyCodes`(): List<String>@Throws(LnException::class)
     fun `logDebugInfo`()@Throws(PayException::class)
-    fun `payInvoice`(`invoice`: String, `metadata`: String)@Throws(LnException::class)
+    fun `payInvoice`(`invoiceDetails`: InvoiceDetails, `metadata`: String)@Throws(LnException::class)
     fun `payLnurlp`(`amountSat`: ULong, `lnurlPayRequestData`: LnUrlPayRequestData): String@Throws(PayException::class)
-    fun `payOpenInvoice`(`invoice`: String, `amountSat`: ULong, `metadata`: String)@Throws(LnException::class)
+    fun `payOpenInvoice`(`invoiceDetails`: InvoiceDetails, `amountSat`: ULong, `metadata`: String)@Throws(LnException::class)
     fun `queryLspFee`(): LspFee@Throws(LnException::class)
     fun `queryOnchainFeeRate`(): UInt@Throws(LnException::class)
     fun `queryUncompletedOffers`(): List<OfferInfo>@Throws(LnException::class)
-    fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo@Throws(LnException::class)
+    fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: String): FiatTopupInfo@Throws(LnException::class)
     fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)@Throws(LnException::class)
     fun `requestOfferCollection`(`offer`: OfferInfo): String@Throws(LnException::class)
     fun `resolveFailedSwap`(`failedSwapAddress`: String, `toAddress`: String, `onchainFeeRate`: UInt): String@Throws(LnException::class)
@@ -1535,11 +1535,11 @@ class LightningNode(
     
     
     
-    @Throws(PayException::class)override fun `payInvoice`(`invoice`: String, `metadata`: String) =
+    @Throws(PayException::class)override fun `payInvoice`(`invoiceDetails`: InvoiceDetails, `metadata`: String) =
         callWithPointer {
     rustCallWithError(PayException) { _status ->
     _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(it,
-        FfiConverterString.lower(`invoice`),FfiConverterString.lower(`metadata`),
+        FfiConverterTypeInvoiceDetails.lower(`invoiceDetails`),FfiConverterString.lower(`metadata`),
         _status)
 }
         }
@@ -1558,11 +1558,11 @@ class LightningNode(
         }
     
     
-    @Throws(PayException::class)override fun `payOpenInvoice`(`invoice`: String, `amountSat`: ULong, `metadata`: String) =
+    @Throws(PayException::class)override fun `payOpenInvoice`(`invoiceDetails`: InvoiceDetails, `amountSat`: ULong, `metadata`: String) =
         callWithPointer {
     rustCallWithError(PayException) { _status ->
     _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_open_invoice(it,
-        FfiConverterString.lower(`invoice`),FfiConverterULong.lower(`amountSat`),FfiConverterString.lower(`metadata`),
+        FfiConverterTypeInvoiceDetails.lower(`invoiceDetails`),FfiConverterULong.lower(`amountSat`),FfiConverterString.lower(`metadata`),
         _status)
 }
         }
@@ -1605,11 +1605,11 @@ class LightningNode(
         }
     
     
-    @Throws(LnException::class)override fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: TopupCurrency): FiatTopupInfo =
+    @Throws(LnException::class)override fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: String): FiatTopupInfo =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
     _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(it,
-        FfiConverterOptionalString.lower(`email`),FfiConverterString.lower(`userIban`),FfiConverterTypeTopupCurrency.lower(`userCurrency`),
+        FfiConverterOptionalString.lower(`email`),FfiConverterString.lower(`userIban`),FfiConverterString.lower(`userCurrency`),
         _status)
 }
         }.let {
@@ -3658,30 +3658,6 @@ public object FfiConverterTypeTemporaryFailureCode : FfiConverterRustBuffer<Temp
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
-    }
-}
-
-
-
-
-
-
-enum class TopupCurrency {
-    EUR,CHF,GBP;
-    companion object
-}
-
-public object FfiConverterTypeTopupCurrency: FfiConverterRustBuffer<TopupCurrency> {
-    override fun read(buf: ByteBuffer) = try {
-        TopupCurrency.values()[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: TopupCurrency) = 4
-
-    override fun write(value: TopupCurrency, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
     }
 }
 
