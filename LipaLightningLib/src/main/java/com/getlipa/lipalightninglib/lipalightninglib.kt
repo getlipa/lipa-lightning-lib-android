@@ -396,8 +396,6 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_data(`ptr`: Pointer,`data`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_invoice(`ptr`: Pointer,`invoice`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_foreground(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_generate_swap_address(`ptr`: Pointer,`lspFeeParams`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
@@ -598,8 +596,6 @@ internal interface _UniFFILib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_data(
     ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_invoice(
-    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_foreground(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_generate_swap_address(
@@ -710,10 +706,7 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_create_invoice() != 54850.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_data() != 25610.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_invoice() != 15690.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_data() != 60450.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_foreground() != 21792.toShort()) {
@@ -1231,9 +1224,8 @@ public interface LightningNodeInterface {
     fun `calculateLspFee`(`amountSat`: ULong): CalculateLspFeeResponse
     fun `changeFiatCurrency`(`fiatCurrency`: String)
     fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)@Throws(LnException::class)
-    fun `createInvoice`(`amountSat`: ULong, `lspFeeParams`: OpeningFeeParams?, `description`: String, `metadata`: String): InvoiceDetails@Throws(LnException::class)
-    fun `decodeData`(`data`: String): DecodedData@Throws(DecodeInvoiceException::class)
-    fun `decodeInvoice`(`invoice`: String): InvoiceDetails
+    fun `createInvoice`(`amountSat`: ULong, `lspFeeParams`: OpeningFeeParams?, `description`: String, `metadata`: String): InvoiceDetails@Throws(DecodeDataException::class)
+    fun `decodeData`(`data`: String): DecodedData
     fun `foreground`()@Throws(LnException::class)
     fun `generateSwapAddress`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo
     fun `getExchangeRate`(): ExchangeRate?@Throws(LnException::class)
@@ -1351,27 +1343,15 @@ class LightningNode(
         }
     
     
-    @Throws(LnException::class)override fun `decodeData`(`data`: String): DecodedData =
+    @Throws(DecodeDataException::class)override fun `decodeData`(`data`: String): DecodedData =
         callWithPointer {
-    rustCallWithError(LnException) { _status ->
+    rustCallWithError(DecodeDataException) { _status ->
     _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_data(it,
         FfiConverterString.lower(`data`),
         _status)
 }
         }.let {
             FfiConverterTypeDecodedData.lift(it)
-        }
-    
-    
-    @Throws(DecodeInvoiceException::class)override fun `decodeInvoice`(`invoice`: String): InvoiceDetails =
-        callWithPointer {
-    rustCallWithError(DecodeInvoiceException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_invoice(it,
-        FfiConverterString.lower(`invoice`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeInvoiceDetails.lift(it)
         }
     
     override fun `foreground`() =
@@ -2558,95 +2538,91 @@ public object FfiConverterTypeTzTime: FfiConverterRustBuffer<TzTime> {
 
 
 
-sealed class DecodeInvoiceException: Exception() {
+sealed class DecodeDataException: Exception() {
     // Each variant is a nested class
     
-    class ParseException(
+    class LnUrlException(
         val `msg`: String
-        ) : DecodeInvoiceException() {
+        ) : DecodeDataException() {
         override val message
             get() = "msg=${ `msg` }"
     }
     
-    class SemanticException(
-        val `msg`: String
-        ) : DecodeInvoiceException() {
+    class Unsupported(
+        val `typ`: UnsupportedDataType
+        ) : DecodeDataException() {
         override val message
-            get() = "msg=${ `msg` }"
+            get() = "typ=${ `typ` }"
     }
     
-    class NetworkMismatch(
-        val `expected`: Network, 
-        val `found`: Network
-        ) : DecodeInvoiceException() {
+    class Unrecognized(
+        val `msg`: String
+        ) : DecodeDataException() {
         override val message
-            get() = "expected=${ `expected` }, found=${ `found` }"
+            get() = "msg=${ `msg` }"
     }
     
 
-    companion object ErrorHandler : CallStatusErrorHandler<DecodeInvoiceException> {
-        override fun lift(error_buf: RustBuffer.ByValue): DecodeInvoiceException = FfiConverterTypeDecodeInvoiceError.lift(error_buf)
+    companion object ErrorHandler : CallStatusErrorHandler<DecodeDataException> {
+        override fun lift(error_buf: RustBuffer.ByValue): DecodeDataException = FfiConverterTypeDecodeDataError.lift(error_buf)
     }
 
     
 }
 
-public object FfiConverterTypeDecodeInvoiceError : FfiConverterRustBuffer<DecodeInvoiceException> {
-    override fun read(buf: ByteBuffer): DecodeInvoiceException {
+public object FfiConverterTypeDecodeDataError : FfiConverterRustBuffer<DecodeDataException> {
+    override fun read(buf: ByteBuffer): DecodeDataException {
         
 
         return when(buf.getInt()) {
-            1 -> DecodeInvoiceException.ParseException(
+            1 -> DecodeDataException.LnUrlException(
                 FfiConverterString.read(buf),
                 )
-            2 -> DecodeInvoiceException.SemanticException(
-                FfiConverterString.read(buf),
+            2 -> DecodeDataException.Unsupported(
+                FfiConverterTypeUnsupportedDataType.read(buf),
                 )
-            3 -> DecodeInvoiceException.NetworkMismatch(
-                FfiConverterTypeNetwork.read(buf),
-                FfiConverterTypeNetwork.read(buf),
+            3 -> DecodeDataException.Unrecognized(
+                FfiConverterString.read(buf),
                 )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
 
-    override fun allocationSize(value: DecodeInvoiceException): Int {
+    override fun allocationSize(value: DecodeDataException): Int {
         return when(value) {
-            is DecodeInvoiceException.ParseException -> (
+            is DecodeDataException.LnUrlException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
                 + FfiConverterString.allocationSize(value.`msg`)
             )
-            is DecodeInvoiceException.SemanticException -> (
+            is DecodeDataException.Unsupported -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterTypeUnsupportedDataType.allocationSize(value.`typ`)
+            )
+            is DecodeDataException.Unrecognized -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
                 + FfiConverterString.allocationSize(value.`msg`)
-            )
-            is DecodeInvoiceException.NetworkMismatch -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
-                + FfiConverterTypeNetwork.allocationSize(value.`expected`)
-                + FfiConverterTypeNetwork.allocationSize(value.`found`)
             )
         }
     }
 
-    override fun write(value: DecodeInvoiceException, buf: ByteBuffer) {
+    override fun write(value: DecodeDataException, buf: ByteBuffer) {
         when(value) {
-            is DecodeInvoiceException.ParseException -> {
+            is DecodeDataException.LnUrlException -> {
                 buf.putInt(1)
                 FfiConverterString.write(value.`msg`, buf)
                 Unit
             }
-            is DecodeInvoiceException.SemanticException -> {
+            is DecodeDataException.Unsupported -> {
                 buf.putInt(2)
-                FfiConverterString.write(value.`msg`, buf)
+                FfiConverterTypeUnsupportedDataType.write(value.`typ`, buf)
                 Unit
             }
-            is DecodeInvoiceException.NetworkMismatch -> {
+            is DecodeDataException.Unrecognized -> {
                 buf.putInt(3)
-                FfiConverterTypeNetwork.write(value.`expected`, buf)
-                FfiConverterTypeNetwork.write(value.`found`, buf)
+                FfiConverterString.write(value.`msg`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -3658,6 +3634,30 @@ public object FfiConverterTypeTemporaryFailureCode : FfiConverterRustBuffer<Temp
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+
+enum class UnsupportedDataType {
+    BITCOIN_ADDRESS,LN_URL_AUTH,LN_URL_WITHDRAW,NODE_ID,URL;
+    companion object
+}
+
+public object FfiConverterTypeUnsupportedDataType: FfiConverterRustBuffer<UnsupportedDataType> {
+    override fun read(buf: ByteBuffer) = try {
+        UnsupportedDataType.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: UnsupportedDataType) = 4
+
+    override fun write(value: UnsupportedDataType, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
     }
 }
 
