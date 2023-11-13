@@ -56,6 +56,14 @@ open class RustBuffer : Structure() {
            }
         }
 
+        internal fun create(capacity: Int, len: Int, data: Pointer?): RustBuffer.ByValue {
+            var buf = RustBuffer.ByValue()
+            buf.capacity = capacity
+            buf.len = len
+            buf.data = data
+            return buf
+        }
+
         internal fun free(buf: RustBuffer.ByValue) = rustCall() { status ->
             _UniFFILib.INSTANCE.ffi_uniffi_lipalightninglib_rustbuffer_free(buf, status)
         }
@@ -444,6 +452,8 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_resolve_failed_swap(`ptr`: Pointer,`failedSwapAddress`: RustBuffer.ByValue,`toAddress`: RustBuffer.ByValue,`onchainFeeRate`: Int,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_retrieve_latest_fiat_topup_info(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`address`: RustBuffer.ByValue,`onchainFeeRate`: Int,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
@@ -644,6 +654,8 @@ internal interface _UniFFILib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_resolve_failed_swap(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_retrieve_latest_fiat_topup_info(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_constructor_lightningnode_new(
@@ -779,6 +791,9 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_resolve_failed_swap() != 33836.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_retrieve_latest_fiat_topup_info() != 13472.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep() != 38276.toShort()) {
@@ -1250,6 +1265,7 @@ public interface LightningNodeInterface {
     fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)@Throws(LnException::class)
     fun `requestOfferCollection`(`offer`: OfferInfo): String@Throws(LnException::class)
     fun `resolveFailedSwap`(`failedSwapAddress`: String, `toAddress`: String, `onchainFeeRate`: UInt): String@Throws(LnException::class)
+    fun `retrieveLatestFiatTopupInfo`(): FiatTopupInfo?@Throws(LnException::class)
     fun `sweep`(`address`: String, `onchainFeeRate`: UInt): String
     companion object
 }
@@ -1632,6 +1648,18 @@ class LightningNode(
         }
     
     
+    @Throws(LnException::class)override fun `retrieveLatestFiatTopupInfo`(): FiatTopupInfo? =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_retrieve_latest_fiat_topup_info(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterOptionalTypeFiatTopupInfo.lift(it)
+        }
+    
+    
     @Throws(LnException::class)override fun `sweep`(`address`: String, `onchainFeeRate`: UInt): String =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
@@ -1898,7 +1926,8 @@ data class FiatTopupInfo (
     var `creditorStreet`: String, 
     var `creditorPostalCode`: String, 
     var `creditorTown`: String, 
-    var `creditorCountry`: String
+    var `creditorCountry`: String, 
+    var `currency`: String
 ) {
     
     companion object
@@ -1907,6 +1936,7 @@ data class FiatTopupInfo (
 public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInfo> {
     override fun read(buf: ByteBuffer): FiatTopupInfo {
         return FiatTopupInfo(
+            FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
@@ -1940,7 +1970,8 @@ public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInf
             FfiConverterString.allocationSize(value.`creditorStreet`) +
             FfiConverterString.allocationSize(value.`creditorPostalCode`) +
             FfiConverterString.allocationSize(value.`creditorTown`) +
-            FfiConverterString.allocationSize(value.`creditorCountry`)
+            FfiConverterString.allocationSize(value.`creditorCountry`) +
+            FfiConverterString.allocationSize(value.`currency`)
     )
 
     override fun write(value: FiatTopupInfo, buf: ByteBuffer) {
@@ -1959,6 +1990,7 @@ public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInf
             FfiConverterString.write(value.`creditorPostalCode`, buf)
             FfiConverterString.write(value.`creditorTown`, buf)
             FfiConverterString.write(value.`creditorCountry`, buf)
+            FfiConverterString.write(value.`currency`, buf)
     }
 }
 
@@ -3095,30 +3127,6 @@ public object FfiConverterTypeMnemonicError : FfiConverterRustBuffer<MnemonicExc
 
 
 
-enum class Network {
-    BITCOIN,TESTNET,SIGNET,REGTEST;
-    companion object
-}
-
-public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
-    override fun read(buf: ByteBuffer) = try {
-        Network.values()[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: Network) = 4
-
-    override fun write(value: Network, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
-    }
-}
-
-
-
-
-
-
 sealed class OfferKind {
     data class Pocket(
         val `id`: String, 
@@ -3476,7 +3484,7 @@ public object FfiConverterTypePocketOfferError : FfiConverterRustBuffer<PocketOf
 
 
 enum class RuntimeErrorCode {
-    AUTH_SERVICE_UNAVAILABLE,OFFER_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,NODE_UNAVAILABLE,FAILED_FUND_MIGRATION;
+    AUTH_SERVICE_UNAVAILABLE,OFFER_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,BACKUP_SERVICE_UNAVAILABLE,BACKUP_NOT_FOUND,NODE_UNAVAILABLE,FAILED_FUND_MIGRATION;
     companion object
 }
 
@@ -4039,6 +4047,35 @@ public object FfiConverterOptionalTypeExchangeRate: FfiConverterRustBuffer<Excha
         } else {
             buf.put(1)
             FfiConverterTypeExchangeRate.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInfo?> {
+    override fun read(buf: ByteBuffer): FiatTopupInfo? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeFiatTopupInfo.read(buf)
+    }
+
+    override fun allocationSize(value: FiatTopupInfo?): Int {
+        if (value == null) {
+            return 1
+        } else {
+            return 1 + FfiConverterTypeFiatTopupInfo.allocationSize(value)
+        }
+    }
+
+    override fun write(value: FiatTopupInfo?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeFiatTopupInfo.write(value, buf)
         }
     }
 }
