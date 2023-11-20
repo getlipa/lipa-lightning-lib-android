@@ -440,6 +440,8 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_resolve_failed_swap(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,`toAddress`: RustBuffer.ByValue,`onchainFeeRate`: Int,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_sweep(`ptr`: Pointer,`address`: RustBuffer.ByValue,`onchainFeeRate`: Int,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_lsp_fee(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee_rate(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
@@ -452,11 +454,13 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(`ptr`: Pointer,`offer`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_reset_fiat_topup(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_resolve_failed_swap(`ptr`: Pointer,`resolveFailedSwapInfo`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_retrieve_latest_fiat_topup_info(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`address`: RustBuffer.ByValue,`onchainFeeRate`: Int,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`sweepInfo`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
     ): Unit
@@ -644,6 +648,8 @@ internal interface _UniFFILib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_resolve_failed_swap(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_sweep(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lsp_fee(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_onchain_fee_rate(
@@ -655,6 +661,8 @@ internal interface _UniFFILib : Library {
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_notification_token(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_request_offer_collection(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_reset_fiat_topup(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_resolve_failed_swap(
     ): Short
@@ -779,6 +787,9 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_resolve_failed_swap() != 43856.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_sweep() != 48035.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lsp_fee() != 32123.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -797,13 +808,16 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_request_offer_collection() != 59716.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_reset_fiat_topup() != 18498.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_resolve_failed_swap() != 2974.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_retrieve_latest_fiat_topup_info() != 13472.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep() != 38276.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep() != 54288.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_constructor_lightningnode_new() != 348.toShort()) {
@@ -1266,15 +1280,17 @@ public interface LightningNodeInterface {
     fun `payLnurlp`(`lnurlPayRequestData`: LnUrlPayRequestData, `amountSat`: ULong): String@Throws(PayException::class)
     fun `payOpenInvoice`(`invoiceDetails`: InvoiceDetails, `amountSat`: ULong, `metadata`: PaymentMetadata)@Throws(LnException::class)
     fun `prepareResolveFailedSwap`(`failedSwapInfo`: FailedSwapInfo, `toAddress`: String, `onchainFeeRate`: UInt): ResolveFailedSwapInfo@Throws(LnException::class)
+    fun `prepareSweep`(`address`: String, `onchainFeeRate`: UInt): SweepInfo@Throws(LnException::class)
     fun `queryLspFee`(): LspFee@Throws(LnException::class)
     fun `queryOnchainFeeRate`(): UInt@Throws(LnException::class)
     fun `queryUncompletedOffers`(): List<OfferInfo>@Throws(LnException::class)
     fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: String): FiatTopupInfo@Throws(LnException::class)
     fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)@Throws(LnException::class)
     fun `requestOfferCollection`(`offer`: OfferInfo): String@Throws(LnException::class)
+    fun `resetFiatTopup`()@Throws(LnException::class)
     fun `resolveFailedSwap`(`resolveFailedSwapInfo`: ResolveFailedSwapInfo): String@Throws(LnException::class)
     fun `retrieveLatestFiatTopupInfo`(): FiatTopupInfo?@Throws(LnException::class)
-    fun `sweep`(`address`: String, `onchainFeeRate`: UInt): String
+    fun `sweep`(`sweepInfo`: SweepInfo): String
     companion object
 }
 
@@ -1585,6 +1601,18 @@ class LightningNode(
         }
     
     
+    @Throws(LnException::class)override fun `prepareSweep`(`address`: String, `onchainFeeRate`: UInt): SweepInfo =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_sweep(it,
+        FfiConverterString.lower(`address`),FfiConverterUInt.lower(`onchainFeeRate`),
+        _status)
+}
+        }.let {
+            FfiConverterTypeSweepInfo.lift(it)
+        }
+    
+    
     @Throws(LnException::class)override fun `queryLspFee`(): LspFee =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
@@ -1656,6 +1684,17 @@ class LightningNode(
         }
     
     
+    @Throws(LnException::class)override fun `resetFiatTopup`() =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_reset_fiat_topup(it,
+        
+        _status)
+}
+        }
+    
+    
+    
     @Throws(LnException::class)override fun `resolveFailedSwap`(`resolveFailedSwapInfo`: ResolveFailedSwapInfo): String =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
@@ -1680,11 +1719,11 @@ class LightningNode(
         }
     
     
-    @Throws(LnException::class)override fun `sweep`(`address`: String, `onchainFeeRate`: UInt): String =
+    @Throws(LnException::class)override fun `sweep`(`sweepInfo`: SweepInfo): String =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
     _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(it,
-        FfiConverterString.lower(`address`),FfiConverterUInt.lower(`onchainFeeRate`),
+        FfiConverterTypeSweepInfo.lower(`sweepInfo`),
         _status)
 }
         }.let {
@@ -2651,6 +2690,40 @@ public object FfiConverterTypeSwapInfo: FfiConverterRustBuffer<SwapInfo> {
             FfiConverterString.write(value.`bitcoinAddress`, buf)
             FfiConverterTypeTzTime.write(value.`createdAt`, buf)
             FfiConverterULong.write(value.`paidSats`, buf)
+    }
+}
+
+
+
+
+data class SweepInfo (
+    var `address`: String, 
+    var `onchainFeeRate`: UInt, 
+    var `onchainFeeSat`: Amount
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeSweepInfo: FfiConverterRustBuffer<SweepInfo> {
+    override fun read(buf: ByteBuffer): SweepInfo {
+        return SweepInfo(
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterTypeAmount.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SweepInfo) = (
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterUInt.allocationSize(value.`onchainFeeRate`) +
+            FfiConverterTypeAmount.allocationSize(value.`onchainFeeSat`)
+    )
+
+    override fun write(value: SweepInfo, buf: ByteBuffer) {
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterUInt.write(value.`onchainFeeRate`, buf)
+            FfiConverterTypeAmount.write(value.`onchainFeeSat`, buf)
     }
 }
 
