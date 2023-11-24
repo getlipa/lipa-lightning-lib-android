@@ -2424,6 +2424,7 @@ data class Payment (
     var `failReason`: PayErrorCode?, 
     var `hash`: String, 
     var `amount`: Amount, 
+    var `requestedAmount`: Amount, 
     var `invoiceDetails`: InvoiceDetails, 
     var `createdAt`: TzTime, 
     var `description`: String, 
@@ -2445,6 +2446,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterOptionalTypePayErrorCode.read(buf),
             FfiConverterString.read(buf),
             FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeAmount.read(buf),
             FfiConverterTypeInvoiceDetails.read(buf),
             FfiConverterTypeTzTime.read(buf),
             FfiConverterString.read(buf),
@@ -2462,6 +2464,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterOptionalTypePayErrorCode.allocationSize(value.`failReason`) +
             FfiConverterString.allocationSize(value.`hash`) +
             FfiConverterTypeAmount.allocationSize(value.`amount`) +
+            FfiConverterTypeAmount.allocationSize(value.`requestedAmount`) +
             FfiConverterTypeInvoiceDetails.allocationSize(value.`invoiceDetails`) +
             FfiConverterTypeTzTime.allocationSize(value.`createdAt`) +
             FfiConverterString.allocationSize(value.`description`) +
@@ -2478,6 +2481,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterOptionalTypePayErrorCode.write(value.`failReason`, buf)
             FfiConverterString.write(value.`hash`, buf)
             FfiConverterTypeAmount.write(value.`amount`, buf)
+            FfiConverterTypeAmount.write(value.`requestedAmount`, buf)
             FfiConverterTypeInvoiceDetails.write(value.`invoiceDetails`, buf)
             FfiConverterTypeTzTime.write(value.`createdAt`, buf)
             FfiConverterString.write(value.`description`, buf)
