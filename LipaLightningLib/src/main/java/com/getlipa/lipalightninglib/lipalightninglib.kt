@@ -2258,6 +2258,82 @@ public object FfiConverterTypeLnUrlPayRequestData: FfiConverterRustBuffer<LnUrlP
 
 
 
+data class LnUrlWithdrawDetails (
+    var `minWithdrawable`: Amount, 
+    var `maxWithdrawable`: Amount, 
+    var `requestData`: LnUrlWithdrawRequestData
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeLnUrlWithdrawDetails: FfiConverterRustBuffer<LnUrlWithdrawDetails> {
+    override fun read(buf: ByteBuffer): LnUrlWithdrawDetails {
+        return LnUrlWithdrawDetails(
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeLnUrlWithdrawRequestData.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: LnUrlWithdrawDetails) = (
+            FfiConverterTypeAmount.allocationSize(value.`minWithdrawable`) +
+            FfiConverterTypeAmount.allocationSize(value.`maxWithdrawable`) +
+            FfiConverterTypeLnUrlWithdrawRequestData.allocationSize(value.`requestData`)
+    )
+
+    override fun write(value: LnUrlWithdrawDetails, buf: ByteBuffer) {
+            FfiConverterTypeAmount.write(value.`minWithdrawable`, buf)
+            FfiConverterTypeAmount.write(value.`maxWithdrawable`, buf)
+            FfiConverterTypeLnUrlWithdrawRequestData.write(value.`requestData`, buf)
+    }
+}
+
+
+
+
+data class LnUrlWithdrawRequestData (
+    var `callback`: String, 
+    var `k1`: String, 
+    var `defaultDescription`: String, 
+    var `minWithdrawable`: ULong, 
+    var `maxWithdrawable`: ULong
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeLnUrlWithdrawRequestData: FfiConverterRustBuffer<LnUrlWithdrawRequestData> {
+    override fun read(buf: ByteBuffer): LnUrlWithdrawRequestData {
+        return LnUrlWithdrawRequestData(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: LnUrlWithdrawRequestData) = (
+            FfiConverterString.allocationSize(value.`callback`) +
+            FfiConverterString.allocationSize(value.`k1`) +
+            FfiConverterString.allocationSize(value.`defaultDescription`) +
+            FfiConverterULong.allocationSize(value.`minWithdrawable`) +
+            FfiConverterULong.allocationSize(value.`maxWithdrawable`)
+    )
+
+    override fun write(value: LnUrlWithdrawRequestData, buf: ByteBuffer) {
+            FfiConverterString.write(value.`callback`, buf)
+            FfiConverterString.write(value.`k1`, buf)
+            FfiConverterString.write(value.`defaultDescription`, buf)
+            FfiConverterULong.write(value.`minWithdrawable`, buf)
+            FfiConverterULong.write(value.`maxWithdrawable`, buf)
+    }
+}
+
+
+
+
 data class LspFee (
     var `channelMinimumFee`: Amount, 
     var `channelFeePermyriad`: ULong
@@ -2905,6 +2981,11 @@ sealed class DecodedData {
         ) : DecodedData() {
         companion object
     }
+    data class LnUrlWithdraw(
+        val `lnurlWithdrawDetails`: LnUrlWithdrawDetails
+        ) : DecodedData() {
+        companion object
+    }
     
 
     
@@ -2919,6 +3000,9 @@ public object FfiConverterTypeDecodedData : FfiConverterRustBuffer<DecodedData>{
                 )
             2 -> DecodedData.LnUrlPay(
                 FfiConverterTypeLnUrlPayDetails.read(buf),
+                )
+            3 -> DecodedData.LnUrlWithdraw(
+                FfiConverterTypeLnUrlWithdrawDetails.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
         }
@@ -2939,6 +3023,13 @@ public object FfiConverterTypeDecodedData : FfiConverterRustBuffer<DecodedData>{
                 + FfiConverterTypeLnUrlPayDetails.allocationSize(value.`lnurlPayDetails`)
             )
         }
+        is DecodedData.LnUrlWithdraw -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypeLnUrlWithdrawDetails.allocationSize(value.`lnurlWithdrawDetails`)
+            )
+        }
     }
 
     override fun write(value: DecodedData, buf: ByteBuffer) {
@@ -2951,6 +3042,11 @@ public object FfiConverterTypeDecodedData : FfiConverterRustBuffer<DecodedData>{
             is DecodedData.LnUrlPay -> {
                 buf.putInt(2)
                 FfiConverterTypeLnUrlPayDetails.write(value.`lnurlPayDetails`, buf)
+                Unit
+            }
+            is DecodedData.LnUrlWithdraw -> {
+                buf.putInt(3)
+                FfiConverterTypeLnUrlWithdrawDetails.write(value.`lnurlWithdrawDetails`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -3268,7 +3364,7 @@ public object FfiConverterTypeLnUrlPayError : FfiConverterRustBuffer<LnUrlPayExc
 
 
 enum class LnUrlPayErrorCode {
-    LN_URL_SERVER_ERROR,NO_ROUTE_FOUND,PAYMENT_FAILED,PAYMENT_TIMEOUT,ROUTE_TOO_EXPENSIVE,UNEXPECTED_ERROR,SERVICE_CONNECTIVITY;
+    LN_URL_SERVER_ERROR,NO_ROUTE_FOUND,PAYMENT_FAILED,PAYMENT_TIMEOUT,ROUTE_TOO_EXPENSIVE,UNEXPECTED_ERROR,SERVICE_CONNECTIVITY,INVALID_NETWORK;
     companion object
 }
 
@@ -4123,22 +4219,98 @@ public object FfiConverterTypeTemporaryFailureCode : FfiConverterRustBuffer<Temp
 
 
 
-enum class UnsupportedDataType {
-    BITCOIN_ADDRESS,LN_URL_AUTH,LN_URL_WITHDRAW,NODE_ID,URL;
+sealed class UnsupportedDataType {
+    object BitcoinAddress : UnsupportedDataType()
+    
+    object LnUrlAuth : UnsupportedDataType()
+    
+    object NodeId : UnsupportedDataType()
+    
+    object Url : UnsupportedDataType()
+    
+    data class Network(
+        val `network`: String
+        ) : UnsupportedDataType() {
+        companion object
+    }
+    
+
+    
     companion object
 }
 
-public object FfiConverterTypeUnsupportedDataType: FfiConverterRustBuffer<UnsupportedDataType> {
-    override fun read(buf: ByteBuffer) = try {
-        UnsupportedDataType.values()[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+public object FfiConverterTypeUnsupportedDataType : FfiConverterRustBuffer<UnsupportedDataType>{
+    override fun read(buf: ByteBuffer): UnsupportedDataType {
+        return when(buf.getInt()) {
+            1 -> UnsupportedDataType.BitcoinAddress
+            2 -> UnsupportedDataType.LnUrlAuth
+            3 -> UnsupportedDataType.NodeId
+            4 -> UnsupportedDataType.Url
+            5 -> UnsupportedDataType.Network(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
     }
 
-    override fun allocationSize(value: UnsupportedDataType) = 4
+    override fun allocationSize(value: UnsupportedDataType) = when(value) {
+        is UnsupportedDataType.BitcoinAddress -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+            )
+        }
+        is UnsupportedDataType.LnUrlAuth -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+            )
+        }
+        is UnsupportedDataType.NodeId -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+            )
+        }
+        is UnsupportedDataType.Url -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+            )
+        }
+        is UnsupportedDataType.Network -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterString.allocationSize(value.`network`)
+            )
+        }
+    }
 
     override fun write(value: UnsupportedDataType, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
+        when(value) {
+            is UnsupportedDataType.BitcoinAddress -> {
+                buf.putInt(1)
+                Unit
+            }
+            is UnsupportedDataType.LnUrlAuth -> {
+                buf.putInt(2)
+                Unit
+            }
+            is UnsupportedDataType.NodeId -> {
+                buf.putInt(3)
+                Unit
+            }
+            is UnsupportedDataType.Url -> {
+                buf.putInt(4)
+                Unit
+            }
+            is UnsupportedDataType.Network -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.`network`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 }
 
