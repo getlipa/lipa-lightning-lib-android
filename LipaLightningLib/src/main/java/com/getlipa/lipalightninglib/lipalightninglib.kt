@@ -422,6 +422,8 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_uuid(`ptr`: Pointer,`paymentHash`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_terms_and_conditions_status(`ptr`: Pointer,`termsAndConditions`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_unresolved_failed_swaps(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
@@ -467,6 +469,8 @@ internal interface _UniFFILib : Library {
     fun uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_func_generate_secret(`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_func_get_terms_and_conditions_status(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`termsAndConditions`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_mnemonic_to_secret(`mnemonicString`: RustBuffer.ByValue,`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
@@ -592,6 +596,8 @@ internal interface _UniFFILib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_func_generate_secret(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_func_get_terms_and_conditions_status(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_func_recover_lightning_node(
@@ -629,6 +635,8 @@ internal interface _UniFFILib : Library {
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_max_routing_fee_mode(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_uuid(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_terms_and_conditions_status(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_unresolved_failed_swaps(
     ): Short
@@ -703,6 +711,9 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_generate_secret() != 21258.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_get_terms_and_conditions_status() != 37907.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret() != 57197.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -758,6 +769,9 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_uuid() != 30652.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_terms_and_conditions_status() != 56486.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_unresolved_failed_swaps() != 8758.toShort()) {
@@ -1271,6 +1285,7 @@ public interface LightningNodeInterface {
     fun `getPaymentAmountLimits`(): PaymentAmountLimits
     fun `getPaymentMaxRoutingFeeMode`(`amountSat`: ULong): MaxRoutingFeeMode@Throws(LnException::class)
     fun `getPaymentUuid`(`paymentHash`: String): String@Throws(LnException::class)
+    fun `getTermsAndConditionsStatus`(`termsAndConditions`: TermsAndConditions): TermsAndConditionsStatus@Throws(LnException::class)
     fun `getUnresolvedFailedSwaps`(): List<FailedSwapInfo>
     fun `getWalletPubkeyId`(): String?@Throws(LnException::class)
     fun `hideTopup`(`id`: String)
@@ -1496,6 +1511,18 @@ class LightningNode(
 }
         }.let {
             FfiConverterString.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `getTermsAndConditionsStatus`(`termsAndConditions`: TermsAndConditions): TermsAndConditionsStatus =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_terms_and_conditions_status(it,
+        FfiConverterTypeTermsAndConditions.lower(`termsAndConditions`),
+        _status)
+}
+        }.let {
+            FfiConverterTypeTermsAndConditionsStatus.lift(it)
         }
     
     
@@ -2804,6 +2831,36 @@ public object FfiConverterTypeSweepInfo: FfiConverterRustBuffer<SweepInfo> {
             FfiConverterString.write(value.`address`, buf)
             FfiConverterUInt.write(value.`onchainFeeRate`, buf)
             FfiConverterTypeAmount.write(value.`onchainFeeSat`, buf)
+    }
+}
+
+
+
+
+data class TermsAndConditionsStatus (
+    var `acceptedAt`: java.time.Instant?, 
+    var `termsAndConditions`: TermsAndConditions
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeTermsAndConditionsStatus: FfiConverterRustBuffer<TermsAndConditionsStatus> {
+    override fun read(buf: ByteBuffer): TermsAndConditionsStatus {
+        return TermsAndConditionsStatus(
+            FfiConverterOptionalTimestamp.read(buf),
+            FfiConverterTypeTermsAndConditions.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: TermsAndConditionsStatus) = (
+            FfiConverterOptionalTimestamp.allocationSize(value.`acceptedAt`) +
+            FfiConverterTypeTermsAndConditions.allocationSize(value.`termsAndConditions`)
+    )
+
+    override fun write(value: TermsAndConditionsStatus, buf: ByteBuffer) {
+            FfiConverterOptionalTimestamp.write(value.`acceptedAt`, buf)
+            FfiConverterTypeTermsAndConditions.write(value.`termsAndConditions`, buf)
     }
 }
 
@@ -4219,6 +4276,30 @@ public object FfiConverterTypeTemporaryFailureCode : FfiConverterRustBuffer<Temp
 
 
 
+enum class TermsAndConditions {
+    LIPA,POCKET;
+    companion object
+}
+
+public object FfiConverterTypeTermsAndConditions: FfiConverterRustBuffer<TermsAndConditions> {
+    override fun read(buf: ByteBuffer) = try {
+        TermsAndConditions.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: TermsAndConditions) = 4
+
+    override fun write(value: TermsAndConditions, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
 sealed class UnsupportedDataType {
     object BitcoinAddress : UnsupportedDataType()
     
@@ -5013,6 +5094,15 @@ fun `generateSecret`(`passphrase`: String): Secret {
     return FfiConverterTypeSecret.lift(
     rustCallWithError(SimpleException) { _status ->
     _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_generate_secret(FfiConverterString.lower(`passphrase`),_status)
+})
+}
+
+@Throws(LnException::class)
+
+fun `getTermsAndConditionsStatus`(`environment`: EnvironmentCode, `seed`: ByteArray, `termsAndConditions`: TermsAndConditions): TermsAndConditionsStatus {
+    return FfiConverterTypeTermsAndConditionsStatus.lift(
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_get_terms_and_conditions_status(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterTypeTermsAndConditions.lower(`termsAndConditions`),_status)
 })
 }
 
