@@ -432,6 +432,8 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_lightning_addresses(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(`ptr`: Pointer,`invoiceDetails`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
@@ -646,6 +648,8 @@ internal interface _UniFFILib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_currency_codes(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_lightning_addresses(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_log_debug_info(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice(
@@ -784,6 +788,9 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_currency_codes() != 24226.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_lightning_addresses() != 15848.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_log_debug_info() != 32021.toShort()) {
@@ -1290,6 +1297,7 @@ public interface LightningNodeInterface {
     fun `getWalletPubkeyId`(): String?@Throws(LnException::class)
     fun `hideTopup`(`id`: String)
     fun `listCurrencyCodes`(): List<String>@Throws(LnException::class)
+    fun `listLightningAddresses`(): List<String>@Throws(LnException::class)
     fun `logDebugInfo`()@Throws(PayException::class)
     fun `payInvoice`(`invoiceDetails`: InvoiceDetails, `metadata`: PaymentMetadata)@Throws(LnUrlPayException::class)
     fun `payLnurlp`(`lnurlPayRequestData`: LnUrlPayRequestData, `amountSat`: ULong): String@Throws(PayException::class)
@@ -1563,6 +1571,18 @@ class LightningNode(
         callWithPointer {
     rustCall() { _status ->
     _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterSequenceString.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `listLightningAddresses`(): List<String> =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_lightning_addresses(it,
         
         _status)
 }
@@ -2535,7 +2555,8 @@ data class Payment (
     var `networkFees`: Amount?, 
     var `lspFees`: Amount?, 
     var `offer`: OfferKind?, 
-    var `swap`: SwapInfo?
+    var `swap`: SwapInfo?, 
+    var `lightningAddress`: String?
 ) {
     
     companion object
@@ -2558,6 +2579,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterOptionalTypeAmount.read(buf),
             FfiConverterOptionalTypeOfferKind.read(buf),
             FfiConverterOptionalTypeSwapInfo.read(buf),
+            FfiConverterOptionalString.read(buf),
         )
     }
 
@@ -2575,7 +2597,8 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterOptionalTypeAmount.allocationSize(value.`networkFees`) +
             FfiConverterOptionalTypeAmount.allocationSize(value.`lspFees`) +
             FfiConverterOptionalTypeOfferKind.allocationSize(value.`offer`) +
-            FfiConverterOptionalTypeSwapInfo.allocationSize(value.`swap`)
+            FfiConverterOptionalTypeSwapInfo.allocationSize(value.`swap`) +
+            FfiConverterOptionalString.allocationSize(value.`lightningAddress`)
     )
 
     override fun write(value: Payment, buf: ByteBuffer) {
@@ -2593,6 +2616,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterOptionalTypeAmount.write(value.`lspFees`, buf)
             FfiConverterOptionalTypeOfferKind.write(value.`offer`, buf)
             FfiConverterOptionalTypeSwapInfo.write(value.`swap`, buf)
+            FfiConverterOptionalString.write(value.`lightningAddress`, buf)
     }
 }
 
