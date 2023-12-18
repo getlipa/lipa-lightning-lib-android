@@ -394,6 +394,8 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_background(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_calculate_lightning_payout_fee(`ptr`: Pointer,`offer`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_calculate_lsp_fee(`ptr`: Pointer,`amountSat`: Long,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_change_fiat_currency(`ptr`: Pointer,`fiatCurrency`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
@@ -610,6 +612,8 @@ internal interface _UniFFILib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_background(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_calculate_lightning_payout_fee(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_calculate_lsp_fee(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_change_fiat_currency(
@@ -731,6 +735,9 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_background() != 28178.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_calculate_lightning_payout_fee() != 11953.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_calculate_lsp_fee() != 45291.toShort()) {
@@ -1278,6 +1285,7 @@ public interface LightningNodeInterface {
     @Throws(LnException::class)
     fun `acceptPocketTermsAndConditions`()
     fun `background`()@Throws(LnException::class)
+    fun `calculateLightningPayoutFee`(`offer`: OfferInfo): Amount@Throws(LnException::class)
     fun `calculateLspFee`(`amountSat`: ULong): CalculateLspFeeResponse
     fun `changeFiatCurrency`(`fiatCurrency`: String)
     fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)@Throws(LnException::class)
@@ -1360,6 +1368,18 @@ class LightningNode(
 }
         }
     
+    
+    
+    @Throws(LnException::class)override fun `calculateLightningPayoutFee`(`offer`: OfferInfo): Amount =
+        callWithPointer {
+    rustCallWithError(LnException) { _status ->
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_calculate_lightning_payout_fee(it,
+        FfiConverterTypeOfferInfo.lower(`offer`),
+        _status)
+}
+        }.let {
+            FfiConverterTypeAmount.lift(it)
+        }
     
     
     @Throws(LnException::class)override fun `calculateLspFee`(`amountSat`: ULong): CalculateLspFeeResponse =
@@ -3662,8 +3682,10 @@ sealed class OfferKind {
         val `id`: String, 
         val `exchangeRate`: ExchangeRate, 
         val `topupValueMinorUnits`: ULong, 
+        val `topupValueSats`: ULong, 
         val `exchangeFeeMinorUnits`: ULong, 
         val `exchangeFeeRatePermyriad`: UShort, 
+        val `lightningPayoutFee`: Amount?, 
         val `error`: PocketOfferError?
         ) : OfferKind() {
         companion object
@@ -3682,7 +3704,9 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
                 FfiConverterTypeExchangeRate.read(buf),
                 FfiConverterULong.read(buf),
                 FfiConverterULong.read(buf),
+                FfiConverterULong.read(buf),
                 FfiConverterUShort.read(buf),
+                FfiConverterOptionalTypeAmount.read(buf),
                 FfiConverterOptionalTypePocketOfferError.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
@@ -3697,8 +3721,10 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
                 + FfiConverterString.allocationSize(value.`id`)
                 + FfiConverterTypeExchangeRate.allocationSize(value.`exchangeRate`)
                 + FfiConverterULong.allocationSize(value.`topupValueMinorUnits`)
+                + FfiConverterULong.allocationSize(value.`topupValueSats`)
                 + FfiConverterULong.allocationSize(value.`exchangeFeeMinorUnits`)
                 + FfiConverterUShort.allocationSize(value.`exchangeFeeRatePermyriad`)
+                + FfiConverterOptionalTypeAmount.allocationSize(value.`lightningPayoutFee`)
                 + FfiConverterOptionalTypePocketOfferError.allocationSize(value.`error`)
             )
         }
@@ -3711,8 +3737,10 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
                 FfiConverterString.write(value.`id`, buf)
                 FfiConverterTypeExchangeRate.write(value.`exchangeRate`, buf)
                 FfiConverterULong.write(value.`topupValueMinorUnits`, buf)
+                FfiConverterULong.write(value.`topupValueSats`, buf)
                 FfiConverterULong.write(value.`exchangeFeeMinorUnits`, buf)
                 FfiConverterUShort.write(value.`exchangeFeeRatePermyriad`, buf)
+                FfiConverterOptionalTypeAmount.write(value.`lightningPayoutFee`, buf)
                 FfiConverterOptionalTypePocketOfferError.write(value.`error`, buf)
                 Unit
             }
