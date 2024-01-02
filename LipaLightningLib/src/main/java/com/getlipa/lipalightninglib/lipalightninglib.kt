@@ -764,7 +764,7 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_exchange_rate() != 49547.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_latest_payments() != 59043.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_latest_payments() != 58495.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_node_info() != 317.toShort()) {
@@ -1294,7 +1294,7 @@ public interface LightningNodeInterface {
     fun `foreground`()@Throws(SwapException::class)
     fun `generateSwapAddress`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo
     fun `getExchangeRate`(): ExchangeRate?@Throws(LnException::class)
-    fun `getLatestPayments`(`numberOfPayments`: UInt): List<Payment>@Throws(LnException::class)
+    fun `getLatestPayments`(`numberOfPayments`: UInt): ListPaymentsResponse@Throws(LnException::class)
     fun `getNodeInfo`(): NodeInfo@Throws(LnException::class)
     fun `getPayment`(`hash`: String): Payment@Throws(LnException::class)
     fun `getPaymentAmountLimits`(): PaymentAmountLimits
@@ -1471,7 +1471,7 @@ class LightningNode(
         }
     
     
-    @Throws(LnException::class)override fun `getLatestPayments`(`numberOfPayments`: UInt): List<Payment> =
+    @Throws(LnException::class)override fun `getLatestPayments`(`numberOfPayments`: UInt): ListPaymentsResponse =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
     _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_latest_payments(it,
@@ -1479,7 +1479,7 @@ class LightningNode(
         _status)
 }
         }.let {
-            FfiConverterSequenceTypePayment.lift(it)
+            FfiConverterTypeListPaymentsResponse.lift(it)
         }
     
     
@@ -2235,6 +2235,36 @@ public object FfiConverterTypeInvoiceDetails: FfiConverterRustBuffer<InvoiceDeta
             FfiConverterTimestamp.write(value.`creationTimestamp`, buf)
             FfiConverterDuration.write(value.`expiryInterval`, buf)
             FfiConverterTimestamp.write(value.`expiryTimestamp`, buf)
+    }
+}
+
+
+
+
+data class ListPaymentsResponse (
+    var `pendingPayments`: List<Payment>, 
+    var `completedPayments`: List<Payment>
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeListPaymentsResponse: FfiConverterRustBuffer<ListPaymentsResponse> {
+    override fun read(buf: ByteBuffer): ListPaymentsResponse {
+        return ListPaymentsResponse(
+            FfiConverterSequenceTypePayment.read(buf),
+            FfiConverterSequenceTypePayment.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ListPaymentsResponse) = (
+            FfiConverterSequenceTypePayment.allocationSize(value.`pendingPayments`) +
+            FfiConverterSequenceTypePayment.allocationSize(value.`completedPayments`)
+    )
+
+    override fun write(value: ListPaymentsResponse, buf: ByteBuffer) {
+            FfiConverterSequenceTypePayment.write(value.`pendingPayments`, buf)
+            FfiConverterSequenceTypePayment.write(value.`completedPayments`, buf)
     }
 }
 
