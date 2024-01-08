@@ -3805,7 +3805,7 @@ sealed class OfferKind {
         val `id`: String, 
         val `exchangeRate`: ExchangeRate, 
         val `topupValueMinorUnits`: ULong, 
-        val `topupValueSats`: ULong, 
+        val `topupValueSats`: ULong?, 
         val `exchangeFeeMinorUnits`: ULong, 
         val `exchangeFeeRatePermyriad`: UShort, 
         val `lightningPayoutFee`: Amount?, 
@@ -3826,7 +3826,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
                 FfiConverterString.read(buf),
                 FfiConverterTypeExchangeRate.read(buf),
                 FfiConverterULong.read(buf),
-                FfiConverterULong.read(buf),
+                FfiConverterOptionalULong.read(buf),
                 FfiConverterULong.read(buf),
                 FfiConverterUShort.read(buf),
                 FfiConverterOptionalTypeAmount.read(buf),
@@ -3844,7 +3844,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
                 + FfiConverterString.allocationSize(value.`id`)
                 + FfiConverterTypeExchangeRate.allocationSize(value.`exchangeRate`)
                 + FfiConverterULong.allocationSize(value.`topupValueMinorUnits`)
-                + FfiConverterULong.allocationSize(value.`topupValueSats`)
+                + FfiConverterOptionalULong.allocationSize(value.`topupValueSats`)
                 + FfiConverterULong.allocationSize(value.`exchangeFeeMinorUnits`)
                 + FfiConverterUShort.allocationSize(value.`exchangeFeeRatePermyriad`)
                 + FfiConverterOptionalTypeAmount.allocationSize(value.`lightningPayoutFee`)
@@ -3860,7 +3860,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
                 FfiConverterString.write(value.`id`, buf)
                 FfiConverterTypeExchangeRate.write(value.`exchangeRate`, buf)
                 FfiConverterULong.write(value.`topupValueMinorUnits`, buf)
-                FfiConverterULong.write(value.`topupValueSats`, buf)
+                FfiConverterOptionalULong.write(value.`topupValueSats`, buf)
                 FfiConverterULong.write(value.`exchangeFeeMinorUnits`, buf)
                 FfiConverterUShort.write(value.`exchangeFeeRatePermyriad`, buf)
                 FfiConverterOptionalTypeAmount.write(value.`lightningPayoutFee`, buf)
@@ -4865,6 +4865,35 @@ public object FfiConverterTypeEventsCallback: FfiConverterCallbackInterface<Even
     override fun register(lib: _UniFFILib) {
         rustCall() { status ->
             lib.uniffi_uniffi_lipalightninglib_fn_init_callback_eventscallback(this.foreignCallback, status)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalULong: FfiConverterRustBuffer<ULong?> {
+    override fun read(buf: ByteBuffer): ULong? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterULong.read(buf)
+    }
+
+    override fun allocationSize(value: ULong?): Int {
+        if (value == null) {
+            return 1
+        } else {
+            return 1 + FfiConverterULong.allocationSize(value)
+        }
+    }
+
+    override fun write(value: ULong?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterULong.write(value, buf)
         }
     }
 }
