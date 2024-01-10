@@ -412,10 +412,6 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_exchange_rate(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_health_status(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_invoice_affordability(`ptr`: Pointer,`amountSat`: Long,_uniffi_out_err: RustCallStatus, 
-    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_latest_payments(`ptr`: Pointer,`numberOfPayments`: Int,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_node_info(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
@@ -634,10 +630,6 @@ internal interface _UniFFILib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_exchange_rate(
     ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_health_status(
-    ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_invoice_affordability(
-    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_latest_payments(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_node_info(
@@ -703,8 +695,6 @@ internal interface _UniFFILib : Library {
     fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_payment_failed(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_channel_closed(
-    ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_breez_health_status_changed_to(
     ): Short
     fun ffi_uniffi_lipalightninglib_uniffi_contract_version(
     ): Int
@@ -774,13 +764,7 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_exchange_rate() != 49547.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_health_status() != 10724.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_invoice_affordability() != 56290.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_latest_payments() != 58495.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_latest_payments() != 59043.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_node_info() != 317.toShort()) {
@@ -877,9 +861,6 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_channel_closed() != 22287.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_breez_health_status_changed_to() != 56698.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -1313,9 +1294,7 @@ public interface LightningNodeInterface {
     fun `foreground`()@Throws(SwapException::class)
     fun `generateSwapAddress`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo
     fun `getExchangeRate`(): ExchangeRate?@Throws(LnException::class)
-    fun `getHealthStatus`(): BreezHealthCheckStatus@Throws(LnException::class)
-    fun `getInvoiceAffordability`(`amountSat`: ULong): InvoiceAffordability@Throws(LnException::class)
-    fun `getLatestPayments`(`numberOfPayments`: UInt): ListPaymentsResponse@Throws(LnException::class)
+    fun `getLatestPayments`(`numberOfPayments`: UInt): List<Payment>@Throws(LnException::class)
     fun `getNodeInfo`(): NodeInfo@Throws(LnException::class)
     fun `getPayment`(`hash`: String): Payment@Throws(LnException::class)
     fun `getPaymentAmountLimits`(): PaymentAmountLimits
@@ -1492,31 +1471,7 @@ class LightningNode(
         }
     
     
-    @Throws(LnException::class)override fun `getHealthStatus`(): BreezHealthCheckStatus =
-        callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_health_status(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterTypeBreezHealthCheckStatus.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getInvoiceAffordability`(`amountSat`: ULong): InvoiceAffordability =
-        callWithPointer {
-    rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_invoice_affordability(it,
-        FfiConverterULong.lower(`amountSat`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeInvoiceAffordability.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getLatestPayments`(`numberOfPayments`: UInt): ListPaymentsResponse =
+    @Throws(LnException::class)override fun `getLatestPayments`(`numberOfPayments`: UInt): List<Payment> =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
     _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_latest_payments(it,
@@ -1524,7 +1479,7 @@ class LightningNode(
         _status)
 }
         }.let {
-            FfiConverterTypeListPaymentsResponse.lift(it)
+            FfiConverterSequenceTypePayment.lift(it)
         }
     
     
@@ -2286,36 +2241,6 @@ public object FfiConverterTypeInvoiceDetails: FfiConverterRustBuffer<InvoiceDeta
 
 
 
-data class ListPaymentsResponse (
-    var `pendingPayments`: List<Payment>, 
-    var `completedPayments`: List<Payment>
-) {
-    
-    companion object
-}
-
-public object FfiConverterTypeListPaymentsResponse: FfiConverterRustBuffer<ListPaymentsResponse> {
-    override fun read(buf: ByteBuffer): ListPaymentsResponse {
-        return ListPaymentsResponse(
-            FfiConverterSequenceTypePayment.read(buf),
-            FfiConverterSequenceTypePayment.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: ListPaymentsResponse) = (
-            FfiConverterSequenceTypePayment.allocationSize(value.`pendingPayments`) +
-            FfiConverterSequenceTypePayment.allocationSize(value.`completedPayments`)
-    )
-
-    override fun write(value: ListPaymentsResponse, buf: ByteBuffer) {
-            FfiConverterSequenceTypePayment.write(value.`pendingPayments`, buf)
-            FfiConverterSequenceTypePayment.write(value.`completedPayments`, buf)
-    }
-}
-
-
-
-
 data class LnUrlPayDetails (
     var `minSendable`: Amount, 
     var `maxSendable`: Amount, 
@@ -3050,30 +2975,6 @@ public object FfiConverterTypeTzTime: FfiConverterRustBuffer<TzTime> {
 
 
 
-enum class BreezHealthCheckStatus {
-    OPERATIONAL,MAINTENANCE,SERVICE_DISRUPTION;
-    companion object
-}
-
-public object FfiConverterTypeBreezHealthCheckStatus: FfiConverterRustBuffer<BreezHealthCheckStatus> {
-    override fun read(buf: ByteBuffer) = try {
-        BreezHealthCheckStatus.values()[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: BreezHealthCheckStatus) = 4
-
-    override fun write(value: BreezHealthCheckStatus, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
-    }
-}
-
-
-
-
-
-
 
 sealed class DecodeDataException: Exception() {
     // Each variant is a nested class
@@ -3273,30 +3174,6 @@ public object FfiConverterTypeEnvironmentCode: FfiConverterRustBuffer<Environmen
     override fun allocationSize(value: EnvironmentCode) = 4
 
     override fun write(value: EnvironmentCode, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
-    }
-}
-
-
-
-
-
-
-enum class InvoiceAffordability {
-    NOT_ENOUGH_FUNDS,UNAFFORDABLE_FEES,AFFORDABLE;
-    companion object
-}
-
-public object FfiConverterTypeInvoiceAffordability: FfiConverterRustBuffer<InvoiceAffordability> {
-    override fun read(buf: ByteBuffer) = try {
-        InvoiceAffordability.values()[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: InvoiceAffordability) = 4
-
-    override fun write(value: InvoiceAffordability, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
@@ -4661,7 +4538,6 @@ public interface EventsCallback {
     fun `paymentSent`(`paymentHash`: String, `paymentPreimage`: String)
     fun `paymentFailed`(`paymentHash`: String)
     fun `channelClosed`(`channelId`: String, `reason`: String)
-    fun `breezHealthStatusChangedTo`(`status`: BreezHealthCheckStatus)
     
     companion object
 }
@@ -4731,22 +4607,6 @@ internal class ForeignCallbackTypeEventsCallback : ForeignCallback {
                 // See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for info
                 try {
                     this.`invokeChannelClosed`(cb, argsData, argsLen, outBuf)
-                } catch (e: Throwable) {
-                    // Unexpected error
-                    try {
-                        // Try to serialize the error into a string
-                        outBuf.setValue(FfiConverterString.lower(e.toString()))
-                    } catch (e: Throwable) {
-                        // If that fails, then it's time to give up and just return
-                    }
-                    UNIFFI_CALLBACK_UNEXPECTED_ERROR
-                }
-            }
-            5 -> {
-                // Call the method, write to outBuf and return a status code
-                // See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for info
-                try {
-                    this.`invokeBreezHealthStatusChangedTo`(cb, argsData, argsLen, outBuf)
                 } catch (e: Throwable) {
                     // Unexpected error
                     try {
@@ -4832,22 +4692,6 @@ internal class ForeignCallbackTypeEventsCallback : ForeignCallback {
             kotlinCallbackInterface.`channelClosed`(
                 FfiConverterString.read(argsBuf), 
                 FfiConverterString.read(argsBuf)
-            )
-            return UNIFFI_CALLBACK_SUCCESS
-        }
-        fun makeCallAndHandleError() : Int = makeCall()
-
-        return makeCallAndHandleError()
-    }
-    
-    @Suppress("UNUSED_PARAMETER")
-    private fun `invokeBreezHealthStatusChangedTo`(kotlinCallbackInterface: EventsCallback, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
-        val argsBuf = argsData.getByteBuffer(0, argsLen.toLong()).also {
-            it.order(ByteOrder.BIG_ENDIAN)
-        }
-        fun makeCall() : Int {
-            kotlinCallbackInterface.`breezHealthStatusChangedTo`(
-                FfiConverterTypeBreezHealthCheckStatus.read(argsBuf)
             )
             return UNIFFI_CALLBACK_SUCCESS
         }
