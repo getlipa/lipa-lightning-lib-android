@@ -3356,12 +3356,12 @@ public object FfiConverterTypeTzTime: FfiConverterRustBuffer<TzTime> {
 
 
 sealed class Activity {
-    data class Payment(
+    data class PaymentActivity(
         val `payment`: Payment
         ) : Activity() {
         companion object
     }
-    data class ChannelClose(
+    data class ChannelCloseActivity(
         val `channelClose`: ChannelClose
         ) : Activity() {
         companion object
@@ -3375,10 +3375,10 @@ sealed class Activity {
 public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
     override fun read(buf: ByteBuffer): Activity {
         return when(buf.getInt()) {
-            1 -> Activity.Payment(
+            1 -> Activity.PaymentActivity(
                 FfiConverterTypePayment.read(buf),
                 )
-            2 -> Activity.ChannelClose(
+            2 -> Activity.ChannelCloseActivity(
                 FfiConverterTypeChannelClose.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
@@ -3386,14 +3386,14 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
     }
 
     override fun allocationSize(value: Activity) = when(value) {
-        is Activity.Payment -> {
+        is Activity.PaymentActivity -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4
                 + FfiConverterTypePayment.allocationSize(value.`payment`)
             )
         }
-        is Activity.ChannelClose -> {
+        is Activity.ChannelCloseActivity -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4
@@ -3404,12 +3404,12 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
 
     override fun write(value: Activity, buf: ByteBuffer) {
         when(value) {
-            is Activity.Payment -> {
+            is Activity.PaymentActivity -> {
                 buf.putInt(1)
                 FfiConverterTypePayment.write(value.`payment`, buf)
                 Unit
             }
-            is Activity.ChannelClose -> {
+            is Activity.ChannelCloseActivity -> {
                 buf.putInt(2)
                 FfiConverterTypeChannelClose.write(value.`channelClose`, buf)
                 Unit
