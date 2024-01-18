@@ -2906,7 +2906,7 @@ data class Payment (
     var `lspFees`: Amount?, 
     var `offer`: OfferKind?, 
     var `swap`: SwapInfo?, 
-    var `lightningAddress`: String?
+    var `recipient`: Recipient?
 ) {
     
     companion object
@@ -2929,7 +2929,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterOptionalTypeAmount.read(buf),
             FfiConverterOptionalTypeOfferKind.read(buf),
             FfiConverterOptionalTypeSwapInfo.read(buf),
-            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalTypeRecipient.read(buf),
         )
     }
 
@@ -2948,7 +2948,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterOptionalTypeAmount.allocationSize(value.`lspFees`) +
             FfiConverterOptionalTypeOfferKind.allocationSize(value.`offer`) +
             FfiConverterOptionalTypeSwapInfo.allocationSize(value.`swap`) +
-            FfiConverterOptionalString.allocationSize(value.`lightningAddress`)
+            FfiConverterOptionalTypeRecipient.allocationSize(value.`recipient`)
     )
 
     override fun write(value: Payment, buf: ByteBuffer) {
@@ -2966,7 +2966,7 @@ public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
             FfiConverterOptionalTypeAmount.write(value.`lspFees`, buf)
             FfiConverterOptionalTypeOfferKind.write(value.`offer`, buf)
             FfiConverterOptionalTypeSwapInfo.write(value.`swap`, buf)
-            FfiConverterOptionalString.write(value.`lightningAddress`, buf)
+            FfiConverterOptionalTypeRecipient.write(value.`recipient`, buf)
     }
 }
 
@@ -4629,6 +4629,67 @@ public object FfiConverterTypePocketOfferError : FfiConverterRustBuffer<PocketOf
 
 
 
+sealed class Recipient {
+    data class LightningAddress(
+        val `address`: String
+        ) : Recipient() {
+        companion object
+    }
+    object Unknown : Recipient()
+    
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypeRecipient : FfiConverterRustBuffer<Recipient>{
+    override fun read(buf: ByteBuffer): Recipient {
+        return when(buf.getInt()) {
+            1 -> Recipient.LightningAddress(
+                FfiConverterString.read(buf),
+                )
+            2 -> Recipient.Unknown
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: Recipient) = when(value) {
+        is Recipient.LightningAddress -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterString.allocationSize(value.`address`)
+            )
+        }
+        is Recipient.Unknown -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+            )
+        }
+    }
+
+    override fun write(value: Recipient, buf: ByteBuffer) {
+        when(value) {
+            is Recipient.LightningAddress -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`address`, buf)
+                Unit
+            }
+            is Recipient.Unknown -> {
+                buf.putInt(2)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+
 enum class RuntimeErrorCode {
     AUTH_SERVICE_UNAVAILABLE,OFFER_SERVICE_UNAVAILABLE,LSP_SERVICE_UNAVAILABLE,BACKUP_SERVICE_UNAVAILABLE,BACKUP_NOT_FOUND,NO_ON_CHAIN_FUNDS_TO_RESOLVE,NODE_UNAVAILABLE,FAILED_FUND_MIGRATION;
     companion object
@@ -5712,6 +5773,35 @@ public object FfiConverterOptionalTypePocketOfferError: FfiConverterRustBuffer<P
         } else {
             buf.put(1)
             FfiConverterTypePocketOfferError.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeRecipient: FfiConverterRustBuffer<Recipient?> {
+    override fun read(buf: ByteBuffer): Recipient? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeRecipient.read(buf)
+    }
+
+    override fun allocationSize(value: Recipient?): Int {
+        if (value == null) {
+            return 1
+        } else {
+            return 1 + FfiConverterTypeRecipient.allocationSize(value)
+        }
+    }
+
+    override fun write(value: Recipient?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeRecipient.write(value, buf)
         }
     }
 }
