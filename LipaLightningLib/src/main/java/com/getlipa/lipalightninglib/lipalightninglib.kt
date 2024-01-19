@@ -390,7 +390,7 @@ internal interface _UniFFILib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_constructor_lightningnode_new(`config`: RustBuffer.ByValue,`eventsCallback`: Long,_uniffi_out_err: RustCallStatus, 
     ): Pointer
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(`ptr`: Pointer,`version`: Long,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_background(`ptr`: Pointer,_uniffi_out_err: RustCallStatus, 
     ): Unit
@@ -484,7 +484,7 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_init_callback_eventscallback(`callbackStub`: ForeignCallback,_uniffi_out_err: RustCallStatus, 
     ): Unit
-    fun uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`version`: Long,_uniffi_out_err: RustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_func_generate_secret(`passphrase`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
@@ -743,7 +743,7 @@ private fun uniffiCheckContractApiVersion(lib: _UniFFILib) {
 
 @Suppress("UNUSED_PARAMETER")
 private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_accept_terms_and_conditions() != 8141.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_accept_terms_and_conditions() != 30772.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_generate_secret() != 21258.toShort()) {
@@ -761,7 +761,7 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_words_by_prefix() != 60220.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_accept_pocket_terms_and_conditions() != 23597.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_accept_pocket_terms_and_conditions() != 11051.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_background() != 28178.toShort()) {
@@ -1001,6 +1001,26 @@ public object FfiConverterULong: FfiConverter<ULong, Long> {
 
     override fun write(value: ULong, buf: ByteBuffer) {
         buf.putLong(value.toLong())
+    }
+}
+
+public object FfiConverterLong: FfiConverter<Long, Long> {
+    override fun lift(value: Long): Long {
+        return value
+    }
+
+    override fun read(buf: ByteBuffer): Long {
+        return buf.getLong()
+    }
+
+    override fun lower(value: Long): Long {
+        return value
+    }
+
+    override fun allocationSize(value: Long) = 8
+
+    override fun write(value: Long, buf: ByteBuffer) {
+        buf.putLong(value)
     }
 }
 
@@ -1337,7 +1357,7 @@ abstract class FFIObject(
 
 public interface LightningNodeInterface {
     @Throws(LnException::class)
-    fun `acceptPocketTermsAndConditions`()
+    fun `acceptPocketTermsAndConditions`(`version`: Long)
     fun `background`()@Throws(LnException::class)
     fun `calculateLightningPayoutFee`(`offer`: OfferInfo): Amount@Throws(LnException::class)
     fun `calculateLspFee`(`amountSat`: ULong): CalculateLspFeeResponse
@@ -1410,11 +1430,11 @@ class LightningNode(
     }
 
     
-    @Throws(LnException::class)override fun `acceptPocketTermsAndConditions`() =
+    @Throws(LnException::class)override fun `acceptPocketTermsAndConditions`(`version`: Long) =
         callWithPointer {
     rustCallWithError(LnException) { _status ->
     _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(it,
-        
+        FfiConverterLong.lower(`version`),
         _status)
 }
         }
@@ -3267,7 +3287,8 @@ public object FfiConverterTypeSweepInfo: FfiConverterRustBuffer<SweepInfo> {
 
 data class TermsAndConditionsStatus (
     var `acceptedAt`: java.time.Instant?, 
-    var `termsAndConditions`: TermsAndConditions
+    var `termsAndConditions`: TermsAndConditions, 
+    var `version`: Long
 ) {
     
     companion object
@@ -3278,17 +3299,20 @@ public object FfiConverterTypeTermsAndConditionsStatus: FfiConverterRustBuffer<T
         return TermsAndConditionsStatus(
             FfiConverterOptionalTimestamp.read(buf),
             FfiConverterTypeTermsAndConditions.read(buf),
+            FfiConverterLong.read(buf),
         )
     }
 
     override fun allocationSize(value: TermsAndConditionsStatus) = (
             FfiConverterOptionalTimestamp.allocationSize(value.`acceptedAt`) +
-            FfiConverterTypeTermsAndConditions.allocationSize(value.`termsAndConditions`)
+            FfiConverterTypeTermsAndConditions.allocationSize(value.`termsAndConditions`) +
+            FfiConverterLong.allocationSize(value.`version`)
     )
 
     override fun write(value: TermsAndConditionsStatus, buf: ByteBuffer) {
             FfiConverterOptionalTimestamp.write(value.`acceptedAt`, buf)
             FfiConverterTypeTermsAndConditions.write(value.`termsAndConditions`, buf)
+            FfiConverterLong.write(value.`version`, buf)
     }
 }
 
@@ -5911,10 +5935,10 @@ public object FfiConverterSequenceTypeActivity: FfiConverterRustBuffer<List<Acti
 }
 @Throws(LnException::class)
 
-fun `acceptTermsAndConditions`(`environment`: EnvironmentCode, `seed`: ByteArray) =
+fun `acceptTermsAndConditions`(`environment`: EnvironmentCode, `seed`: ByteArray, `version`: Long) =
     
     rustCallWithError(LnException) { _status ->
-    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),_status)
+    _UniFFILib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterLong.lower(`version`),_status)
 }
 
 
