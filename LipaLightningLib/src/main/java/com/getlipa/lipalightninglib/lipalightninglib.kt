@@ -2572,6 +2572,7 @@ public object FfiConverterTypeListActivitiesResponse: FfiConverterRustBuffer<Lis
 
 
 data class LnUrlPayDetails (
+    var `domain`: String, 
     var `minSendable`: Amount, 
     var `maxSendable`: Amount, 
     var `requestData`: LnUrlPayRequestData
@@ -2583,6 +2584,7 @@ data class LnUrlPayDetails (
 public object FfiConverterTypeLnUrlPayDetails: FfiConverterRustBuffer<LnUrlPayDetails> {
     override fun read(buf: ByteBuffer): LnUrlPayDetails {
         return LnUrlPayDetails(
+            FfiConverterString.read(buf),
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeLnUrlPayRequestData.read(buf),
@@ -2590,12 +2592,14 @@ public object FfiConverterTypeLnUrlPayDetails: FfiConverterRustBuffer<LnUrlPayDe
     }
 
     override fun allocationSize(value: LnUrlPayDetails) = (
+            FfiConverterString.allocationSize(value.`domain`) +
             FfiConverterTypeAmount.allocationSize(value.`minSendable`) +
             FfiConverterTypeAmount.allocationSize(value.`maxSendable`) +
             FfiConverterTypeLnUrlPayRequestData.allocationSize(value.`requestData`)
     )
 
     override fun write(value: LnUrlPayDetails, buf: ByteBuffer) {
+            FfiConverterString.write(value.`domain`, buf)
             FfiConverterTypeAmount.write(value.`minSendable`, buf)
             FfiConverterTypeAmount.write(value.`maxSendable`, buf)
             FfiConverterTypeLnUrlPayRequestData.write(value.`requestData`, buf)
