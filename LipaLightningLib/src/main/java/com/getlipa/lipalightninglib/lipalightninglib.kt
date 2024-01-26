@@ -3320,7 +3320,7 @@ public object FfiConverterTypeSwapAddressInfo: FfiConverterRustBuffer<SwapAddres
 data class SwapInfo (
     var `bitcoinAddress`: String, 
     var `createdAt`: TzTime, 
-    var `paidSats`: ULong
+    var `paidMsats`: ULong
 ) {
     
     companion object
@@ -3338,13 +3338,13 @@ public object FfiConverterTypeSwapInfo: FfiConverterRustBuffer<SwapInfo> {
     override fun allocationSize(value: SwapInfo) = (
             FfiConverterString.allocationSize(value.`bitcoinAddress`) +
             FfiConverterTypeTzTime.allocationSize(value.`createdAt`) +
-            FfiConverterULong.allocationSize(value.`paidSats`)
+            FfiConverterULong.allocationSize(value.`paidMsats`)
     )
 
     override fun write(value: SwapInfo, buf: ByteBuffer) {
             FfiConverterString.write(value.`bitcoinAddress`, buf)
             FfiConverterTypeTzTime.write(value.`createdAt`, buf)
-            FfiConverterULong.write(value.`paidSats`, buf)
+            FfiConverterULong.write(value.`paidMsats`, buf)
     }
 }
 
