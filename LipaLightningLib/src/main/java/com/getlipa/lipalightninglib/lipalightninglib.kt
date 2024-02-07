@@ -419,6 +419,8 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_generate_swap_address(`ptr`: Pointer,`lspFeeParams`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_analytics_config(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_channel_close_resolving_fees(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_exchange_rate(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -485,6 +487,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_retrieve_latest_fiat_topup_info(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_set_analytics_config(`ptr`: Pointer,`config`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_swap_onchain_to_lightning(`ptr`: Pointer,`satsPerVbyte`: Int,`lspFeeParams`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`sweepInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -499,6 +503,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_mnemonic_to_secret(`mnemonicString`: RustBuffer.ByValue,`passphrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_func_parse_lightning_address(`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`localPersistencePath`: RustBuffer.ByValue,`enableFileLogging`: Byte,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_func_words_by_prefix(`prefix`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -623,6 +629,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_func_parse_lightning_address(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_func_recover_lightning_node(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_func_words_by_prefix(
@@ -648,6 +656,8 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_foreground(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_generate_swap_address(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_analytics_config(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_channel_close_resolving_fees(
     ): Short
@@ -715,6 +725,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_retrieve_latest_fiat_topup_info(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_set_analytics_config(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_swap_onchain_to_lightning(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep(
@@ -760,6 +772,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret() != 23900.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_parse_lightning_address() != 40400.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_recover_lightning_node() != 3892.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -797,6 +812,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_generate_swap_address() != 19541.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_analytics_config() != 15582.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_channel_close_resolving_fees() != 52527.toShort()) {
@@ -896,6 +914,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_retrieve_latest_fiat_topup_info() != 55765.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_set_analytics_config() != 38927.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_swap_onchain_to_lightning() != 56740.toShort()) {
@@ -1483,6 +1504,8 @@ public interface LightningNodeInterface {
     
     fun `generateSwapAddress`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo
     
+    fun `getAnalyticsConfig`(): AnalyticsConfig
+    
     fun `getChannelCloseResolvingFees`(): ChannelCloseResolvingFees
     
     fun `getExchangeRate`(): ExchangeRate?
@@ -1548,6 +1571,8 @@ public interface LightningNodeInterface {
     fun `resolveFailedSwap`(`resolveFailedSwapInfo`: ResolveFailedSwapInfo): String
     
     fun `retrieveLatestFiatTopupInfo`(): FiatTopupInfo?
+    
+    fun `setAnalyticsConfig`(`config`: AnalyticsConfig)
     
     fun `swapOnchainToLightning`(`satsPerVbyte`: UInt, `lspFeeParams`: OpeningFeeParams?): String
     
@@ -1714,6 +1739,18 @@ open class LightningNode : FFIObject, LightningNodeInterface {
 }
         }.let {
             FfiConverterTypeSwapAddressInfo.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `getAnalyticsConfig`(): AnalyticsConfig =
+        callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_analytics_config(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterTypeAnalyticsConfig.lift(it)
         }
     
     
@@ -2101,6 +2138,17 @@ open class LightningNode : FFIObject, LightningNodeInterface {
         }.let {
             FfiConverterOptionalTypeFiatTopupInfo.lift(it)
         }
+    
+    
+    @Throws(LnException::class)override fun `setAnalyticsConfig`(`config`: AnalyticsConfig) =
+        callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_set_analytics_config(it,
+        FfiConverterTypeAnalyticsConfig.lower(`config`),
+        _status)
+}
+        }
+    
     
     
     @Throws(SwapException::class)override fun `swapOnchainToLightning`(`satsPerVbyte`: UInt, `lspFeeParams`: OpeningFeeParams?): String =
@@ -3594,6 +3642,31 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
 
 
 
+enum class AnalyticsConfig {
+    
+    ENABLED,
+    DISABLED;
+    companion object
+}
+
+public object FfiConverterTypeAnalyticsConfig: FfiConverterRustBuffer<AnalyticsConfig> {
+    override fun read(buf: ByteBuffer) = try {
+        AnalyticsConfig.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: AnalyticsConfig) = 4
+
+    override fun write(value: AnalyticsConfig, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
 enum class BreezHealthCheckStatus {
     
     OPERATIONAL,
@@ -4561,6 +4634,77 @@ public object FfiConverterTypeOfferStatus: FfiConverterRustBuffer<OfferStatus> {
 }
 
 
+
+
+
+
+
+sealed class ParseException: Exception() {
+    
+    class Incomplete(
+        ) : ParseException() {
+        override val message
+            get() = ""
+    }
+    
+    class InvalidCharacter(
+        
+        val `at`: UInt
+        ) : ParseException() {
+        override val message
+            get() = "at=${ `at` }"
+    }
+    
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<ParseException> {
+        override fun lift(error_buf: RustBuffer.ByValue): ParseException = FfiConverterTypeParseError.lift(error_buf)
+    }
+
+    
+}
+
+public object FfiConverterTypeParseError : FfiConverterRustBuffer<ParseException> {
+    override fun read(buf: ByteBuffer): ParseException {
+        
+
+        return when(buf.getInt()) {
+            1 -> ParseException.Incomplete()
+            2 -> ParseException.InvalidCharacter(
+                FfiConverterUInt.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: ParseException): Int {
+        return when(value) {
+            is ParseException.Incomplete -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+            )
+            is ParseException.InvalidCharacter -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterUInt.allocationSize(value.`at`)
+            )
+        }
+    }
+
+    override fun write(value: ParseException, buf: ByteBuffer) {
+        when(value) {
+            is ParseException.Incomplete -> {
+                buf.putInt(1)
+                Unit
+            }
+            is ParseException.InvalidCharacter -> {
+                buf.putInt(2)
+                FfiConverterUInt.write(value.`at`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
 
 
 
@@ -6205,6 +6349,15 @@ fun `mnemonicToSecret`(`mnemonicString`: List<String>, `passphrase`: String): Se
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_mnemonic_to_secret(FfiConverterSequenceString.lower(`mnemonicString`),FfiConverterString.lower(`passphrase`),_status)
 })
 }
+
+@Throws(ParseException::class)
+
+fun `parseLightningAddress`(`address`: String) =
+    
+    uniffiRustCallWithError(ParseException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_parse_lightning_address(FfiConverterString.lower(`address`),_status)
+}
+
 
 @Throws(LnException::class)
 
