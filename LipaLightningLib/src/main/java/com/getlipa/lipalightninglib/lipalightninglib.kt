@@ -451,6 +451,8 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_is_clear_wallet_feasible(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_action_required_items(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_lightning_addresses(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -689,6 +691,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_is_clear_wallet_feasible(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_action_required_items(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_currency_codes(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_lightning_addresses(
@@ -853,13 +857,16 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_unresolved_failed_swaps() != 55743.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_wallet_pubkey_id() != 48212.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_wallet_pubkey_id() != 64850.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_topup() != 9954.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_is_clear_wallet_feasible() != 27512.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_action_required_items() != 17350.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_currency_codes() != 24404.toShort()) {
@@ -1530,11 +1537,13 @@ public interface LightningNodeInterface {
     
     fun `getUnresolvedFailedSwaps`(): List<FailedSwapInfo>
     
-    fun `getWalletPubkeyId`(): String?
+    fun `getWalletPubkeyId`(): String
     
     fun `hideTopup`(`id`: String)
     
     fun `isClearWalletFeasible`(): Boolean
+    
+    fun `listActionRequiredItems`(): List<ActionRequiredItem>
     
     fun `listCurrencyCodes`(): List<String>
     
@@ -1895,15 +1904,16 @@ open class LightningNode : FFIObject, LightningNodeInterface {
             FfiConverterSequenceTypeFailedSwapInfo.lift(it)
         }
     
-    override fun `getWalletPubkeyId`(): String? =
+    
+    @Throws(LnException::class)override fun `getWalletPubkeyId`(): String =
         callWithPointer {
-    uniffiRustCall() { _status ->
+    uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(it,
         
         _status)
 }
         }.let {
-            FfiConverterOptionalString.lift(it)
+            FfiConverterString.lift(it)
         }
     
     
@@ -1927,6 +1937,18 @@ open class LightningNode : FFIObject, LightningNodeInterface {
 }
         }.let {
             FfiConverterBoolean.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `listActionRequiredItems`(): List<ActionRequiredItem> =
+        callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_action_required_items(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterSequenceTypeActionRequiredItem.lift(it)
         }
     
     override fun `listCurrencyCodes`(): List<String> =
@@ -3568,6 +3590,99 @@ public object FfiConverterTypeTzTime: FfiConverterRustBuffer<TzTime> {
             FfiConverterInt.write(value.`timezoneUtcOffsetSecs`, buf)
     }
 }
+
+
+
+sealed class ActionRequiredItem {
+    
+    data class UncompletedOffer(
+        
+        val `offer`: OfferInfo
+        ) : ActionRequiredItem() {
+        companion object
+    }
+    
+    data class UnresolvedFailedSwap(
+        
+        val `failedSwap`: FailedSwapInfo
+        ) : ActionRequiredItem() {
+        companion object
+    }
+    
+    data class ChannelClosesFundsAvailable(
+        
+        val `availableFunds`: Amount
+        ) : ActionRequiredItem() {
+        companion object
+    }
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypeActionRequiredItem : FfiConverterRustBuffer<ActionRequiredItem>{
+    override fun read(buf: ByteBuffer): ActionRequiredItem {
+        return when(buf.getInt()) {
+            1 -> ActionRequiredItem.UncompletedOffer(
+                FfiConverterTypeOfferInfo.read(buf),
+                )
+            2 -> ActionRequiredItem.UnresolvedFailedSwap(
+                FfiConverterTypeFailedSwapInfo.read(buf),
+                )
+            3 -> ActionRequiredItem.ChannelClosesFundsAvailable(
+                FfiConverterTypeAmount.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: ActionRequiredItem) = when(value) {
+        is ActionRequiredItem.UncompletedOffer -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypeOfferInfo.allocationSize(value.`offer`)
+            )
+        }
+        is ActionRequiredItem.UnresolvedFailedSwap -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypeFailedSwapInfo.allocationSize(value.`failedSwap`)
+            )
+        }
+        is ActionRequiredItem.ChannelClosesFundsAvailable -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypeAmount.allocationSize(value.`availableFunds`)
+            )
+        }
+    }
+
+    override fun write(value: ActionRequiredItem, buf: ByteBuffer) {
+        when(value) {
+            is ActionRequiredItem.UncompletedOffer -> {
+                buf.putInt(1)
+                FfiConverterTypeOfferInfo.write(value.`offer`, buf)
+                Unit
+            }
+            is ActionRequiredItem.UnresolvedFailedSwap -> {
+                buf.putInt(2)
+                FfiConverterTypeFailedSwapInfo.write(value.`failedSwap`, buf)
+                Unit
+            }
+            is ActionRequiredItem.ChannelClosesFundsAvailable -> {
+                buf.putInt(3)
+                FfiConverterTypeAmount.write(value.`availableFunds`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
 
 
 
@@ -6286,6 +6401,31 @@ public object FfiConverterSequenceTypeOfferInfo: FfiConverterRustBuffer<List<Off
         buf.putInt(value.size)
         value.forEach {
             FfiConverterTypeOfferInfo.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeActionRequiredItem: FfiConverterRustBuffer<List<ActionRequiredItem>> {
+    override fun read(buf: ByteBuffer): List<ActionRequiredItem> {
+        val len = buf.getInt()
+        return List<ActionRequiredItem>(len) {
+            FfiConverterTypeActionRequiredItem.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<ActionRequiredItem>): Int {
+        val sizeForLength = 4
+        val sizeForItems = value.map { FfiConverterTypeActionRequiredItem.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<ActionRequiredItem>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.forEach {
+            FfiConverterTypeActionRequiredItem.write(it, buf)
         }
     }
 }
