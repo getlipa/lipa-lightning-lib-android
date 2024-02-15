@@ -1,6 +1,6 @@
 before_install:
   - wget https://github.com/getlipa/lipa-lightning-lib-android/releases/download/v0.7-temprary-test/jniLibs.zip
-  - if [ $(shasum -a 256 jniLibs.zip | sed 's/ .*//') != 'c30b5df231222f42da6c432311a80360a9ec64b08d1b86b32a155d9e03854536' ]; then exit 1; fi
+  - if [ $(shasum -a 256 jniLibs.zip | sed 's/ .*//') != '709d558fc4a839f79ddfa8ea672d18b256f248434c41d67fc28fd08dec52be1f' ]; then exit 1; fi
   - unzip -o jniLibs.zip
   - mv jniLibs LipaLightningLib/src/main/jniLibs
   - wget https://github.com/java-native-access/jna/archive/refs/tags/5.13.0.zip
