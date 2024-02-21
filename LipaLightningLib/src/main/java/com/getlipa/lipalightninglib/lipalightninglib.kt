@@ -503,6 +503,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_get_terms_and_conditions_status(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`termsAndConditions`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_func_handle_notification(`config`: RustBuffer.ByValue,`notificationPayload`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_mnemonic_to_secret(`mnemonicString`: RustBuffer.ByValue,`passphrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_parse_lightning_address(`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -628,6 +630,8 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_checksum_func_generate_secret(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_func_get_terms_and_conditions_status(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_func_handle_notification(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret(
     ): Short
@@ -771,6 +775,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_get_terms_and_conditions_status() != 32529.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_handle_notification() != 48833.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret() != 23900.toShort()) {
@@ -4641,6 +4648,60 @@ public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
 
 
 
+sealed class Notification {
+    
+    data class Bolt11PaymentReceived(
+        
+        val `amountSat`: ULong, 
+        
+        val `paymentHash`: String
+        ) : Notification() {
+        companion object
+    }
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification>{
+    override fun read(buf: ByteBuffer): Notification {
+        return when(buf.getInt()) {
+            1 -> Notification.Bolt11PaymentReceived(
+                FfiConverterULong.read(buf),
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: Notification) = when(value) {
+        is Notification.Bolt11PaymentReceived -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterULong.allocationSize(value.`amountSat`)
+                + FfiConverterString.allocationSize(value.`paymentHash`)
+            )
+        }
+    }
+
+    override fun write(value: Notification, buf: ByteBuffer) {
+        when(value) {
+            is Notification.Bolt11PaymentReceived -> {
+                buf.putInt(1)
+                FfiConverterULong.write(value.`amountSat`, buf)
+                FfiConverterString.write(value.`paymentHash`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
 sealed class OfferKind {
     
     data class Pocket(
@@ -5149,6 +5210,13 @@ sealed class Recipient {
         companion object
     }
     
+    data class LnUrlPayDomain(
+        
+        val `domain`: String
+        ) : Recipient() {
+        companion object
+    }
+    
     object Unknown : Recipient()
     
     
@@ -5163,7 +5231,10 @@ public object FfiConverterTypeRecipient : FfiConverterRustBuffer<Recipient>{
             1 -> Recipient.LightningAddress(
                 FfiConverterString.read(buf),
                 )
-            2 -> Recipient.Unknown
+            2 -> Recipient.LnUrlPayDomain(
+                FfiConverterString.read(buf),
+                )
+            3 -> Recipient.Unknown
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
         }
     }
@@ -5174,6 +5245,13 @@ public object FfiConverterTypeRecipient : FfiConverterRustBuffer<Recipient>{
             (
                 4
                 + FfiConverterString.allocationSize(value.`address`)
+            )
+        }
+        is Recipient.LnUrlPayDomain -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterString.allocationSize(value.`domain`)
             )
         }
         is Recipient.Unknown -> {
@@ -5191,8 +5269,76 @@ public object FfiConverterTypeRecipient : FfiConverterRustBuffer<Recipient>{
                 FfiConverterString.write(value.`address`, buf)
                 Unit
             }
-            is Recipient.Unknown -> {
+            is Recipient.LnUrlPayDomain -> {
                 buf.putInt(2)
+                FfiConverterString.write(value.`domain`, buf)
+                Unit
+            }
+            is Recipient.Unknown -> {
+                buf.putInt(3)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+sealed class RecommendedAction {
+    
+    object None : RecommendedAction()
+    
+    
+    data class ShowNotification(
+        
+        val `notification`: Notification
+        ) : RecommendedAction() {
+        companion object
+    }
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypeRecommendedAction : FfiConverterRustBuffer<RecommendedAction>{
+    override fun read(buf: ByteBuffer): RecommendedAction {
+        return when(buf.getInt()) {
+            1 -> RecommendedAction.None
+            2 -> RecommendedAction.ShowNotification(
+                FfiConverterTypeNotification.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: RecommendedAction) = when(value) {
+        is RecommendedAction.None -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+            )
+        }
+        is RecommendedAction.ShowNotification -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypeNotification.allocationSize(value.`notification`)
+            )
+        }
+    }
+
+    override fun write(value: RecommendedAction, buf: ByteBuffer) {
+        when(value) {
+            is RecommendedAction.None -> {
+                buf.putInt(1)
+                Unit
+            }
+            is RecommendedAction.ShowNotification -> {
+                buf.putInt(2)
+                FfiConverterTypeNotification.write(value.`notification`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -6478,6 +6624,15 @@ fun `getTermsAndConditionsStatus`(`environment`: EnvironmentCode, `seed`: ByteAr
     return FfiConverterTypeTermsAndConditionsStatus.lift(
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_get_terms_and_conditions_status(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterTypeTermsAndConditions.lower(`termsAndConditions`),_status)
+})
+}
+
+@Throws(LnException::class)
+
+fun `handleNotification`(`config`: Config, `notificationPayload`: String): RecommendedAction {
+    return FfiConverterTypeRecommendedAction.lift(
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_handle_notification(FfiConverterTypeConfig.lower(`config`),FfiConverterString.lower(`notificationPayload`),_status)
 })
 }
 
