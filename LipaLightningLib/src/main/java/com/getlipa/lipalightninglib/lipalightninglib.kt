@@ -479,6 +479,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(`ptr`: Pointer,`email`: RustBuffer.ByValue,`userIban`: RustBuffer.ByValue,`userCurrency`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_lightning_address(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(`ptr`: Pointer,`notificationToken`: RustBuffer.ByValue,`languageIso6391`: RustBuffer.ByValue,`countryIso31661Alpha2`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(`ptr`: Pointer,`offer`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -725,6 +727,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_fiat_topup(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_lightning_address(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_notification_token(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_request_offer_collection(
@@ -917,6 +921,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_fiat_topup() != 12958.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_lightning_address() != 46966.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_notification_token() != 23769.toShort()) {
@@ -1585,6 +1592,8 @@ public interface LightningNodeInterface {
     
     fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: String): FiatTopupInfo
     
+    fun `registerLightningAddress`(): String
+    
     fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)
     
     fun `requestOfferCollection`(`offer`: OfferInfo): String
@@ -2117,6 +2126,18 @@ open class LightningNode : FFIObject, LightningNodeInterface {
 }
         }.let {
             FfiConverterTypeFiatTopupInfo.lift(it)
+        }
+    
+    
+    @Throws(LnException::class)override fun `registerLightningAddress`(): String =
+        callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_lightning_address(it,
+        
+        _status)
+}
+        }.let {
+            FfiConverterString.lift(it)
         }
     
     
