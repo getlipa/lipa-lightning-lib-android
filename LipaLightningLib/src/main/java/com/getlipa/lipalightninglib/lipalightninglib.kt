@@ -759,6 +759,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_breez_health_status_changed_to(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_synced(
+    ): Short
     fun ffi_uniffi_lipalightninglib_uniffi_contract_version(
     ): Int
     
@@ -969,6 +971,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_breez_health_status_changed_to() != 40320.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_synced() != 49179.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -5814,6 +5819,8 @@ public interface EventsCallback {
     
     fun `breezHealthStatusChangedTo`(`status`: BreezHealthCheckStatus)
     
+    fun `synced`()
+    
     companion object
 }
 
@@ -5975,6 +5982,22 @@ internal class UniffiCallbackInterfaceEventsCallback : ForeignCallback {
                     UNIFFI_CALLBACK_UNEXPECTED_ERROR
                 }
             }
+            6 -> {
+                // Call the method, write to outBuf and return a status code
+                // See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for info
+                try {
+                    this.`invokeSynced`(cb, argsData, argsLen, outBuf)
+                } catch (e: Throwable) {
+                    // Unexpected error
+                    try {
+                        // Try to serialize the error into a string
+                        outBuf.setValue(FfiConverterString.lower(e.toString()))
+                    } catch (e: Throwable) {
+                        // If that fails, then it's time to give up and just return
+                    }
+                    UNIFFI_CALLBACK_UNEXPECTED_ERROR
+                }
+            }
             
             else -> {
                 // An unexpected error happened.
@@ -6065,6 +6088,18 @@ internal class UniffiCallbackInterfaceEventsCallback : ForeignCallback {
         fun makeCall() : Int {
             kotlinCallbackInterface.`breezHealthStatusChangedTo`(
                 FfiConverterTypeBreezHealthCheckStatus.read(argsBuf)
+            )
+            return UNIFFI_CALLBACK_SUCCESS
+        }
+        fun makeCallAndHandleError() : Int = makeCall()
+
+        return makeCallAndHandleError()
+    }
+    
+    @Suppress("UNUSED_PARAMETER")
+    private fun `invokeSynced`(kotlinCallbackInterface: EventsCallback, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
+        fun makeCall() : Int {
+            kotlinCallbackInterface.`synced`(
             )
             return UNIFFI_CALLBACK_SUCCESS
         }
