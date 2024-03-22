@@ -1,6 +1,6 @@
 before_install:
-  - wget https://github.com/getlipa/lipa-lightning-lib-android/releases/download/v0.42.1-beta-sqlite-test-2/jniLibs.zip
-  - if [ $(shasum -a 256 jniLibs.zip | sed 's/ .*//') != '4d0480c5b88d718c8bbbd94ca3936ef6e07467ea9733fe27a0e03a44c695711b' ]; then exit 1; fi
+  - wget https://github.com/getlipa/lipa-lightning-lib-android/releases/download/v0.42.1-beta-sqlite-test-3/jniLibs.zip
+  - if [ $(shasum -a 256 jniLibs.zip | sed 's/ .*//') != 'd398be3db00837dbf1fe524ad36a49f35183e2acae626b6dab6e97da86f1107f' ]; then exit 1; fi
   - unzip -o jniLibs.zip
   - mv jniLibs LipaLightningLib/src/main/jniLibs
   - wget https://github.com/java-native-access/jna/archive/refs/tags/5.13.0.zip
