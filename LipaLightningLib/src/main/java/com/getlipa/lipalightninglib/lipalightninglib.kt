@@ -513,7 +513,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_parse_lightning_address(`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`localPersistencePath`: RustBuffer.ByValue,`enableFileLogging`: Byte,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`localPersistencePath`: RustBuffer.ByValue,`fileLoggingLevel`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_func_words_by_prefix(`prefix`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -796,7 +796,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_parse_lightning_address() != 40400.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_recover_lightning_node() != 3892.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_recover_lightning_node() != 45110.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_words_by_prefix() != 18339.toShort()) {
@@ -2532,7 +2532,7 @@ data class Config (
     var `fiatCurrency`: String, 
     var `localPersistencePath`: String, 
     var `timezoneConfig`: TzConfig, 
-    var `enableFileLogging`: Boolean
+    var `fileLoggingLevel`: Level?
 ) {
     
     companion object
@@ -2546,7 +2546,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterTypeTzConfig.read(buf),
-            FfiConverterBoolean.read(buf),
+            FfiConverterOptionalTypeLevel.read(buf),
         )
     }
 
@@ -2556,7 +2556,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
             FfiConverterString.allocationSize(value.`fiatCurrency`) +
             FfiConverterString.allocationSize(value.`localPersistencePath`) +
             FfiConverterTypeTzConfig.allocationSize(value.`timezoneConfig`) +
-            FfiConverterBoolean.allocationSize(value.`enableFileLogging`)
+            FfiConverterOptionalTypeLevel.allocationSize(value.`fileLoggingLevel`)
     )
 
     override fun write(value: Config, buf: ByteBuffer) {
@@ -2565,7 +2565,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
             FfiConverterString.write(value.`fiatCurrency`, buf)
             FfiConverterString.write(value.`localPersistencePath`, buf)
             FfiConverterTypeTzConfig.write(value.`timezoneConfig`, buf)
-            FfiConverterBoolean.write(value.`enableFileLogging`, buf)
+            FfiConverterOptionalTypeLevel.write(value.`fileLoggingLevel`, buf)
     }
 }
 
@@ -4148,6 +4148,34 @@ public object FfiConverterTypeInvoiceAffordability: FfiConverterRustBuffer<Invoi
     override fun allocationSize(value: InvoiceAffordability) = 4
 
     override fun write(value: InvoiceAffordability, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+enum class Level {
+    
+    ERROR,
+    WARN,
+    INFO,
+    DEBUG,
+    TRACE;
+    companion object
+}
+
+public object FfiConverterTypeLevel: FfiConverterRustBuffer<Level> {
+    override fun read(buf: ByteBuffer) = try {
+        Level.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: Level) = 4
+
+    override fun write(value: Level, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
@@ -6443,6 +6471,35 @@ public object FfiConverterOptionalTypeTzTime: FfiConverterRustBuffer<TzTime?> {
 
 
 
+public object FfiConverterOptionalTypeLevel: FfiConverterRustBuffer<Level?> {
+    override fun read(buf: ByteBuffer): Level? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeLevel.read(buf)
+    }
+
+    override fun allocationSize(value: Level?): Int {
+        if (value == null) {
+            return 1
+        } else {
+            return 1 + FfiConverterTypeLevel.allocationSize(value)
+        }
+    }
+
+    override fun write(value: Level?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeLevel.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeOfferKind: FfiConverterRustBuffer<OfferKind?> {
     override fun read(buf: ByteBuffer): OfferKind? {
         if (buf.get().toInt() == 0) {
@@ -6736,10 +6793,10 @@ fun `parseLightningAddress`(`address`: String) =
 
 @Throws(LnException::class)
 
-fun `recoverLightningNode`(`environment`: EnvironmentCode, `seed`: ByteArray, `localPersistencePath`: String, `enableFileLogging`: Boolean) =
+fun `recoverLightningNode`(`environment`: EnvironmentCode, `seed`: ByteArray, `localPersistencePath`: String, `fileLoggingLevel`: Level?) =
     
     uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterString.lower(`localPersistencePath`),FfiConverterBoolean.lower(`enableFileLogging`),_status)
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterString.lower(`localPersistencePath`),FfiConverterOptionalTypeLevel.lower(`fileLoggingLevel`),_status)
 }
 
 
