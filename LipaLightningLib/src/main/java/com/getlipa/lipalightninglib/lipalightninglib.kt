@@ -427,13 +427,15 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_health_status(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_incoming_payment(`ptr`: Pointer,`hash`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_invoice_affordability(`ptr`: Pointer,`amountSat`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_latest_activities(`ptr`: Pointer,`numberOfActivities`: Int,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_node_info(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment(`ptr`: Pointer,`hash`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_outgoing_payment(`ptr`: Pointer,`hash`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_amount_limits(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -675,13 +677,15 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_health_status(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_incoming_payment(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_invoice_affordability(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_latest_activities(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_node_info(
     ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_outgoing_payment(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_amount_limits(
     ): Short
@@ -847,6 +851,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_health_status() != 64525.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_incoming_payment() != 6206.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_invoice_affordability() != 10343.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -856,7 +863,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_node_info() != 8992.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment() != 52622.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_outgoing_payment() != 17986.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_payment_amount_limits() != 38114.toShort()) {
@@ -1545,13 +1552,15 @@ public interface LightningNodeInterface {
     
     fun `getHealthStatus`(): BreezHealthCheckStatus
     
+    fun `getIncomingPayment`(`hash`: String): IncomingPaymentInfo
+    
     fun `getInvoiceAffordability`(`amountSat`: ULong): InvoiceAffordability
     
     fun `getLatestActivities`(`numberOfActivities`: UInt): ListActivitiesResponse
     
     fun `getNodeInfo`(): NodeInfo
     
-    fun `getPayment`(`hash`: String): Payment
+    fun `getOutgoingPayment`(`hash`: String): OutgoingPaymentInfo
     
     fun `getPaymentAmountLimits`(): PaymentAmountLimits
     
@@ -1828,6 +1837,18 @@ open class LightningNode : FFIObject, LightningNodeInterface {
         }
     
     
+    @Throws(LnException::class)override fun `getIncomingPayment`(`hash`: String): IncomingPaymentInfo =
+        callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_incoming_payment(it,
+        FfiConverterString.lower(`hash`),
+        _status)
+}
+        }.let {
+            FfiConverterTypeIncomingPaymentInfo.lift(it)
+        }
+    
+    
     @Throws(LnException::class)override fun `getInvoiceAffordability`(`amountSat`: ULong): InvoiceAffordability =
         callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
@@ -1864,15 +1885,15 @@ open class LightningNode : FFIObject, LightningNodeInterface {
         }
     
     
-    @Throws(LnException::class)override fun `getPayment`(`hash`: String): Payment =
+    @Throws(LnException::class)override fun `getOutgoingPayment`(`hash`: String): OutgoingPaymentInfo =
         callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment(it,
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_outgoing_payment(it,
         FfiConverterString.lower(`hash`),
         _status)
 }
         }.let {
-            FfiConverterTypePayment.lift(it)
+            FfiConverterTypeOutgoingPaymentInfo.lift(it)
         }
     
     
@@ -2382,7 +2403,7 @@ public object FfiConverterTypeCalculateLspFeeResponse: FfiConverterRustBuffer<Ca
 
 
 
-data class ChannelClose (
+data class ChannelCloseInfo (
     var `amount`: Amount, 
     var `state`: ChannelCloseState, 
     var `closedAt`: TzTime?, 
@@ -2392,9 +2413,9 @@ data class ChannelClose (
     companion object
 }
 
-public object FfiConverterTypeChannelClose: FfiConverterRustBuffer<ChannelClose> {
-    override fun read(buf: ByteBuffer): ChannelClose {
-        return ChannelClose(
+public object FfiConverterTypeChannelCloseInfo: FfiConverterRustBuffer<ChannelCloseInfo> {
+    override fun read(buf: ByteBuffer): ChannelCloseInfo {
+        return ChannelCloseInfo(
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeChannelCloseState.read(buf),
             FfiConverterOptionalTypeTzTime.read(buf),
@@ -2402,14 +2423,14 @@ public object FfiConverterTypeChannelClose: FfiConverterRustBuffer<ChannelClose>
         )
     }
 
-    override fun allocationSize(value: ChannelClose) = (
+    override fun allocationSize(value: ChannelCloseInfo) = (
             FfiConverterTypeAmount.allocationSize(value.`amount`) +
             FfiConverterTypeChannelCloseState.allocationSize(value.`state`) +
             FfiConverterOptionalTypeTzTime.allocationSize(value.`closedAt`) +
             FfiConverterString.allocationSize(value.`closingTxId`)
     )
 
-    override fun write(value: ChannelClose, buf: ByteBuffer) {
+    override fun write(value: ChannelCloseInfo, buf: ByteBuffer) {
             FfiConverterTypeAmount.write(value.`amount`, buf)
             FfiConverterTypeChannelCloseState.write(value.`state`, buf)
             FfiConverterOptionalTypeTzTime.write(value.`closedAt`, buf)
@@ -2754,6 +2775,39 @@ public object FfiConverterTypeFiatValue: FfiConverterRustBuffer<FiatValue> {
             FfiConverterString.write(value.`currencyCode`, buf)
             FfiConverterUInt.write(value.`rate`, buf)
             FfiConverterTimestamp.write(value.`convertedAt`, buf)
+    }
+}
+
+
+
+data class IncomingPaymentInfo (
+    var `paymentInfo`: PaymentInfo, 
+    var `requestedAmount`: Amount, 
+    var `lspFees`: Amount
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeIncomingPaymentInfo: FfiConverterRustBuffer<IncomingPaymentInfo> {
+    override fun read(buf: ByteBuffer): IncomingPaymentInfo {
+        return IncomingPaymentInfo(
+            FfiConverterTypePaymentInfo.read(buf),
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeAmount.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: IncomingPaymentInfo) = (
+            FfiConverterTypePaymentInfo.allocationSize(value.`paymentInfo`) +
+            FfiConverterTypeAmount.allocationSize(value.`requestedAmount`) +
+            FfiConverterTypeAmount.allocationSize(value.`lspFees`)
+    )
+
+    override fun write(value: IncomingPaymentInfo, buf: ByteBuffer) {
+            FfiConverterTypePaymentInfo.write(value.`paymentInfo`, buf)
+            FfiConverterTypeAmount.write(value.`requestedAmount`, buf)
+            FfiConverterTypeAmount.write(value.`lspFees`, buf)
     }
 }
 
@@ -3190,86 +3244,34 @@ public object FfiConverterTypeOpeningFeeParams: FfiConverterRustBuffer<OpeningFe
 
 
 
-data class Payment (
-    var `paymentType`: PaymentType, 
-    var `paymentState`: PaymentState, 
-    var `failReason`: PayErrorCode?, 
-    var `hash`: String, 
-    var `amount`: Amount, 
-    var `requestedAmount`: Amount, 
-    var `invoiceDetails`: InvoiceDetails, 
-    var `createdAt`: TzTime, 
-    var `description`: String, 
-    var `preimage`: String?, 
-    var `networkFees`: Amount?, 
-    var `lspFees`: Amount?, 
-    var `offer`: OfferKind?, 
-    var `swap`: SwapInfo?, 
-    var `recipient`: Recipient?, 
-    var `personalNote`: String?
+data class OutgoingPaymentInfo (
+    var `paymentInfo`: PaymentInfo, 
+    var `networkFees`: Amount, 
+    var `recipient`: Recipient
 ) {
     
     companion object
 }
 
-public object FfiConverterTypePayment: FfiConverterRustBuffer<Payment> {
-    override fun read(buf: ByteBuffer): Payment {
-        return Payment(
-            FfiConverterTypePaymentType.read(buf),
-            FfiConverterTypePaymentState.read(buf),
-            FfiConverterOptionalTypePayErrorCode.read(buf),
-            FfiConverterString.read(buf),
+public object FfiConverterTypeOutgoingPaymentInfo: FfiConverterRustBuffer<OutgoingPaymentInfo> {
+    override fun read(buf: ByteBuffer): OutgoingPaymentInfo {
+        return OutgoingPaymentInfo(
+            FfiConverterTypePaymentInfo.read(buf),
             FfiConverterTypeAmount.read(buf),
-            FfiConverterTypeAmount.read(buf),
-            FfiConverterTypeInvoiceDetails.read(buf),
-            FfiConverterTypeTzTime.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterOptionalString.read(buf),
-            FfiConverterOptionalTypeAmount.read(buf),
-            FfiConverterOptionalTypeAmount.read(buf),
-            FfiConverterOptionalTypeOfferKind.read(buf),
-            FfiConverterOptionalTypeSwapInfo.read(buf),
-            FfiConverterOptionalTypeRecipient.read(buf),
-            FfiConverterOptionalString.read(buf),
+            FfiConverterTypeRecipient.read(buf),
         )
     }
 
-    override fun allocationSize(value: Payment) = (
-            FfiConverterTypePaymentType.allocationSize(value.`paymentType`) +
-            FfiConverterTypePaymentState.allocationSize(value.`paymentState`) +
-            FfiConverterOptionalTypePayErrorCode.allocationSize(value.`failReason`) +
-            FfiConverterString.allocationSize(value.`hash`) +
-            FfiConverterTypeAmount.allocationSize(value.`amount`) +
-            FfiConverterTypeAmount.allocationSize(value.`requestedAmount`) +
-            FfiConverterTypeInvoiceDetails.allocationSize(value.`invoiceDetails`) +
-            FfiConverterTypeTzTime.allocationSize(value.`createdAt`) +
-            FfiConverterString.allocationSize(value.`description`) +
-            FfiConverterOptionalString.allocationSize(value.`preimage`) +
-            FfiConverterOptionalTypeAmount.allocationSize(value.`networkFees`) +
-            FfiConverterOptionalTypeAmount.allocationSize(value.`lspFees`) +
-            FfiConverterOptionalTypeOfferKind.allocationSize(value.`offer`) +
-            FfiConverterOptionalTypeSwapInfo.allocationSize(value.`swap`) +
-            FfiConverterOptionalTypeRecipient.allocationSize(value.`recipient`) +
-            FfiConverterOptionalString.allocationSize(value.`personalNote`)
+    override fun allocationSize(value: OutgoingPaymentInfo) = (
+            FfiConverterTypePaymentInfo.allocationSize(value.`paymentInfo`) +
+            FfiConverterTypeAmount.allocationSize(value.`networkFees`) +
+            FfiConverterTypeRecipient.allocationSize(value.`recipient`)
     )
 
-    override fun write(value: Payment, buf: ByteBuffer) {
-            FfiConverterTypePaymentType.write(value.`paymentType`, buf)
-            FfiConverterTypePaymentState.write(value.`paymentState`, buf)
-            FfiConverterOptionalTypePayErrorCode.write(value.`failReason`, buf)
-            FfiConverterString.write(value.`hash`, buf)
-            FfiConverterTypeAmount.write(value.`amount`, buf)
-            FfiConverterTypeAmount.write(value.`requestedAmount`, buf)
-            FfiConverterTypeInvoiceDetails.write(value.`invoiceDetails`, buf)
-            FfiConverterTypeTzTime.write(value.`createdAt`, buf)
-            FfiConverterString.write(value.`description`, buf)
-            FfiConverterOptionalString.write(value.`preimage`, buf)
-            FfiConverterOptionalTypeAmount.write(value.`networkFees`, buf)
-            FfiConverterOptionalTypeAmount.write(value.`lspFees`, buf)
-            FfiConverterOptionalTypeOfferKind.write(value.`offer`, buf)
-            FfiConverterOptionalTypeSwapInfo.write(value.`swap`, buf)
-            FfiConverterOptionalTypeRecipient.write(value.`recipient`, buf)
-            FfiConverterOptionalString.write(value.`personalNote`, buf)
+    override fun write(value: OutgoingPaymentInfo, buf: ByteBuffer) {
+            FfiConverterTypePaymentInfo.write(value.`paymentInfo`, buf)
+            FfiConverterTypeAmount.write(value.`networkFees`, buf)
+            FfiConverterTypeRecipient.write(value.`recipient`, buf)
     }
 }
 
@@ -3299,6 +3301,59 @@ public object FfiConverterTypePaymentAmountLimits: FfiConverterRustBuffer<Paymen
     override fun write(value: PaymentAmountLimits, buf: ByteBuffer) {
             FfiConverterTypeAmount.write(value.`maxReceive`, buf)
             FfiConverterTypeLiquidityLimit.write(value.`liquidityLimit`, buf)
+    }
+}
+
+
+
+data class PaymentInfo (
+    var `paymentState`: PaymentState, 
+    var `hash`: String, 
+    var `amount`: Amount, 
+    var `invoiceDetails`: InvoiceDetails, 
+    var `createdAt`: TzTime, 
+    var `description`: String, 
+    var `preimage`: String?, 
+    var `personalNote`: String?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypePaymentInfo: FfiConverterRustBuffer<PaymentInfo> {
+    override fun read(buf: ByteBuffer): PaymentInfo {
+        return PaymentInfo(
+            FfiConverterTypePaymentState.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeInvoiceDetails.read(buf),
+            FfiConverterTypeTzTime.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PaymentInfo) = (
+            FfiConverterTypePaymentState.allocationSize(value.`paymentState`) +
+            FfiConverterString.allocationSize(value.`hash`) +
+            FfiConverterTypeAmount.allocationSize(value.`amount`) +
+            FfiConverterTypeInvoiceDetails.allocationSize(value.`invoiceDetails`) +
+            FfiConverterTypeTzTime.allocationSize(value.`createdAt`) +
+            FfiConverterString.allocationSize(value.`description`) +
+            FfiConverterOptionalString.allocationSize(value.`preimage`) +
+            FfiConverterOptionalString.allocationSize(value.`personalNote`)
+    )
+
+    override fun write(value: PaymentInfo, buf: ByteBuffer) {
+            FfiConverterTypePaymentState.write(value.`paymentState`, buf)
+            FfiConverterString.write(value.`hash`, buf)
+            FfiConverterTypeAmount.write(value.`amount`, buf)
+            FfiConverterTypeInvoiceDetails.write(value.`invoiceDetails`, buf)
+            FfiConverterTypeTzTime.write(value.`createdAt`, buf)
+            FfiConverterString.write(value.`description`, buf)
+            FfiConverterOptionalString.write(value.`preimage`, buf)
+            FfiConverterOptionalString.write(value.`personalNote`, buf)
     }
 }
 
@@ -3745,16 +3800,41 @@ public object FfiConverterTypeActionRequiredItem : FfiConverterRustBuffer<Action
 
 sealed class Activity {
     
-    data class PaymentActivity(
+    data class IncomingPayment(
         
-        val `payment`: Payment
+        val `incomingPaymentInfo`: IncomingPaymentInfo
         ) : Activity() {
         companion object
     }
     
-    data class ChannelCloseActivity(
+    data class OutgoingPayment(
         
-        val `channelClose`: ChannelClose
+        val `outgoingPaymentInfo`: OutgoingPaymentInfo
+        ) : Activity() {
+        companion object
+    }
+    
+    data class OfferClaim(
+        
+        val `incomingPaymentInfo`: IncomingPaymentInfo, 
+        
+        val `offerKind`: OfferKind
+        ) : Activity() {
+        companion object
+    }
+    
+    data class Swap(
+        
+        val `incomingPaymentInfo`: IncomingPaymentInfo, 
+        
+        val `swapInfo`: SwapInfo
+        ) : Activity() {
+        companion object
+    }
+    
+    data class ChannelClose(
+        
+        val `channelCloseInfo`: ChannelCloseInfo
         ) : Activity() {
         companion object
     }
@@ -3767,43 +3847,94 @@ sealed class Activity {
 public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
     override fun read(buf: ByteBuffer): Activity {
         return when(buf.getInt()) {
-            1 -> Activity.PaymentActivity(
-                FfiConverterTypePayment.read(buf),
+            1 -> Activity.IncomingPayment(
+                FfiConverterTypeIncomingPaymentInfo.read(buf),
                 )
-            2 -> Activity.ChannelCloseActivity(
-                FfiConverterTypeChannelClose.read(buf),
+            2 -> Activity.OutgoingPayment(
+                FfiConverterTypeOutgoingPaymentInfo.read(buf),
+                )
+            3 -> Activity.OfferClaim(
+                FfiConverterTypeIncomingPaymentInfo.read(buf),
+                FfiConverterTypeOfferKind.read(buf),
+                )
+            4 -> Activity.Swap(
+                FfiConverterTypeIncomingPaymentInfo.read(buf),
+                FfiConverterTypeSwapInfo.read(buf),
+                )
+            5 -> Activity.ChannelClose(
+                FfiConverterTypeChannelCloseInfo.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
         }
     }
 
     override fun allocationSize(value: Activity) = when(value) {
-        is Activity.PaymentActivity -> {
+        is Activity.IncomingPayment -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4
-                + FfiConverterTypePayment.allocationSize(value.`payment`)
+                + FfiConverterTypeIncomingPaymentInfo.allocationSize(value.`incomingPaymentInfo`)
             )
         }
-        is Activity.ChannelCloseActivity -> {
+        is Activity.OutgoingPayment -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4
-                + FfiConverterTypeChannelClose.allocationSize(value.`channelClose`)
+                + FfiConverterTypeOutgoingPaymentInfo.allocationSize(value.`outgoingPaymentInfo`)
+            )
+        }
+        is Activity.OfferClaim -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypeIncomingPaymentInfo.allocationSize(value.`incomingPaymentInfo`)
+                + FfiConverterTypeOfferKind.allocationSize(value.`offerKind`)
+            )
+        }
+        is Activity.Swap -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypeIncomingPaymentInfo.allocationSize(value.`incomingPaymentInfo`)
+                + FfiConverterTypeSwapInfo.allocationSize(value.`swapInfo`)
+            )
+        }
+        is Activity.ChannelClose -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4
+                + FfiConverterTypeChannelCloseInfo.allocationSize(value.`channelCloseInfo`)
             )
         }
     }
 
     override fun write(value: Activity, buf: ByteBuffer) {
         when(value) {
-            is Activity.PaymentActivity -> {
+            is Activity.IncomingPayment -> {
                 buf.putInt(1)
-                FfiConverterTypePayment.write(value.`payment`, buf)
+                FfiConverterTypeIncomingPaymentInfo.write(value.`incomingPaymentInfo`, buf)
                 Unit
             }
-            is Activity.ChannelCloseActivity -> {
+            is Activity.OutgoingPayment -> {
                 buf.putInt(2)
-                FfiConverterTypeChannelClose.write(value.`channelClose`, buf)
+                FfiConverterTypeOutgoingPaymentInfo.write(value.`outgoingPaymentInfo`, buf)
+                Unit
+            }
+            is Activity.OfferClaim -> {
+                buf.putInt(3)
+                FfiConverterTypeIncomingPaymentInfo.write(value.`incomingPaymentInfo`, buf)
+                FfiConverterTypeOfferKind.write(value.`offerKind`, buf)
+                Unit
+            }
+            is Activity.Swap -> {
+                buf.putInt(4)
+                FfiConverterTypeIncomingPaymentInfo.write(value.`incomingPaymentInfo`, buf)
+                FfiConverterTypeSwapInfo.write(value.`swapInfo`, buf)
+                Unit
+            }
+            is Activity.ChannelClose -> {
+                buf.putInt(5)
+                FfiConverterTypeChannelCloseInfo.write(value.`channelCloseInfo`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -5152,31 +5283,6 @@ public object FfiConverterTypePaymentState: FfiConverterRustBuffer<PaymentState>
 
 
 
-enum class PaymentType {
-    
-    RECEIVING,
-    SENDING;
-    companion object
-}
-
-public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
-    override fun read(buf: ByteBuffer) = try {
-        PaymentType.values()[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: PaymentType) = 4
-
-    override fun write(value: PaymentType, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
-    }
-}
-
-
-
-
-
 enum class PermanentFailureCode {
     
     THRESHOLD_EXCEEDED,
@@ -6384,35 +6490,6 @@ public object FfiConverterOptionalTypeOpeningFeeParams: FfiConverterRustBuffer<O
 
 
 
-public object FfiConverterOptionalTypeSwapInfo: FfiConverterRustBuffer<SwapInfo?> {
-    override fun read(buf: ByteBuffer): SwapInfo? {
-        if (buf.get().toInt() == 0) {
-            return null
-        }
-        return FfiConverterTypeSwapInfo.read(buf)
-    }
-
-    override fun allocationSize(value: SwapInfo?): Int {
-        if (value == null) {
-            return 1
-        } else {
-            return 1 + FfiConverterTypeSwapInfo.allocationSize(value)
-        }
-    }
-
-    override fun write(value: SwapInfo?, buf: ByteBuffer) {
-        if (value == null) {
-            buf.put(0)
-        } else {
-            buf.put(1)
-            FfiConverterTypeSwapInfo.write(value, buf)
-        }
-    }
-}
-
-
-
-
 public object FfiConverterOptionalTypeSwapToLightningFees: FfiConverterRustBuffer<SwapToLightningFees?> {
     override fun read(buf: ByteBuffer): SwapToLightningFees? {
         if (buf.get().toInt() == 0) {
@@ -6500,64 +6577,6 @@ public object FfiConverterOptionalTypeLevel: FfiConverterRustBuffer<Level?> {
 
 
 
-public object FfiConverterOptionalTypeOfferKind: FfiConverterRustBuffer<OfferKind?> {
-    override fun read(buf: ByteBuffer): OfferKind? {
-        if (buf.get().toInt() == 0) {
-            return null
-        }
-        return FfiConverterTypeOfferKind.read(buf)
-    }
-
-    override fun allocationSize(value: OfferKind?): Int {
-        if (value == null) {
-            return 1
-        } else {
-            return 1 + FfiConverterTypeOfferKind.allocationSize(value)
-        }
-    }
-
-    override fun write(value: OfferKind?, buf: ByteBuffer) {
-        if (value == null) {
-            buf.put(0)
-        } else {
-            buf.put(1)
-            FfiConverterTypeOfferKind.write(value, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterOptionalTypePayErrorCode: FfiConverterRustBuffer<PayErrorCode?> {
-    override fun read(buf: ByteBuffer): PayErrorCode? {
-        if (buf.get().toInt() == 0) {
-            return null
-        }
-        return FfiConverterTypePayErrorCode.read(buf)
-    }
-
-    override fun allocationSize(value: PayErrorCode?): Int {
-        if (value == null) {
-            return 1
-        } else {
-            return 1 + FfiConverterTypePayErrorCode.allocationSize(value)
-        }
-    }
-
-    override fun write(value: PayErrorCode?, buf: ByteBuffer) {
-        if (value == null) {
-            buf.put(0)
-        } else {
-            buf.put(1)
-            FfiConverterTypePayErrorCode.write(value, buf)
-        }
-    }
-}
-
-
-
-
 public object FfiConverterOptionalTypePocketOfferError: FfiConverterRustBuffer<PocketOfferError?> {
     override fun read(buf: ByteBuffer): PocketOfferError? {
         if (buf.get().toInt() == 0) {
@@ -6580,35 +6599,6 @@ public object FfiConverterOptionalTypePocketOfferError: FfiConverterRustBuffer<P
         } else {
             buf.put(1)
             FfiConverterTypePocketOfferError.write(value, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterOptionalTypeRecipient: FfiConverterRustBuffer<Recipient?> {
-    override fun read(buf: ByteBuffer): Recipient? {
-        if (buf.get().toInt() == 0) {
-            return null
-        }
-        return FfiConverterTypeRecipient.read(buf)
-    }
-
-    override fun allocationSize(value: Recipient?): Int {
-        if (value == null) {
-            return 1
-        } else {
-            return 1 + FfiConverterTypeRecipient.allocationSize(value)
-        }
-    }
-
-    override fun write(value: Recipient?, buf: ByteBuffer) {
-        if (value == null) {
-            buf.put(0)
-        } else {
-            buf.put(1)
-            FfiConverterTypeRecipient.write(value, buf)
         }
     }
 }
