@@ -28,11 +28,9 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.CharBuffer
 import java.nio.charset.CodingErrorAction
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicLong
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 // This is a helper for safely working with byte buffers returned from the Rust code.
 // A rust-owned buffer is represented by its capacity, its current length, and a
@@ -40,26 +38,35 @@ import kotlin.concurrent.withLock
 
 @Structure.FieldOrder("capacity", "len", "data")
 open class RustBuffer : Structure() {
-    @JvmField var capacity: Int = 0
-    @JvmField var len: Int = 0
+    // Note: `capacity` and `len` are actually `ULong` values, but JVM only supports signed values.
+    // When dealing with these fields, make sure to call `toULong()`.
+    @JvmField var capacity: Long = 0
+    @JvmField var len: Long = 0
     @JvmField var data: Pointer? = null
 
     class ByValue: RustBuffer(), Structure.ByValue
     class ByReference: RustBuffer(), Structure.ByReference
 
+   internal fun setValue(other: RustBuffer) {
+        capacity = other.capacity
+        len = other.len
+        data = other.data
+    }
+
     companion object {
-        internal fun alloc(size: Int = 0) = uniffiRustCall() { status ->
-            UniffiLib.INSTANCE.ffi_uniffi_lipalightninglib_rustbuffer_alloc(size, status)
+        internal fun alloc(size: ULong = 0UL) = uniffiRustCall() { status ->
+            // Note: need to convert the size to a `Long` value to make this work with JVM.
+            UniffiLib.INSTANCE.ffi_uniffi_lipalightninglib_rustbuffer_alloc(size.toLong(), status)
         }.also {
             if(it.data == null) {
                throw RuntimeException("RustBuffer.alloc() returned null data pointer (size=${size})")
            }
         }
 
-        internal fun create(capacity: Int, len: Int, data: Pointer?): RustBuffer.ByValue {
+        internal fun create(capacity: ULong, len: ULong, data: Pointer?): RustBuffer.ByValue {
             var buf = RustBuffer.ByValue()
-            buf.capacity = capacity
-            buf.len = len
+            buf.capacity = capacity.toLong()
+            buf.len = len.toLong()
             buf.data = data
             return buf
         }
@@ -89,9 +96,9 @@ class RustBufferByReference : ByReference(16) {
     fun setValue(value: RustBuffer.ByValue) {
         // NOTE: The offsets are as they are in the C-like struct.
         val pointer = getPointer()
-        pointer.setInt(0, value.capacity)
-        pointer.setInt(4, value.len)
-        pointer.setPointer(8, value.data)
+        pointer.setLong(0, value.capacity)
+        pointer.setLong(8, value.len)
+        pointer.setPointer(16, value.data)
     }
 
     /**
@@ -100,9 +107,9 @@ class RustBufferByReference : ByReference(16) {
     fun getValue(): RustBuffer.ByValue {
         val pointer = getPointer()
         val value = RustBuffer.ByValue()
-        value.writeField("capacity", pointer.getInt(0))
-        value.writeField("len", pointer.getInt(4))
-        value.writeField("data", pointer.getPointer(8))
+        value.writeField("capacity", pointer.getLong(0))
+        value.writeField("len", pointer.getLong(8))
+        value.writeField("data", pointer.getLong(16))
 
         return value
     }
@@ -143,7 +150,7 @@ public interface FfiConverter<KotlinType, FfiType> {
     // encoding, so we pessimistically allocate the largest size possible (3
     // bytes per codepoint).  Allocating extra bytes is not really a big deal
     // because the `RustBuffer` is short-lived.
-    fun allocationSize(value: KotlinType): Int
+    fun allocationSize(value: KotlinType): ULong
 
     // Write a Kotlin type to a `ByteBuffer`
     fun write(value: KotlinType, buf: ByteBuffer)
@@ -157,11 +164,11 @@ public interface FfiConverter<KotlinType, FfiType> {
     fun lowerIntoRustBuffer(value: KotlinType): RustBuffer.ByValue {
         val rbuf = RustBuffer.alloc(allocationSize(value))
         try {
-            val bbuf = rbuf.data!!.getByteBuffer(0, rbuf.capacity.toLong()).also {
+            val bbuf = rbuf.data!!.getByteBuffer(0, rbuf.capacity).also {
                 it.order(ByteOrder.BIG_ENDIAN)
             }
             write(value, bbuf)
-            rbuf.writeField("len", bbuf.position())
+            rbuf.writeField("len", bbuf.position().toLong())
             return rbuf
         } catch (e: Throwable) {
             RustBuffer.free(rbuf)
@@ -194,7 +201,11 @@ public interface FfiConverterRustBuffer<KotlinType>: FfiConverter<KotlinType, Ru
 }
 // A handful of classes and functions to support the generated data structures.
 // This would be a good candidate for isolating in its own ffi-support lib.
-// Error runtime.
+
+internal const val UNIFFI_CALL_SUCCESS = 0.toByte()
+internal const val UNIFFI_CALL_ERROR = 1.toByte()
+internal const val UNIFFI_CALL_UNEXPECTED_ERROR = 2.toByte()
+
 @Structure.FieldOrder("code", "error_buf")
 internal open class UniffiRustCallStatus : Structure() {
     @JvmField var code: Byte = 0
@@ -203,15 +214,24 @@ internal open class UniffiRustCallStatus : Structure() {
     class ByValue: UniffiRustCallStatus(), Structure.ByValue
 
     fun isSuccess(): Boolean {
-        return code == 0.toByte()
+        return code == UNIFFI_CALL_SUCCESS
     }
 
     fun isError(): Boolean {
-        return code == 1.toByte()
+        return code == UNIFFI_CALL_ERROR
     }
 
     fun isPanic(): Boolean {
-        return code == 2.toByte()
+        return code == UNIFFI_CALL_UNEXPECTED_ERROR
+    }
+
+    companion object {
+        fun create(code: Byte, errorBuf: RustBuffer.ByValue): UniffiRustCallStatus.ByValue {
+            val callStatus = UniffiRustCallStatus.ByValue()
+            callStatus.code = code
+            callStatus.error_buf = errorBuf
+            return callStatus
+        }
     }
 }
 
@@ -267,91 +287,63 @@ private inline fun <U> uniffiRustCall(callback: (UniffiRustCallStatus) -> U): U 
     return uniffiRustCallWithError(UniffiNullRustCallStatusErrorHandler, callback);
 }
 
-// IntegerType that matches Rust's `usize` / C's `size_t`
-public class USize(value: Long = 0) : IntegerType(Native.SIZE_T_SIZE, value, true) {
-    // This is needed to fill in the gaps of IntegerType's implementation of Number for Kotlin.
-    override fun toByte() = toInt().toByte()
-    // Needed until https://youtrack.jetbrains.com/issue/KT-47902 is fixed.
-    @Deprecated("`toInt().toChar()` is deprecated")
-    override fun toChar() = toInt().toChar()
-    override fun toShort() = toInt().toShort()
-
-    fun writeToBuffer(buf: ByteBuffer) {
-        // Make sure we always write usize integers using native byte-order, since they may be
-        // casted to pointer values
-        buf.order(ByteOrder.nativeOrder())
-        try {
-            when (Native.SIZE_T_SIZE) {
-                4 -> buf.putInt(toInt())
-                8 -> buf.putLong(toLong())
-                else -> throw RuntimeException("Invalid SIZE_T_SIZE: ${Native.SIZE_T_SIZE}")
-            }
-        } finally {
-            buf.order(ByteOrder.BIG_ENDIAN)
-        }
-    }
-
-    companion object {
-        val size: Int
-            get() = Native.SIZE_T_SIZE
-
-        fun readFromBuffer(buf: ByteBuffer) : USize {
-            // Make sure we always read usize integers using native byte-order, since they may be
-            // casted from pointer values
-            buf.order(ByteOrder.nativeOrder())
-            try {
-                return when (Native.SIZE_T_SIZE) {
-                    4 -> USize(buf.getInt().toLong())
-                    8 -> USize(buf.getLong())
-                    else -> throw RuntimeException("Invalid SIZE_T_SIZE: ${Native.SIZE_T_SIZE}")
-                }
-            } finally {
-                buf.order(ByteOrder.BIG_ENDIAN)
-            }
-        }
+internal inline fun<T> uniffiTraitInterfaceCall(
+    callStatus: UniffiRustCallStatus,
+    makeCall: () -> T,
+    writeReturn: (T) -> Unit,
+) {
+    try {
+        writeReturn(makeCall())
+    } catch(e: Exception) {
+        callStatus.code = UNIFFI_CALL_UNEXPECTED_ERROR
+        callStatus.error_buf = FfiConverterString.lower(e.toString())
     }
 }
 
-
+internal inline fun<T, reified E: Throwable> uniffiTraitInterfaceCallWithError(
+    callStatus: UniffiRustCallStatus,
+    makeCall: () -> T,
+    writeReturn: (T) -> Unit,
+    lowerError: (E) -> RustBuffer.ByValue
+) {
+    try {
+        writeReturn(makeCall())
+    } catch(e: Exception) {
+        if (e is E) {
+            callStatus.code = UNIFFI_CALL_ERROR
+            callStatus.error_buf = lowerError(e)
+        } else {
+            callStatus.code = UNIFFI_CALL_UNEXPECTED_ERROR
+            callStatus.error_buf = FfiConverterString.lower(e.toString())
+        }
+    }
+}
 // Map handles to objects
 //
-// This is used when the Rust code expects an opaque pointer to represent some foreign object.
-// Normally we would pass a pointer to the object, but JNA doesn't support getting a pointer from an
-// object reference , nor does it support leaking a reference to Rust.
-//
-// Instead, this class maps USize values to objects so that we can pass a pointer-sized type to
-// Rust when it needs an opaque pointer.
-//
-// TODO: refactor callbacks to use this class
-internal class UniFfiHandleMap<T: Any> {
-    private val map = ConcurrentHashMap<USize, T>()
-    // Use AtomicInteger for our counter, since we may be on a 32-bit system.  4 billion possible
-    // values seems like enough. If somehow we generate 4 billion handles, then this will wrap
-    // around back to zero and we can assume the first handle generated will have been dropped by
-    // then.
-    private val counter = java.util.concurrent.atomic.AtomicInteger(0)
+// This is used pass an opaque 64-bit handle representing a foreign object to the Rust code.
+internal class UniffiHandleMap<T: Any> {
+    private val map = ConcurrentHashMap<Long, T>()
+    private val counter = java.util.concurrent.atomic.AtomicLong(0)
 
     val size: Int
         get() = map.size
 
-    fun insert(obj: T): USize {
-        val handle = USize(counter.getAndAdd(1).toLong())
+    // Insert a new object into the handle map and get a handle for it
+    fun insert(obj: T): Long {
+        val handle = counter.getAndAdd(1)
         map.put(handle, obj)
         return handle
     }
 
-    fun get(handle: USize): T? {
-        return map.get(handle)
+    // Get an object from the handle map
+    fun get(handle: Long): T {
+        return map.get(handle) ?: throw InternalException("UniffiHandleMap.get: Invalid handle")
     }
 
-    fun remove(handle: USize): T? {
-        return map.remove(handle)
+    // Remove an entry from the handlemap and get the Kotlin object back
+    fun remove(handle: Long): T {
+        return map.remove(handle) ?: throw InternalException("UniffiHandleMap: Invalid handle")
     }
-}
-
-// FFI type for Rust future continuations
-internal interface UniFffiRustFutureContinuationCallbackType : com.sun.jna.Callback {
-    fun callback(continuationHandle: USize, pollResult: Byte);
 }
 
 // Contains loading, initialization code,
@@ -370,6 +362,514 @@ private inline fun <reified Lib : Library> loadIndirect(
 ): Lib {
     return Native.load<Lib>(findLibraryName(componentName), Lib::class.java)
 }
+
+// Define FFI callback types
+internal interface UniffiRustFutureContinuationCallback : com.sun.jna.Callback {
+    fun callback(`data`: Long,`pollResult`: Byte,)
+}
+internal interface UniffiForeignFutureFree : com.sun.jna.Callback {
+    fun callback(`handle`: Long,)
+}
+internal interface UniffiCallbackInterfaceFree : com.sun.jna.Callback {
+    fun callback(`handle`: Long,)
+}
+@Structure.FieldOrder("handle", "free")
+internal open class UniffiForeignFuture(
+    @JvmField internal var `handle`: Long = 0.toLong(),
+    @JvmField internal var `free`: UniffiForeignFutureFree? = null,
+) : Structure() {
+    class UniffiByValue(
+        `handle`: Long = 0.toLong(),
+        `free`: UniffiForeignFutureFree? = null,
+    ): UniffiForeignFuture(`handle`,`free`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFuture) {
+        `handle` = other.`handle`
+        `free` = other.`free`
+    }
+
+}
+@Structure.FieldOrder("returnValue", "callStatus")
+internal open class UniffiForeignFutureStructU8(
+    @JvmField internal var `returnValue`: Byte = 0.toByte(),
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `returnValue`: Byte = 0.toByte(),
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructU8(`returnValue`,`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructU8) {
+        `returnValue` = other.`returnValue`
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompleteU8 : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructU8.UniffiByValue,)
+}
+@Structure.FieldOrder("returnValue", "callStatus")
+internal open class UniffiForeignFutureStructI8(
+    @JvmField internal var `returnValue`: Byte = 0.toByte(),
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `returnValue`: Byte = 0.toByte(),
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructI8(`returnValue`,`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructI8) {
+        `returnValue` = other.`returnValue`
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompleteI8 : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructI8.UniffiByValue,)
+}
+@Structure.FieldOrder("returnValue", "callStatus")
+internal open class UniffiForeignFutureStructU16(
+    @JvmField internal var `returnValue`: Short = 0.toShort(),
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `returnValue`: Short = 0.toShort(),
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructU16(`returnValue`,`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructU16) {
+        `returnValue` = other.`returnValue`
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompleteU16 : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructU16.UniffiByValue,)
+}
+@Structure.FieldOrder("returnValue", "callStatus")
+internal open class UniffiForeignFutureStructI16(
+    @JvmField internal var `returnValue`: Short = 0.toShort(),
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `returnValue`: Short = 0.toShort(),
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructI16(`returnValue`,`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructI16) {
+        `returnValue` = other.`returnValue`
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompleteI16 : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructI16.UniffiByValue,)
+}
+@Structure.FieldOrder("returnValue", "callStatus")
+internal open class UniffiForeignFutureStructU32(
+    @JvmField internal var `returnValue`: Int = 0,
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `returnValue`: Int = 0,
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructU32(`returnValue`,`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructU32) {
+        `returnValue` = other.`returnValue`
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompleteU32 : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructU32.UniffiByValue,)
+}
+@Structure.FieldOrder("returnValue", "callStatus")
+internal open class UniffiForeignFutureStructI32(
+    @JvmField internal var `returnValue`: Int = 0,
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `returnValue`: Int = 0,
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructI32(`returnValue`,`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructI32) {
+        `returnValue` = other.`returnValue`
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompleteI32 : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructI32.UniffiByValue,)
+}
+@Structure.FieldOrder("returnValue", "callStatus")
+internal open class UniffiForeignFutureStructU64(
+    @JvmField internal var `returnValue`: Long = 0.toLong(),
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `returnValue`: Long = 0.toLong(),
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructU64(`returnValue`,`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructU64) {
+        `returnValue` = other.`returnValue`
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompleteU64 : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructU64.UniffiByValue,)
+}
+@Structure.FieldOrder("returnValue", "callStatus")
+internal open class UniffiForeignFutureStructI64(
+    @JvmField internal var `returnValue`: Long = 0.toLong(),
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `returnValue`: Long = 0.toLong(),
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructI64(`returnValue`,`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructI64) {
+        `returnValue` = other.`returnValue`
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompleteI64 : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructI64.UniffiByValue,)
+}
+@Structure.FieldOrder("returnValue", "callStatus")
+internal open class UniffiForeignFutureStructF32(
+    @JvmField internal var `returnValue`: Float = 0.0f,
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `returnValue`: Float = 0.0f,
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructF32(`returnValue`,`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructF32) {
+        `returnValue` = other.`returnValue`
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompleteF32 : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructF32.UniffiByValue,)
+}
+@Structure.FieldOrder("returnValue", "callStatus")
+internal open class UniffiForeignFutureStructF64(
+    @JvmField internal var `returnValue`: Double = 0.0,
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `returnValue`: Double = 0.0,
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructF64(`returnValue`,`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructF64) {
+        `returnValue` = other.`returnValue`
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompleteF64 : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructF64.UniffiByValue,)
+}
+@Structure.FieldOrder("returnValue", "callStatus")
+internal open class UniffiForeignFutureStructPointer(
+    @JvmField internal var `returnValue`: Pointer = Pointer.NULL,
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `returnValue`: Pointer = Pointer.NULL,
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructPointer(`returnValue`,`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructPointer) {
+        `returnValue` = other.`returnValue`
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompletePointer : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructPointer.UniffiByValue,)
+}
+@Structure.FieldOrder("returnValue", "callStatus")
+internal open class UniffiForeignFutureStructRustBuffer(
+    @JvmField internal var `returnValue`: RustBuffer.ByValue = RustBuffer.ByValue(),
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `returnValue`: RustBuffer.ByValue = RustBuffer.ByValue(),
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructRustBuffer(`returnValue`,`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructRustBuffer) {
+        `returnValue` = other.`returnValue`
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompleteRustBuffer : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructRustBuffer.UniffiByValue,)
+}
+@Structure.FieldOrder("callStatus")
+internal open class UniffiForeignFutureStructVoid(
+    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+) : Structure() {
+    class UniffiByValue(
+        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
+    ): UniffiForeignFutureStructVoid(`callStatus`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiForeignFutureStructVoid) {
+        `callStatus` = other.`callStatus`
+    }
+
+}
+internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructVoid.UniffiByValue,)
+}
+internal interface UniffiCallbackInterfaceEventsCallbackMethod0 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`paymentHash`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceEventsCallbackMethod1 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`paymentHash`: RustBuffer.ByValue,`paymentPreimage`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceEventsCallbackMethod2 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`paymentHash`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceEventsCallbackMethod3 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`channelId`: RustBuffer.ByValue,`reason`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceEventsCallbackMethod4 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`status`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceEventsCallbackMethod5 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+@Structure.FieldOrder("paymentReceived", "paymentSent", "paymentFailed", "channelClosed", "breezHealthStatusChangedTo", "synced", "uniffiFree")
+internal open class UniffiVTableCallbackInterfaceEventsCallback(
+    @JvmField internal var `paymentReceived`: UniffiCallbackInterfaceEventsCallbackMethod0? = null,
+    @JvmField internal var `paymentSent`: UniffiCallbackInterfaceEventsCallbackMethod1? = null,
+    @JvmField internal var `paymentFailed`: UniffiCallbackInterfaceEventsCallbackMethod2? = null,
+    @JvmField internal var `channelClosed`: UniffiCallbackInterfaceEventsCallbackMethod3? = null,
+    @JvmField internal var `breezHealthStatusChangedTo`: UniffiCallbackInterfaceEventsCallbackMethod4? = null,
+    @JvmField internal var `synced`: UniffiCallbackInterfaceEventsCallbackMethod5? = null,
+    @JvmField internal var `uniffiFree`: UniffiCallbackInterfaceFree? = null,
+) : Structure() {
+    class UniffiByValue(
+        `paymentReceived`: UniffiCallbackInterfaceEventsCallbackMethod0? = null,
+        `paymentSent`: UniffiCallbackInterfaceEventsCallbackMethod1? = null,
+        `paymentFailed`: UniffiCallbackInterfaceEventsCallbackMethod2? = null,
+        `channelClosed`: UniffiCallbackInterfaceEventsCallbackMethod3? = null,
+        `breezHealthStatusChangedTo`: UniffiCallbackInterfaceEventsCallbackMethod4? = null,
+        `synced`: UniffiCallbackInterfaceEventsCallbackMethod5? = null,
+        `uniffiFree`: UniffiCallbackInterfaceFree? = null,
+    ): UniffiVTableCallbackInterfaceEventsCallback(`paymentReceived`,`paymentSent`,`paymentFailed`,`channelClosed`,`breezHealthStatusChangedTo`,`synced`,`uniffiFree`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiVTableCallbackInterfaceEventsCallback) {
+        `paymentReceived` = other.`paymentReceived`
+        `paymentSent` = other.`paymentSent`
+        `paymentFailed` = other.`paymentFailed`
+        `channelClosed` = other.`channelClosed`
+        `breezHealthStatusChangedTo` = other.`breezHealthStatusChangedTo`
+        `synced` = other.`synced`
+        `uniffiFree` = other.`uniffiFree`
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
@@ -501,7 +1001,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`sweepInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_init_callback_eventscallback(`handle`: ForeignCallback,
+    fun uniffi_uniffi_lipalightninglib_fn_init_callback_vtable_eventscallback(`vtable`: UniffiVTableCallbackInterfaceEventsCallback,
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`version`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
@@ -519,117 +1019,117 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_func_words_by_prefix(`prefix`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun ffi_uniffi_lipalightninglib_rustbuffer_alloc(`size`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun ffi_uniffi_lipalightninglib_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun ffi_uniffi_lipalightninglib_rustbuffer_free(`buf`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_u8(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_u8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_u8(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_u8(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_u8(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_u8(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_u8(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_u8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_i8(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_i8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_i8(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_i8(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_i8(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_i8(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_i8(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_i8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_u16(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_u16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_u16(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_u16(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_u16(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_u16(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_u16(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_u16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Short
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_i16(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_i16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_i16(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_i16(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_i16(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_i16(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_i16(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_i16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Short
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_u32(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_u32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_u32(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_u32(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_u32(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_u32(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_u32(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_u32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Int
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_i32(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_i32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_i32(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_i32(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_i32(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_i32(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_i32(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_i32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Int
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_u64(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_u64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_u64(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_u64(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_u64(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_u64(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_u64(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_u64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_i64(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_i64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_i64(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_i64(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_i64(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_i64(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_i64(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_i64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_f32(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_f32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_f32(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_f32(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_f32(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_f32(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_f32(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_f32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Float
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_f64(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_f64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_f64(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_f64(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_f64(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_f64(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_f64(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_f64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Double
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_pointer(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_pointer(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_pointer(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_pointer(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_pointer(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_pointer(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_pointer(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_pointer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_rust_buffer(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_rust_buffer(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_rust_buffer(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_rust_buffer(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_rust_buffer(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_rust_buffer(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_rust_buffer(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_rust_buffer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun ffi_uniffi_lipalightninglib_rust_future_poll_void(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
+    fun ffi_uniffi_lipalightninglib_rust_future_poll_void(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_cancel_void(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_cancel_void(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_free_void(`handle`: Pointer,
+    fun ffi_uniffi_lipalightninglib_rust_future_free_void(`handle`: Long,
     ): Unit
-    fun ffi_uniffi_lipalightninglib_rust_future_complete_void(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_uniffi_lipalightninglib_rust_future_complete_void(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_checksum_func_accept_terms_and_conditions(
     ): Short
@@ -772,7 +1272,7 @@ internal interface UniffiLib : Library {
 
 private fun uniffiCheckContractApiVersion(lib: UniffiLib) {
     // Get the bindings contract version from our ComponentInterface
-    val bindings_contract_version = 25
+    val bindings_contract_version = 26
     // Get the scaffolding contract version by calling the into the dylib
     val scaffolding_contract_version = lib.ffi_uniffi_lipalightninglib_uniffi_contract_version()
     if (bindings_contract_version != scaffolding_contract_version) {
@@ -962,7 +1462,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep() != 63698.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_constructor_lightningnode_new() != 6752.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_constructor_lightningnode_new() != 11021.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_payment_received() != 64243.toShort()) {
@@ -1020,6 +1520,9 @@ inline fun <T : Disposable?, R> T.use(block: (T) -> R) =
         }
     }
 
+/** Used to instantiate an interface without an actual pointer, for fakes in tests, mostly. */
+object NoPointer
+
 public object FfiConverterUShort: FfiConverter<UShort, Short> {
     override fun lift(value: Short): UShort {
         return value.toUShort()
@@ -1033,7 +1536,7 @@ public object FfiConverterUShort: FfiConverter<UShort, Short> {
         return value.toShort()
     }
 
-    override fun allocationSize(value: UShort) = 2
+    override fun allocationSize(value: UShort) = 2UL
 
     override fun write(value: UShort, buf: ByteBuffer) {
         buf.putShort(value.toShort())
@@ -1053,7 +1556,7 @@ public object FfiConverterUInt: FfiConverter<UInt, Int> {
         return value.toInt()
     }
 
-    override fun allocationSize(value: UInt) = 4
+    override fun allocationSize(value: UInt) = 4UL
 
     override fun write(value: UInt, buf: ByteBuffer) {
         buf.putInt(value.toInt())
@@ -1073,7 +1576,7 @@ public object FfiConverterInt: FfiConverter<Int, Int> {
         return value
     }
 
-    override fun allocationSize(value: Int) = 4
+    override fun allocationSize(value: Int) = 4UL
 
     override fun write(value: Int, buf: ByteBuffer) {
         buf.putInt(value)
@@ -1093,7 +1596,7 @@ public object FfiConverterULong: FfiConverter<ULong, Long> {
         return value.toLong()
     }
 
-    override fun allocationSize(value: ULong) = 8
+    override fun allocationSize(value: ULong) = 8UL
 
     override fun write(value: ULong, buf: ByteBuffer) {
         buf.putLong(value.toLong())
@@ -1113,7 +1616,7 @@ public object FfiConverterLong: FfiConverter<Long, Long> {
         return value
     }
 
-    override fun allocationSize(value: Long) = 8
+    override fun allocationSize(value: Long) = 8UL
 
     override fun write(value: Long, buf: ByteBuffer) {
         buf.putLong(value)
@@ -1133,7 +1636,7 @@ public object FfiConverterBoolean: FfiConverter<Boolean, Byte> {
         return if (value) 1.toByte() else 0.toByte()
     }
 
-    override fun allocationSize(value: Boolean) = 1
+    override fun allocationSize(value: Boolean) = 1UL
 
     override fun write(value: Boolean, buf: ByteBuffer) {
         buf.put(lower(value))
@@ -1146,7 +1649,7 @@ public object FfiConverterString: FfiConverter<String, RustBuffer.ByValue> {
     // store our length and avoid writing it out to the buffer.
     override fun lift(value: RustBuffer.ByValue): String {
         try {
-            val byteArr = ByteArray(value.len)
+            val byteArr = ByteArray(value.len.toInt())
             value.asByteBuffer()!!.get(byteArr)
             return byteArr.toString(Charsets.UTF_8)
         } finally {
@@ -1173,7 +1676,7 @@ public object FfiConverterString: FfiConverter<String, RustBuffer.ByValue> {
         val byteBuf = toUtf8(value)
         // Ideally we'd pass these bytes to `ffi_bytebuffer_from_bytes`, but doing so would require us
         // to copy them into a JNA `Memory`. So we might as well directly copy them into a `RustBuffer`.
-        val rbuf = RustBuffer.alloc(byteBuf.limit())
+        val rbuf = RustBuffer.alloc(byteBuf.limit().toULong())
         rbuf.asByteBuffer()!!.put(byteBuf)
         return rbuf
     }
@@ -1181,9 +1684,9 @@ public object FfiConverterString: FfiConverter<String, RustBuffer.ByValue> {
     // We aren't sure exactly how many bytes our string will be once it's UTF-8
     // encoded.  Allocate 3 bytes per UTF-16 code unit which will always be
     // enough.
-    override fun allocationSize(value: String): Int {
-        val sizeForLength = 4
-        val sizeForString = value.length * 3
+    override fun allocationSize(value: String): ULong {
+        val sizeForLength = 4UL
+        val sizeForString = value.length.toULong() * 3UL
         return sizeForLength + sizeForString
     }
 
@@ -1201,8 +1704,8 @@ public object FfiConverterByteArray: FfiConverterRustBuffer<ByteArray> {
         buf.get(byteArr)
         return byteArr
     }
-    override fun allocationSize(value: ByteArray): Int {
-        return 4 + value.size
+    override fun allocationSize(value: ByteArray): ULong {
+        return 4UL + value.size.toULong()
     }
     override fun write(value: ByteArray, buf: ByteBuffer) {
         buf.putInt(value.size)
@@ -1227,7 +1730,7 @@ public object FfiConverterTimestamp: FfiConverterRustBuffer<java.time.Instant> {
     }
 
     // 8 bytes for seconds, 4 bytes for nanoseconds
-    override fun allocationSize(value: java.time.Instant) = 12
+    override fun allocationSize(value: java.time.Instant) = 12UL
 
     override fun write(value: java.time.Instant, buf: ByteBuffer) {
         var epochOffset = java.time.Duration.between(java.time.Instant.EPOCH, value)
@@ -1267,7 +1770,7 @@ public object FfiConverterDuration: FfiConverterRustBuffer<java.time.Duration> {
     }
 
     // 8 bytes for seconds, 4 bytes for nanoseconds
-    override fun allocationSize(value: java.time.Duration) = 12
+    override fun allocationSize(value: java.time.Duration) = 12UL
 
     override fun write(value: java.time.Duration, buf: ByteBuffer) {
         if (value.seconds < 0) {
@@ -1288,6 +1791,103 @@ public object FfiConverterDuration: FfiConverterRustBuffer<java.time.Duration> {
     }
 }
 
+
+// This template implements a class for working with a Rust struct via a Pointer/Arc<T>
+// to the live Rust struct on the other side of the FFI.
+//
+// Each instance implements core operations for working with the Rust `Arc<T>` and the
+// Kotlin Pointer to work with the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque pointer to the underlying Rust struct.
+//     Method calls need to read this pointer from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its pointer should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the pointer, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the pointer, but is interrupted
+//      before it can pass the pointer over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read pointer value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
 
 
 // The cleaner interface for Object finalization code to run.
@@ -1349,132 +1949,144 @@ private class JavaLangRefCleanable(
 ) : UniffiCleaner.Cleanable {
     override fun clean() = cleanable.clean()
 }
-
-// The base class for all UniFFI Object types.
-//
-// This class provides core operations for working with the Rust `Arc<T>` pointer to
-// the live Rust struct on the other side of the FFI.
-//
-// There's some subtlety here, because we have to be careful not to operate on a Rust
-// struct after it has been dropped, and because we must expose a public API for freeing
-// the Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
-//
-//   * Each `FFIObject` instance holds an opaque pointer to the underlying Rust struct.
-//     Method calls need to read this pointer from the object's state and pass it in to
-//     the Rust FFI.
-//
-//   * When an `FFIObject` is no longer needed, its pointer should be passed to a
-//     special destructor function provided by the Rust FFI, which will drop the
-//     underlying Rust struct.
-//
-//   * Given an `FFIObject` instance, calling code is expected to call the special
-//     `destroy` method in order to free it after use, either by calling it explicitly
-//     or by using a higher-level helper like the `use` method. Failing to do so risks
-//     leaking the underlying Rust struct.
-//
-//   * We can't assume that calling code will do the right thing, and must be prepared
-//     to handle Kotlin method calls executing concurrently with or even after a call to
-//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
-//
-//   * We must never allow Rust code to operate on the underlying Rust struct after
-//     the destructor has been called, and must never call the destructor more than once.
-//     Doing so may trigger memory unsafety.
-//
-//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
-//     is implemented to call the destructor when the Kotlin object becomes unreachable.
-//     This is done in a background thread. This is not a panacea, and client code should be aware that
-//      1. the thread may starve if some there are objects that have poorly performing
-//     `drop` methods or do significant work in their `drop` methods.
-//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
-//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
-//
-// If we try to implement this with mutual exclusion on access to the pointer, there is the
-// possibility of a race between a method call and a concurrent call to `destroy`:
-//
-//    * Thread A starts a method call, reads the value of the pointer, but is interrupted
-//      before it can pass the pointer over the FFI to Rust.
-//    * Thread B calls `destroy` and frees the underlying Rust struct.
-//    * Thread A resumes, passing the already-read pointer value to Rust and triggering
-//      a use-after-free.
-//
-// One possible solution would be to use a `ReadWriteLock`, with each method call taking
-// a read lock (and thus allowed to run concurrently) and the special `destroy` method
-// taking a write lock (and thus blocking on live method calls). However, we aim not to
-// generate methods with any hidden blocking semantics, and a `destroy` method that might
-// block if called incorrectly seems to meet that bar.
-//
-// So, we achieve our goals by giving each `FFIObject` an associated `AtomicLong` counter to track
-// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
-// has been called. These are updated according to the following rules:
-//
-//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
-//      The initial value for the flag is false.
-//
-//    * At the start of each method call, we atomically check the counter.
-//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
-//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
-//
-//    * At the end of each method call, we atomically decrement and check the counter.
-//      If it has reached zero then we destroy the underlying Rust struct.
-//
-//    * When `destroy` is called, we atomically flip the flag from false to true.
-//      If the flag was already true we silently fail.
-//      Otherwise we atomically decrement and check the counter.
-//      If it has reached zero then we destroy the underlying Rust struct.
-//
-// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
-// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
-//
-// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
-// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
-// of the underlying Rust code.
-//
-// This makes a cleaner a better alternative to _not_ calling `destroy()` as
-// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
-// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
-// thread may be starved, and the app will leak memory.
-//
-// In this case, `destroy`ing manually may be a better solution.
-//
-// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
-// with Rust peers are reclaimed:
-//
-// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
-// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
-// 3. The memory is reclaimed when the process terminates.
-//
-// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
-//
-abstract class FFIObject: Disposable, AutoCloseable {
+public interface LightningNodeInterface {
+    
+    fun `acceptPocketTermsAndConditions`(`version`: kotlin.Long)
+    
+    fun `background`()
+    
+    fun `calculateLightningPayoutFee`(`offer`: OfferInfo): Amount
+    
+    fun `calculateLspFee`(`amountSat`: kotlin.ULong): CalculateLspFeeResponse
+    
+    fun `changeFiatCurrency`(`fiatCurrency`: kotlin.String)
+    
+    fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)
+    
+    fun `clearWallet`(`clearWalletInfo`: ClearWalletInfo, `destinationOnchainAddressData`: BitcoinAddressData)
+    
+    fun `createInvoice`(`amountSat`: kotlin.ULong, `lspFeeParams`: OpeningFeeParams?, `description`: kotlin.String, `metadata`: InvoiceCreationMetadata): InvoiceDetails
+    
+    fun `decodeData`(`data`: kotlin.String): DecodedData
+    
+    fun `foreground`()
+    
+    fun `generateSwapAddress`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo
+    
+    fun `getAnalyticsConfig`(): AnalyticsConfig
+    
+    fun `getChannelCloseResolvingFees`(): ChannelCloseResolvingFees
+    
+    fun `getExchangeRate`(): ExchangeRate?
+    
+    fun `getHealthStatus`(): BreezHealthCheckStatus
+    
+    fun `getIncomingPayment`(`hash`: kotlin.String): IncomingPaymentInfo
+    
+    fun `getInvoiceAffordability`(`amountSat`: kotlin.ULong): InvoiceAffordability
+    
+    fun `getLatestActivities`(`numberOfActivities`: kotlin.UInt): ListActivitiesResponse
+    
+    fun `getNodeInfo`(): NodeInfo
+    
+    fun `getOutgoingPayment`(`hash`: kotlin.String): OutgoingPaymentInfo
+    
+    fun `getPaymentAmountLimits`(): PaymentAmountLimits
+    
+    fun `getPaymentMaxRoutingFeeMode`(`amountSat`: kotlin.ULong): MaxRoutingFeeMode
+    
+    fun `getPaymentUuid`(`paymentHash`: kotlin.String): kotlin.String
+    
+    fun `getTermsAndConditionsStatus`(`termsAndConditions`: TermsAndConditions): TermsAndConditionsStatus
+    
+    fun `getUnresolvedFailedSwaps`(): List<FailedSwapInfo>
+    
+    fun `getWalletPubkeyId`(): kotlin.String
+    
+    fun `hideTopup`(`id`: kotlin.String)
+    
+    fun `isClearWalletFeasible`(): kotlin.Boolean
+    
+    fun `listActionRequiredItems`(): List<ActionRequiredItem>
+    
+    fun `listCurrencyCodes`(): List<kotlin.String>
+    
+    fun `listLightningAddresses`(): List<kotlin.String>
+    
+    fun `logDebugInfo`()
+    
+    fun `payInvoice`(`invoiceDetails`: InvoiceDetails, `metadata`: PaymentMetadata)
+    
+    fun `payLnurlp`(`lnurlPayRequestData`: LnUrlPayRequestData, `amountSat`: kotlin.ULong): kotlin.String
+    
+    fun `payOpenInvoice`(`invoiceDetails`: InvoiceDetails, `amountSat`: kotlin.ULong, `metadata`: PaymentMetadata)
+    
+    fun `prepareClearWallet`(): ClearWalletInfo
+    
+    fun `prepareResolveFailedSwap`(`failedSwapInfo`: FailedSwapInfo, `toAddress`: kotlin.String, `onchainFeeRate`: kotlin.UInt): ResolveFailedSwapInfo
+    
+    fun `prepareSweep`(`address`: kotlin.String, `onchainFeeRate`: kotlin.UInt): SweepInfo
+    
+    fun `queryLspFee`(): LspFee
+    
+    fun `queryOnchainFeeRate`(): kotlin.UInt
+    
+    fun `queryUncompletedOffers`(): List<OfferInfo>
+    
+    fun `registerFiatTopup`(`email`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo
+    
+    fun `registerLightningAddress`(): kotlin.String
+    
+    fun `registerNotificationToken`(`notificationToken`: kotlin.String, `languageIso6391`: kotlin.String, `countryIso31661Alpha2`: kotlin.String)
+    
+    fun `requestOfferCollection`(`offer`: OfferInfo): kotlin.String
+    
+    fun `resetFiatTopup`()
+    
+    fun `resolveFailedSwap`(`resolveFailedSwapInfo`: ResolveFailedSwapInfo): kotlin.String
+    
+    fun `retrieveLatestFiatTopupInfo`(): FiatTopupInfo?
+    
+    fun `setAnalyticsConfig`(`config`: AnalyticsConfig)
+    
+    fun `setPaymentPersonalNote`(`paymentHash`: kotlin.String, `note`: kotlin.String)
+    
+    fun `swapOnchainToLightning`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String
+    
+    fun `sweep`(`sweepInfo`: SweepInfo): kotlin.String
+    
+    companion object
+}
+open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
 
     constructor(pointer: Pointer) {
         this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
     }
 
     /**
-     * This constructor can be used to instantiate a fake object.
-     *
-     * **WARNING: Any object instantiated with this constructor cannot be passed to an actual Rust-backed object.**
-     * Since there isn't a backing [Pointer] the FFI lower functions will crash.
-     * @param noPointer Placeholder value so we can have a constructor separate from the default empty one that may be
-     *   implemented for classes extending [FFIObject].
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
      */
     @Suppress("UNUSED_PARAMETER")
     constructor(noPointer: NoPointer) {
         this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
     }
+    constructor(`config`: Config, `eventsCallback`: EventsCallback) :
+        this(
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_constructor_lightningnode_new(
+        FfiConverterTypeConfig.lower(`config`),FfiConverterTypeEventsCallback.lower(`eventsCallback`),_status)
+}
+    )
 
     protected val pointer: Pointer?
-    protected abstract val cleanable: UniffiCleaner.Cleanable
+    protected val cleanable: UniffiCleaner.Cleanable
 
     private val wasDestroyed = AtomicBoolean(false)
     private val callCounter = AtomicLong(1)
-
-    open fun uniffiClonePointer(): Pointer {
-        // Overridden by generated subclasses, the default method exists to allow users to manually
-        // implement the interface
-        throw RuntimeException("uniffiClonePointer not implemented")
-    }
 
     override fun destroy() {
         // Only allow a single call to this method.
@@ -1514,140 +2126,6 @@ abstract class FFIObject: Disposable, AutoCloseable {
             }
         }
     }
-}
-
-/** Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly. */
-object NoPointer
-
-
-public interface LightningNodeInterface {
-    
-    fun `acceptPocketTermsAndConditions`(`version`: Long)
-    
-    fun `background`()
-    
-    fun `calculateLightningPayoutFee`(`offer`: OfferInfo): Amount
-    
-    fun `calculateLspFee`(`amountSat`: ULong): CalculateLspFeeResponse
-    
-    fun `changeFiatCurrency`(`fiatCurrency`: String)
-    
-    fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)
-    
-    fun `clearWallet`(`clearWalletInfo`: ClearWalletInfo, `destinationOnchainAddressData`: BitcoinAddressData)
-    
-    fun `createInvoice`(`amountSat`: ULong, `lspFeeParams`: OpeningFeeParams?, `description`: String, `metadata`: InvoiceCreationMetadata): InvoiceDetails
-    
-    fun `decodeData`(`data`: String): DecodedData
-    
-    fun `foreground`()
-    
-    fun `generateSwapAddress`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo
-    
-    fun `getAnalyticsConfig`(): AnalyticsConfig
-    
-    fun `getChannelCloseResolvingFees`(): ChannelCloseResolvingFees
-    
-    fun `getExchangeRate`(): ExchangeRate?
-    
-    fun `getHealthStatus`(): BreezHealthCheckStatus
-    
-    fun `getIncomingPayment`(`hash`: String): IncomingPaymentInfo
-    
-    fun `getInvoiceAffordability`(`amountSat`: ULong): InvoiceAffordability
-    
-    fun `getLatestActivities`(`numberOfActivities`: UInt): ListActivitiesResponse
-    
-    fun `getNodeInfo`(): NodeInfo
-    
-    fun `getOutgoingPayment`(`hash`: String): OutgoingPaymentInfo
-    
-    fun `getPaymentAmountLimits`(): PaymentAmountLimits
-    
-    fun `getPaymentMaxRoutingFeeMode`(`amountSat`: ULong): MaxRoutingFeeMode
-    
-    fun `getPaymentUuid`(`paymentHash`: String): String
-    
-    fun `getTermsAndConditionsStatus`(`termsAndConditions`: TermsAndConditions): TermsAndConditionsStatus
-    
-    fun `getUnresolvedFailedSwaps`(): List<FailedSwapInfo>
-    
-    fun `getWalletPubkeyId`(): String
-    
-    fun `hideTopup`(`id`: String)
-    
-    fun `isClearWalletFeasible`(): Boolean
-    
-    fun `listActionRequiredItems`(): List<ActionRequiredItem>
-    
-    fun `listCurrencyCodes`(): List<String>
-    
-    fun `listLightningAddresses`(): List<String>
-    
-    fun `logDebugInfo`()
-    
-    fun `payInvoice`(`invoiceDetails`: InvoiceDetails, `metadata`: PaymentMetadata)
-    
-    fun `payLnurlp`(`lnurlPayRequestData`: LnUrlPayRequestData, `amountSat`: ULong): String
-    
-    fun `payOpenInvoice`(`invoiceDetails`: InvoiceDetails, `amountSat`: ULong, `metadata`: PaymentMetadata)
-    
-    fun `prepareClearWallet`(): ClearWalletInfo
-    
-    fun `prepareResolveFailedSwap`(`failedSwapInfo`: FailedSwapInfo, `toAddress`: String, `onchainFeeRate`: UInt): ResolveFailedSwapInfo
-    
-    fun `prepareSweep`(`address`: String, `onchainFeeRate`: UInt): SweepInfo
-    
-    fun `queryLspFee`(): LspFee
-    
-    fun `queryOnchainFeeRate`(): UInt
-    
-    fun `queryUncompletedOffers`(): List<OfferInfo>
-    
-    fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: String): FiatTopupInfo
-    
-    fun `registerLightningAddress`(): String
-    
-    fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String)
-    
-    fun `requestOfferCollection`(`offer`: OfferInfo): String
-    
-    fun `resetFiatTopup`()
-    
-    fun `resolveFailedSwap`(`resolveFailedSwapInfo`: ResolveFailedSwapInfo): String
-    
-    fun `retrieveLatestFiatTopupInfo`(): FiatTopupInfo?
-    
-    fun `setAnalyticsConfig`(`config`: AnalyticsConfig)
-    
-    fun `setPaymentPersonalNote`(`paymentHash`: String, `note`: String)
-    
-    fun `swapOnchainToLightning`(`satsPerVbyte`: UInt, `lspFeeParams`: OpeningFeeParams?): String
-    
-    fun `sweep`(`sweepInfo`: SweepInfo): String
-    
-    companion object
-}
-open class LightningNode : FFIObject, LightningNodeInterface {
-
-    constructor(pointer: Pointer): super(pointer)
-
-    /**
-     * This constructor can be used to instantiate a fake object.
-     *
-     * **WARNING: Any object instantiated with this constructor cannot be passed to an actual Rust-backed object.**
-     * Since there isn't a backing [Pointer] the FFI lower functions will crash.
-     * @param noPointer Placeholder value so we can have a constructor separate from the default empty one that may be
-     *   implemented for classes extending [FFIObject].
-     */
-    constructor(noPointer: NoPointer): super(noPointer)
-    constructor(`config`: Config, `eventsCallback`: EventsCallback) :
-        this(
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_constructor_lightningnode_new(FfiConverterTypeConfig.lower(`config`),FfiConverterTypeEventsCallback.lower(`eventsCallback`),_status)
-})
-
-    override val cleanable: UniffiCleaner.Cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
 
     // Use a static inner class instead of a closure so as not to accidentally
     // capture `this` as part of the cleanable's action.
@@ -1661,617 +2139,670 @@ open class LightningNode : FFIObject, LightningNodeInterface {
         }
     }
 
-    override fun uniffiClonePointer(): Pointer {
+    fun uniffiClonePointer(): Pointer {
         return uniffiRustCall() { status ->
             UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_clone_lightningnode(pointer!!, status)
         }
     }
 
     
-    @Throws(LnException::class)override fun `acceptPocketTermsAndConditions`(`version`: Long) =
-        callWithPointer {
+    @Throws(LnException::class)override fun `acceptPocketTermsAndConditions`(`version`: kotlin.Long)
+        = 
+    callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(it,
-        FfiConverterLong.lower(`version`),
-        _status)
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(
+        it, FfiConverterLong.lower(`version`),_status)
 }
-        }
-    
-    
-    override fun `background`() =
-        callWithPointer {
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_background(it,
-        
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(LnException::class)override fun `calculateLightningPayoutFee`(`offer`: OfferInfo): Amount =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_calculate_lightning_payout_fee(it,
-        FfiConverterTypeOfferInfo.lower(`offer`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeAmount.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `calculateLspFee`(`amountSat`: ULong): CalculateLspFeeResponse =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_calculate_lsp_fee(it,
-        FfiConverterULong.lower(`amountSat`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeCalculateLspFeeResponse.lift(it)
-        }
-    
-    override fun `changeFiatCurrency`(`fiatCurrency`: String) =
-        callWithPointer {
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_change_fiat_currency(it,
-        FfiConverterString.lower(`fiatCurrency`),
-        _status)
-}
-        }
-    
-    
-    override fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig) =
-        callWithPointer {
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_change_timezone_config(it,
-        FfiConverterTypeTzConfig.lower(`timezoneConfig`),
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(LnException::class)override fun `clearWallet`(`clearWalletInfo`: ClearWalletInfo, `destinationOnchainAddressData`: BitcoinAddressData) =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_clear_wallet(it,
-        FfiConverterTypeClearWalletInfo.lower(`clearWalletInfo`),FfiConverterTypeBitcoinAddressData.lower(`destinationOnchainAddressData`),
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(LnException::class)override fun `createInvoice`(`amountSat`: ULong, `lspFeeParams`: OpeningFeeParams?, `description`: String, `metadata`: InvoiceCreationMetadata): InvoiceDetails =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_create_invoice(it,
-        FfiConverterULong.lower(`amountSat`),FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),FfiConverterString.lower(`description`),FfiConverterTypeInvoiceCreationMetadata.lower(`metadata`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeInvoiceDetails.lift(it)
-        }
-    
-    
-    @Throws(DecodeDataException::class)override fun `decodeData`(`data`: String): DecodedData =
-        callWithPointer {
-    uniffiRustCallWithError(DecodeDataException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_data(it,
-        FfiConverterString.lower(`data`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeDecodedData.lift(it)
-        }
-    
-    override fun `foreground`() =
-        callWithPointer {
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_foreground(it,
-        
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(SwapException::class)override fun `generateSwapAddress`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo =
-        callWithPointer {
-    uniffiRustCallWithError(SwapException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_generate_swap_address(it,
-        FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeSwapAddressInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getAnalyticsConfig`(): AnalyticsConfig =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_analytics_config(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterTypeAnalyticsConfig.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getChannelCloseResolvingFees`(): ChannelCloseResolvingFees =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_channel_close_resolving_fees(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterTypeChannelCloseResolvingFees.lift(it)
-        }
-    
-    override fun `getExchangeRate`(): ExchangeRate? =
-        callWithPointer {
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_exchange_rate(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterOptionalTypeExchangeRate.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getHealthStatus`(): BreezHealthCheckStatus =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_health_status(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterTypeBreezHealthCheckStatus.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getIncomingPayment`(`hash`: String): IncomingPaymentInfo =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_incoming_payment(it,
-        FfiConverterString.lower(`hash`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeIncomingPaymentInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getInvoiceAffordability`(`amountSat`: ULong): InvoiceAffordability =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_invoice_affordability(it,
-        FfiConverterULong.lower(`amountSat`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeInvoiceAffordability.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getLatestActivities`(`numberOfActivities`: UInt): ListActivitiesResponse =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_latest_activities(it,
-        FfiConverterUInt.lower(`numberOfActivities`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeListActivitiesResponse.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getNodeInfo`(): NodeInfo =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_node_info(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterTypeNodeInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getOutgoingPayment`(`hash`: String): OutgoingPaymentInfo =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_outgoing_payment(it,
-        FfiConverterString.lower(`hash`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeOutgoingPaymentInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getPaymentAmountLimits`(): PaymentAmountLimits =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_amount_limits(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterTypePaymentAmountLimits.lift(it)
-        }
-    
-    override fun `getPaymentMaxRoutingFeeMode`(`amountSat`: ULong): MaxRoutingFeeMode =
-        callWithPointer {
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_max_routing_fee_mode(it,
-        FfiConverterULong.lower(`amountSat`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeMaxRoutingFeeMode.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getPaymentUuid`(`paymentHash`: String): String =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_uuid(it,
-        FfiConverterString.lower(`paymentHash`),
-        _status)
-}
-        }.let {
-            FfiConverterString.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getTermsAndConditionsStatus`(`termsAndConditions`: TermsAndConditions): TermsAndConditionsStatus =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_terms_and_conditions_status(it,
-        FfiConverterTypeTermsAndConditions.lower(`termsAndConditions`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeTermsAndConditionsStatus.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getUnresolvedFailedSwaps`(): List<FailedSwapInfo> =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_unresolved_failed_swaps(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterSequenceTypeFailedSwapInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `getWalletPubkeyId`(): String =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterString.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `hideTopup`(`id`: String) =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_topup(it,
-        FfiConverterString.lower(`id`),
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(LnException::class)override fun `isClearWalletFeasible`(): Boolean =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_is_clear_wallet_feasible(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterBoolean.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `listActionRequiredItems`(): List<ActionRequiredItem> =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_action_required_items(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterSequenceTypeActionRequiredItem.lift(it)
-        }
-    
-    override fun `listCurrencyCodes`(): List<String> =
-        callWithPointer {
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterSequenceString.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `listLightningAddresses`(): List<String> =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_lightning_addresses(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterSequenceString.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `logDebugInfo`() =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(it,
-        
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(PayException::class)override fun `payInvoice`(`invoiceDetails`: InvoiceDetails, `metadata`: PaymentMetadata) =
-        callWithPointer {
-    uniffiRustCallWithError(PayException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(it,
-        FfiConverterTypeInvoiceDetails.lower(`invoiceDetails`),FfiConverterTypePaymentMetadata.lower(`metadata`),
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(LnUrlPayException::class)override fun `payLnurlp`(`lnurlPayRequestData`: LnUrlPayRequestData, `amountSat`: ULong): String =
-        callWithPointer {
-    uniffiRustCallWithError(LnUrlPayException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_lnurlp(it,
-        FfiConverterTypeLnUrlPayRequestData.lower(`lnurlPayRequestData`),FfiConverterULong.lower(`amountSat`),
-        _status)
-}
-        }.let {
-            FfiConverterString.lift(it)
-        }
-    
-    
-    @Throws(PayException::class)override fun `payOpenInvoice`(`invoiceDetails`: InvoiceDetails, `amountSat`: ULong, `metadata`: PaymentMetadata) =
-        callWithPointer {
-    uniffiRustCallWithError(PayException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_open_invoice(it,
-        FfiConverterTypeInvoiceDetails.lower(`invoiceDetails`),FfiConverterULong.lower(`amountSat`),FfiConverterTypePaymentMetadata.lower(`metadata`),
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(LnException::class)override fun `prepareClearWallet`(): ClearWalletInfo =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_clear_wallet(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterTypeClearWalletInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `prepareResolveFailedSwap`(`failedSwapInfo`: FailedSwapInfo, `toAddress`: String, `onchainFeeRate`: UInt): ResolveFailedSwapInfo =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_resolve_failed_swap(it,
-        FfiConverterTypeFailedSwapInfo.lower(`failedSwapInfo`),FfiConverterString.lower(`toAddress`),FfiConverterUInt.lower(`onchainFeeRate`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeResolveFailedSwapInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `prepareSweep`(`address`: String, `onchainFeeRate`: UInt): SweepInfo =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_sweep(it,
-        FfiConverterString.lower(`address`),FfiConverterUInt.lower(`onchainFeeRate`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeSweepInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `queryLspFee`(): LspFee =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_lsp_fee(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterTypeLspFee.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `queryOnchainFeeRate`(): UInt =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee_rate(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterUInt.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `queryUncompletedOffers`(): List<OfferInfo> =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_uncompleted_offers(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterSequenceTypeOfferInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `registerFiatTopup`(`email`: String?, `userIban`: String, `userCurrency`: String): FiatTopupInfo =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(it,
-        FfiConverterOptionalString.lower(`email`),FfiConverterString.lower(`userIban`),FfiConverterString.lower(`userCurrency`),
-        _status)
-}
-        }.let {
-            FfiConverterTypeFiatTopupInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `registerLightningAddress`(): String =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_lightning_address(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterString.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `registerNotificationToken`(`notificationToken`: String, `languageIso6391`: String, `countryIso31661Alpha2`: String) =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(it,
-        FfiConverterString.lower(`notificationToken`),FfiConverterString.lower(`languageIso6391`),FfiConverterString.lower(`countryIso31661Alpha2`),
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(LnException::class)override fun `requestOfferCollection`(`offer`: OfferInfo): String =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(it,
-        FfiConverterTypeOfferInfo.lower(`offer`),
-        _status)
-}
-        }.let {
-            FfiConverterString.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `resetFiatTopup`() =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_reset_fiat_topup(it,
-        
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(LnException::class)override fun `resolveFailedSwap`(`resolveFailedSwapInfo`: ResolveFailedSwapInfo): String =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_resolve_failed_swap(it,
-        FfiConverterTypeResolveFailedSwapInfo.lower(`resolveFailedSwapInfo`),
-        _status)
-}
-        }.let {
-            FfiConverterString.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `retrieveLatestFiatTopupInfo`(): FiatTopupInfo? =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_retrieve_latest_fiat_topup_info(it,
-        
-        _status)
-}
-        }.let {
-            FfiConverterOptionalTypeFiatTopupInfo.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `setAnalyticsConfig`(`config`: AnalyticsConfig) =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_set_analytics_config(it,
-        FfiConverterTypeAnalyticsConfig.lower(`config`),
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(LnException::class)override fun `setPaymentPersonalNote`(`paymentHash`: String, `note`: String) =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_set_payment_personal_note(it,
-        FfiConverterString.lower(`paymentHash`),FfiConverterString.lower(`note`),
-        _status)
-}
-        }
-    
-    
-    
-    @Throws(SwapException::class)override fun `swapOnchainToLightning`(`satsPerVbyte`: UInt, `lspFeeParams`: OpeningFeeParams?): String =
-        callWithPointer {
-    uniffiRustCallWithError(SwapException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_swap_onchain_to_lightning(it,
-        FfiConverterUInt.lower(`satsPerVbyte`),FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),
-        _status)
-}
-        }.let {
-            FfiConverterString.lift(it)
-        }
-    
-    
-    @Throws(LnException::class)override fun `sweep`(`sweepInfo`: SweepInfo): String =
-        callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(it,
-        FfiConverterTypeSweepInfo.lower(`sweepInfo`),
-        _status)
-}
-        }.let {
-            FfiConverterString.lift(it)
-        }
+    }
     
     
 
+    override fun `background`()
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_background(
+        it, _status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `calculateLightningPayoutFee`(`offer`: OfferInfo): Amount {
+            return FfiConverterTypeAmount.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_calculate_lightning_payout_fee(
+        it, FfiConverterTypeOfferInfo.lower(`offer`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `calculateLspFee`(`amountSat`: kotlin.ULong): CalculateLspFeeResponse {
+            return FfiConverterTypeCalculateLspFeeResponse.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_calculate_lsp_fee(
+        it, FfiConverterULong.lower(`amountSat`),_status)
+}
+    }
+    )
+    }
+    
+
+    override fun `changeFiatCurrency`(`fiatCurrency`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_change_fiat_currency(
+        it, FfiConverterString.lower(`fiatCurrency`),_status)
+}
+    }
+    
+    
+
+    override fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_change_timezone_config(
+        it, FfiConverterTypeTzConfig.lower(`timezoneConfig`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `clearWallet`(`clearWalletInfo`: ClearWalletInfo, `destinationOnchainAddressData`: BitcoinAddressData)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_clear_wallet(
+        it, FfiConverterTypeClearWalletInfo.lower(`clearWalletInfo`),FfiConverterTypeBitcoinAddressData.lower(`destinationOnchainAddressData`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `createInvoice`(`amountSat`: kotlin.ULong, `lspFeeParams`: OpeningFeeParams?, `description`: kotlin.String, `metadata`: InvoiceCreationMetadata): InvoiceDetails {
+            return FfiConverterTypeInvoiceDetails.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_create_invoice(
+        it, FfiConverterULong.lower(`amountSat`),FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),FfiConverterString.lower(`description`),FfiConverterTypeInvoiceCreationMetadata.lower(`metadata`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(DecodeDataException::class)override fun `decodeData`(`data`: kotlin.String): DecodedData {
+            return FfiConverterTypeDecodedData.lift(
+    callWithPointer {
+    uniffiRustCallWithError(DecodeDataException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_data(
+        it, FfiConverterString.lower(`data`),_status)
+}
+    }
+    )
+    }
+    
+
+    override fun `foreground`()
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_foreground(
+        it, _status)
+}
+    }
+    
+    
+
+    
+    @Throws(SwapException::class)override fun `generateSwapAddress`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo {
+            return FfiConverterTypeSwapAddressInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(SwapException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_generate_swap_address(
+        it, FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getAnalyticsConfig`(): AnalyticsConfig {
+            return FfiConverterTypeAnalyticsConfig.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_analytics_config(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getChannelCloseResolvingFees`(): ChannelCloseResolvingFees {
+            return FfiConverterTypeChannelCloseResolvingFees.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_channel_close_resolving_fees(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    override fun `getExchangeRate`(): ExchangeRate? {
+            return FfiConverterOptionalTypeExchangeRate.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_exchange_rate(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getHealthStatus`(): BreezHealthCheckStatus {
+            return FfiConverterTypeBreezHealthCheckStatus.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_health_status(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getIncomingPayment`(`hash`: kotlin.String): IncomingPaymentInfo {
+            return FfiConverterTypeIncomingPaymentInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_incoming_payment(
+        it, FfiConverterString.lower(`hash`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getInvoiceAffordability`(`amountSat`: kotlin.ULong): InvoiceAffordability {
+            return FfiConverterTypeInvoiceAffordability.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_invoice_affordability(
+        it, FfiConverterULong.lower(`amountSat`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getLatestActivities`(`numberOfActivities`: kotlin.UInt): ListActivitiesResponse {
+            return FfiConverterTypeListActivitiesResponse.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_latest_activities(
+        it, FfiConverterUInt.lower(`numberOfActivities`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getNodeInfo`(): NodeInfo {
+            return FfiConverterTypeNodeInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_node_info(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getOutgoingPayment`(`hash`: kotlin.String): OutgoingPaymentInfo {
+            return FfiConverterTypeOutgoingPaymentInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_outgoing_payment(
+        it, FfiConverterString.lower(`hash`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getPaymentAmountLimits`(): PaymentAmountLimits {
+            return FfiConverterTypePaymentAmountLimits.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_amount_limits(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    override fun `getPaymentMaxRoutingFeeMode`(`amountSat`: kotlin.ULong): MaxRoutingFeeMode {
+            return FfiConverterTypeMaxRoutingFeeMode.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_max_routing_fee_mode(
+        it, FfiConverterULong.lower(`amountSat`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getPaymentUuid`(`paymentHash`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_payment_uuid(
+        it, FfiConverterString.lower(`paymentHash`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getTermsAndConditionsStatus`(`termsAndConditions`: TermsAndConditions): TermsAndConditionsStatus {
+            return FfiConverterTypeTermsAndConditionsStatus.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_terms_and_conditions_status(
+        it, FfiConverterTypeTermsAndConditions.lower(`termsAndConditions`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getUnresolvedFailedSwaps`(): List<FailedSwapInfo> {
+            return FfiConverterSequenceTypeFailedSwapInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_unresolved_failed_swaps(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getWalletPubkeyId`(): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `hideTopup`(`id`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_topup(
+        it, FfiConverterString.lower(`id`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `isClearWalletFeasible`(): kotlin.Boolean {
+            return FfiConverterBoolean.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_is_clear_wallet_feasible(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `listActionRequiredItems`(): List<ActionRequiredItem> {
+            return FfiConverterSequenceTypeActionRequiredItem.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_action_required_items(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    override fun `listCurrencyCodes`(): List<kotlin.String> {
+            return FfiConverterSequenceString.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `listLightningAddresses`(): List<kotlin.String> {
+            return FfiConverterSequenceString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_lightning_addresses(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `logDebugInfo`()
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(
+        it, _status)
+}
+    }
+    
+    
+
+    
+    @Throws(PayException::class)override fun `payInvoice`(`invoiceDetails`: InvoiceDetails, `metadata`: PaymentMetadata)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(PayException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(
+        it, FfiConverterTypeInvoiceDetails.lower(`invoiceDetails`),FfiConverterTypePaymentMetadata.lower(`metadata`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnUrlPayException::class)override fun `payLnurlp`(`lnurlPayRequestData`: LnUrlPayRequestData, `amountSat`: kotlin.ULong): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnUrlPayException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_lnurlp(
+        it, FfiConverterTypeLnUrlPayRequestData.lower(`lnurlPayRequestData`),FfiConverterULong.lower(`amountSat`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(PayException::class)override fun `payOpenInvoice`(`invoiceDetails`: InvoiceDetails, `amountSat`: kotlin.ULong, `metadata`: PaymentMetadata)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(PayException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_open_invoice(
+        it, FfiConverterTypeInvoiceDetails.lower(`invoiceDetails`),FfiConverterULong.lower(`amountSat`),FfiConverterTypePaymentMetadata.lower(`metadata`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `prepareClearWallet`(): ClearWalletInfo {
+            return FfiConverterTypeClearWalletInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_clear_wallet(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `prepareResolveFailedSwap`(`failedSwapInfo`: FailedSwapInfo, `toAddress`: kotlin.String, `onchainFeeRate`: kotlin.UInt): ResolveFailedSwapInfo {
+            return FfiConverterTypeResolveFailedSwapInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_resolve_failed_swap(
+        it, FfiConverterTypeFailedSwapInfo.lower(`failedSwapInfo`),FfiConverterString.lower(`toAddress`),FfiConverterUInt.lower(`onchainFeeRate`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `prepareSweep`(`address`: kotlin.String, `onchainFeeRate`: kotlin.UInt): SweepInfo {
+            return FfiConverterTypeSweepInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_sweep(
+        it, FfiConverterString.lower(`address`),FfiConverterUInt.lower(`onchainFeeRate`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `queryLspFee`(): LspFee {
+            return FfiConverterTypeLspFee.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_lsp_fee(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `queryOnchainFeeRate`(): kotlin.UInt {
+            return FfiConverterUInt.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_onchain_fee_rate(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `queryUncompletedOffers`(): List<OfferInfo> {
+            return FfiConverterSequenceTypeOfferInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_uncompleted_offers(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `registerFiatTopup`(`email`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo {
+            return FfiConverterTypeFiatTopupInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(
+        it, FfiConverterOptionalString.lower(`email`),FfiConverterString.lower(`userIban`),FfiConverterString.lower(`userCurrency`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `registerLightningAddress`(): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_lightning_address(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `registerNotificationToken`(`notificationToken`: kotlin.String, `languageIso6391`: kotlin.String, `countryIso31661Alpha2`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(
+        it, FfiConverterString.lower(`notificationToken`),FfiConverterString.lower(`languageIso6391`),FfiConverterString.lower(`countryIso31661Alpha2`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `requestOfferCollection`(`offer`: OfferInfo): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(
+        it, FfiConverterTypeOfferInfo.lower(`offer`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `resetFiatTopup`()
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_reset_fiat_topup(
+        it, _status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `resolveFailedSwap`(`resolveFailedSwapInfo`: ResolveFailedSwapInfo): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_resolve_failed_swap(
+        it, FfiConverterTypeResolveFailedSwapInfo.lower(`resolveFailedSwapInfo`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `retrieveLatestFiatTopupInfo`(): FiatTopupInfo? {
+            return FfiConverterOptionalTypeFiatTopupInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_retrieve_latest_fiat_topup_info(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `setAnalyticsConfig`(`config`: AnalyticsConfig)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_set_analytics_config(
+        it, FfiConverterTypeAnalyticsConfig.lower(`config`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `setPaymentPersonalNote`(`paymentHash`: kotlin.String, `note`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_set_payment_personal_note(
+        it, FfiConverterString.lower(`paymentHash`),FfiConverterString.lower(`note`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(SwapException::class)override fun `swapOnchainToLightning`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(SwapException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_swap_onchain_to_lightning(
+        it, FfiConverterUInt.lower(`satsPerVbyte`),FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `sweep`(`sweepInfo`: SweepInfo): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(
+        it, FfiConverterTypeSweepInfo.lower(`sweepInfo`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
     
     companion object
     
@@ -2293,7 +2824,7 @@ public object FfiConverterTypeLightningNode: FfiConverter<LightningNode, Pointer
         return lift(Pointer(buf.getLong()))
     }
 
-    override fun allocationSize(value: LightningNode) = 8
+    override fun allocationSize(value: LightningNode) = 8UL
 
     override fun write(value: LightningNode, buf: ByteBuffer) {
         // The Rust code always expects pointers written as 8 bytes,
@@ -2305,7 +2836,7 @@ public object FfiConverterTypeLightningNode: FfiConverter<LightningNode, Pointer
 
 
 data class Amount (
-    var `sats`: ULong, 
+    var `sats`: kotlin.ULong, 
     var `fiat`: FiatValue?
 ) {
     
@@ -2334,11 +2865,11 @@ public object FfiConverterTypeAmount: FfiConverterRustBuffer<Amount> {
 
 
 data class BitcoinAddressData (
-    var `address`: String, 
+    var `address`: kotlin.String, 
     var `network`: Network, 
-    var `amountSat`: ULong?, 
-    var `label`: String?, 
-    var `message`: String?
+    var `amountSat`: kotlin.ULong?, 
+    var `label`: kotlin.String?, 
+    var `message`: kotlin.String?
 ) {
     
     companion object
@@ -2407,7 +2938,7 @@ data class ChannelCloseInfo (
     var `amount`: Amount, 
     var `state`: ChannelCloseState, 
     var `closedAt`: TzTime?, 
-    var `closingTxId`: String
+    var `closingTxId`: kotlin.String
 ) {
     
     companion object
@@ -2443,7 +2974,7 @@ public object FfiConverterTypeChannelCloseInfo: FfiConverterRustBuffer<ChannelCl
 data class ChannelCloseResolvingFees (
     var `swapFees`: SwapToLightningFees?, 
     var `sweepOnchainFeeEstimate`: Amount, 
-    var `satPerVbyte`: UInt
+    var `satPerVbyte`: kotlin.UInt
 ) {
     
     companion object
@@ -2511,7 +3042,7 @@ data class ClearWalletInfo (
     var `totalEstimatedFees`: Amount, 
     var `onchainFee`: Amount, 
     var `swapFee`: Amount, 
-    var `feesHash`: String
+    var `feesHash`: kotlin.String
 ) {
     
     companion object
@@ -2549,9 +3080,9 @@ public object FfiConverterTypeClearWalletInfo: FfiConverterRustBuffer<ClearWalle
 
 data class Config (
     var `environment`: EnvironmentCode, 
-    var `seed`: ByteArray, 
-    var `fiatCurrency`: String, 
-    var `localPersistencePath`: String, 
+    var `seed`: kotlin.ByteArray, 
+    var `fiatCurrency`: kotlin.String, 
+    var `localPersistencePath`: kotlin.String, 
     var `timezoneConfig`: TzConfig, 
     var `fileLoggingLevel`: Level?
 ) {
@@ -2593,8 +3124,8 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
 
 
 data class ExchangeRate (
-    var `currencyCode`: String, 
-    var `rate`: UInt, 
+    var `currencyCode`: kotlin.String, 
+    var `rate`: kotlin.UInt, 
     var `updatedAt`: java.time.Instant
 ) {
     
@@ -2626,7 +3157,7 @@ public object FfiConverterTypeExchangeRate: FfiConverterRustBuffer<ExchangeRate>
 
 
 data class FailedSwapInfo (
-    var `address`: String, 
+    var `address`: kotlin.String, 
     var `amount`: Amount, 
     var `createdAt`: java.time.Instant
 ) {
@@ -2659,22 +3190,22 @@ public object FfiConverterTypeFailedSwapInfo: FfiConverterRustBuffer<FailedSwapI
 
 
 data class FiatTopupInfo (
-    var `orderId`: String, 
-    var `debitorIban`: String, 
-    var `creditorReference`: String, 
-    var `creditorIban`: String, 
-    var `creditorBankName`: String, 
-    var `creditorBankStreet`: String, 
-    var `creditorBankPostalCode`: String, 
-    var `creditorBankTown`: String, 
-    var `creditorBankCountry`: String, 
-    var `creditorBankBic`: String, 
-    var `creditorName`: String, 
-    var `creditorStreet`: String, 
-    var `creditorPostalCode`: String, 
-    var `creditorTown`: String, 
-    var `creditorCountry`: String, 
-    var `currency`: String
+    var `orderId`: kotlin.String, 
+    var `debitorIban`: kotlin.String, 
+    var `creditorReference`: kotlin.String, 
+    var `creditorIban`: kotlin.String, 
+    var `creditorBankName`: kotlin.String, 
+    var `creditorBankStreet`: kotlin.String, 
+    var `creditorBankPostalCode`: kotlin.String, 
+    var `creditorBankTown`: kotlin.String, 
+    var `creditorBankCountry`: kotlin.String, 
+    var `creditorBankBic`: kotlin.String, 
+    var `creditorName`: kotlin.String, 
+    var `creditorStreet`: kotlin.String, 
+    var `creditorPostalCode`: kotlin.String, 
+    var `creditorTown`: kotlin.String, 
+    var `creditorCountry`: kotlin.String, 
+    var `currency`: kotlin.String
 ) {
     
     companion object
@@ -2744,9 +3275,9 @@ public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInf
 
 
 data class FiatValue (
-    var `minorUnits`: ULong, 
-    var `currencyCode`: String, 
-    var `rate`: UInt, 
+    var `minorUnits`: kotlin.ULong, 
+    var `currencyCode`: kotlin.String, 
+    var `rate`: kotlin.UInt, 
     var `convertedAt`: java.time.Instant
 ) {
     
@@ -2814,7 +3345,7 @@ public object FfiConverterTypeIncomingPaymentInfo: FfiConverterRustBuffer<Incomi
 
 
 data class InvoiceCreationMetadata (
-    var `requestCurrency`: String
+    var `requestCurrency`: kotlin.String
 ) {
     
     companion object
@@ -2839,11 +3370,11 @@ public object FfiConverterTypeInvoiceCreationMetadata: FfiConverterRustBuffer<In
 
 
 data class InvoiceDetails (
-    var `invoice`: String, 
+    var `invoice`: kotlin.String, 
     var `amount`: Amount?, 
-    var `description`: String, 
-    var `paymentHash`: String, 
-    var `payeePubKey`: String, 
+    var `description`: kotlin.String, 
+    var `paymentHash`: kotlin.String, 
+    var `payeePubKey`: kotlin.String, 
     var `creationTimestamp`: java.time.Instant, 
     var `expiryInterval`: java.time.Duration, 
     var `expiryTimestamp`: java.time.Instant
@@ -2921,9 +3452,9 @@ public object FfiConverterTypeListActivitiesResponse: FfiConverterRustBuffer<Lis
 
 
 data class LnUrlPayDetails (
-    var `domain`: String, 
-    var `shortDescription`: String, 
-    var `longDescription`: String?, 
+    var `domain`: kotlin.String, 
+    var `shortDescription`: kotlin.String, 
+    var `longDescription`: kotlin.String?, 
     var `minSendable`: Amount, 
     var `maxSendable`: Amount, 
     var `requestData`: LnUrlPayRequestData
@@ -2966,13 +3497,13 @@ public object FfiConverterTypeLnUrlPayDetails: FfiConverterRustBuffer<LnUrlPayDe
 
 
 data class LnUrlPayRequestData (
-    var `callback`: String, 
-    var `minSendable`: ULong, 
-    var `maxSendable`: ULong, 
-    var `metadataStr`: String, 
-    var `commentAllowed`: UShort, 
-    var `domain`: String, 
-    var `lnAddress`: String?
+    var `callback`: kotlin.String, 
+    var `minSendable`: kotlin.ULong, 
+    var `maxSendable`: kotlin.ULong, 
+    var `metadataStr`: kotlin.String, 
+    var `commentAllowed`: kotlin.UShort, 
+    var `domain`: kotlin.String, 
+    var `lnAddress`: kotlin.String?
 ) {
     
     companion object
@@ -3048,11 +3579,11 @@ public object FfiConverterTypeLnUrlWithdrawDetails: FfiConverterRustBuffer<LnUrl
 
 
 data class LnUrlWithdrawRequestData (
-    var `callback`: String, 
-    var `k1`: String, 
-    var `defaultDescription`: String, 
-    var `minWithdrawable`: ULong, 
-    var `maxWithdrawable`: ULong
+    var `callback`: kotlin.String, 
+    var `k1`: kotlin.String, 
+    var `defaultDescription`: kotlin.String, 
+    var `minWithdrawable`: kotlin.ULong, 
+    var `maxWithdrawable`: kotlin.ULong
 ) {
     
     companion object
@@ -3090,7 +3621,7 @@ public object FfiConverterTypeLnUrlWithdrawRequestData: FfiConverterRustBuffer<L
 
 data class LspFee (
     var `channelMinimumFee`: Amount, 
-    var `channelFeePermyriad`: ULong
+    var `channelFeePermyriad`: kotlin.ULong
 ) {
     
     companion object
@@ -3118,8 +3649,8 @@ public object FfiConverterTypeLspFee: FfiConverterRustBuffer<LspFee> {
 
 
 data class NodeInfo (
-    var `nodePubkey`: String, 
-    var `peers`: List<String>, 
+    var `nodePubkey`: kotlin.String, 
+    var `peers`: List<kotlin.String>, 
     var `onchainBalance`: Amount, 
     var `channelsInfo`: ChannelsInfo
 ) {
@@ -3157,7 +3688,7 @@ public object FfiConverterTypeNodeInfo: FfiConverterRustBuffer<NodeInfo> {
 data class OfferInfo (
     var `offerKind`: OfferKind, 
     var `amount`: Amount, 
-    var `lnurlw`: String?, 
+    var `lnurlw`: kotlin.String?, 
     var `createdAt`: java.time.Instant, 
     var `expiresAt`: java.time.Instant?, 
     var `status`: OfferStatus
@@ -3200,12 +3731,12 @@ public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
 
 
 data class OpeningFeeParams (
-    var `minMsat`: ULong, 
-    var `proportional`: UInt, 
-    var `validUntil`: String, 
-    var `maxIdleTime`: UInt, 
-    var `maxClientToSelfDelay`: UInt, 
-    var `promise`: String
+    var `minMsat`: kotlin.ULong, 
+    var `proportional`: kotlin.UInt, 
+    var `validUntil`: kotlin.String, 
+    var `maxIdleTime`: kotlin.UInt, 
+    var `maxClientToSelfDelay`: kotlin.UInt, 
+    var `promise`: kotlin.String
 ) {
     
     companion object
@@ -3308,13 +3839,13 @@ public object FfiConverterTypePaymentAmountLimits: FfiConverterRustBuffer<Paymen
 
 data class PaymentInfo (
     var `paymentState`: PaymentState, 
-    var `hash`: String, 
+    var `hash`: kotlin.String, 
     var `amount`: Amount, 
     var `invoiceDetails`: InvoiceDetails, 
     var `createdAt`: TzTime, 
-    var `description`: String, 
-    var `preimage`: String?, 
-    var `personalNote`: String?
+    var `description`: kotlin.String, 
+    var `preimage`: kotlin.String?, 
+    var `personalNote`: kotlin.String?
 ) {
     
     companion object
@@ -3389,11 +3920,11 @@ public object FfiConverterTypePaymentMetadata: FfiConverterRustBuffer<PaymentMet
 
 
 data class ResolveFailedSwapInfo (
-    var `swapAddress`: String, 
+    var `swapAddress`: kotlin.String, 
     var `recoveredAmount`: Amount, 
     var `onchainFee`: Amount, 
-    var `toAddress`: String, 
-    var `onchainFeeRate`: UInt
+    var `toAddress`: kotlin.String, 
+    var `onchainFeeRate`: kotlin.UInt
 ) {
     
     companion object
@@ -3430,9 +3961,9 @@ public object FfiConverterTypeResolveFailedSwapInfo: FfiConverterRustBuffer<Reso
 
 
 data class Secret (
-    var `mnemonic`: List<String>, 
-    var `passphrase`: String, 
-    var `seed`: ByteArray
+    var `mnemonic`: List<kotlin.String>, 
+    var `passphrase`: kotlin.String, 
+    var `seed`: kotlin.ByteArray
 ) {
     
     companion object
@@ -3463,7 +3994,7 @@ public object FfiConverterTypeSecret: FfiConverterRustBuffer<Secret> {
 
 
 data class SwapAddressInfo (
-    var `address`: String, 
+    var `address`: kotlin.String, 
     var `minDeposit`: Amount, 
     var `maxDeposit`: Amount, 
     var `swapFee`: Amount
@@ -3500,9 +4031,9 @@ public object FfiConverterTypeSwapAddressInfo: FfiConverterRustBuffer<SwapAddres
 
 
 data class SwapInfo (
-    var `bitcoinAddress`: String, 
+    var `bitcoinAddress`: kotlin.String, 
     var `createdAt`: TzTime, 
-    var `paidMsats`: ULong
+    var `paidMsats`: kotlin.ULong
 ) {
     
     companion object
@@ -3574,8 +4105,8 @@ public object FfiConverterTypeSwapToLightningFees: FfiConverterRustBuffer<SwapTo
 
 
 data class SweepInfo (
-    var `address`: String, 
-    var `onchainFeeRate`: UInt, 
+    var `address`: kotlin.String, 
+    var `onchainFeeRate`: kotlin.UInt, 
     var `onchainFeeSat`: Amount, 
     var `amount`: Amount
 ) {
@@ -3613,7 +4144,7 @@ public object FfiConverterTypeSweepInfo: FfiConverterRustBuffer<SweepInfo> {
 data class TermsAndConditionsStatus (
     var `acceptedAt`: java.time.Instant?, 
     var `termsAndConditions`: TermsAndConditions, 
-    var `version`: Long
+    var `version`: kotlin.Long
 ) {
     
     companion object
@@ -3644,8 +4175,8 @@ public object FfiConverterTypeTermsAndConditionsStatus: FfiConverterRustBuffer<T
 
 
 data class TzConfig (
-    var `timezoneId`: String, 
-    var `timezoneUtcOffsetSecs`: Int
+    var `timezoneId`: kotlin.String, 
+    var `timezoneUtcOffsetSecs`: kotlin.Int
 ) {
     
     companion object
@@ -3674,8 +4205,8 @@ public object FfiConverterTypeTzConfig: FfiConverterRustBuffer<TzConfig> {
 
 data class TzTime (
     var `time`: java.time.Instant, 
-    var `timezoneId`: String, 
-    var `timezoneUtcOffsetSecs`: Int
+    var `timezoneId`: kotlin.String, 
+    var `timezoneUtcOffsetSecs`: kotlin.Int
 ) {
     
     companion object
@@ -3708,23 +4239,17 @@ public object FfiConverterTypeTzTime: FfiConverterRustBuffer<TzTime> {
 sealed class ActionRequiredItem {
     
     data class UncompletedOffer(
-        
-        val `offer`: OfferInfo
-        ) : ActionRequiredItem() {
+        val `offer`: OfferInfo) : ActionRequiredItem() {
         companion object
     }
     
     data class UnresolvedFailedSwap(
-        
-        val `failedSwap`: FailedSwapInfo
-        ) : ActionRequiredItem() {
+        val `failedSwap`: FailedSwapInfo) : ActionRequiredItem() {
         companion object
     }
     
     data class ChannelClosesFundsAvailable(
-        
-        val `availableFunds`: Amount
-        ) : ActionRequiredItem() {
+        val `availableFunds`: Amount) : ActionRequiredItem() {
         companion object
     }
     
@@ -3753,21 +4278,21 @@ public object FfiConverterTypeActionRequiredItem : FfiConverterRustBuffer<Action
         is ActionRequiredItem.UncompletedOffer -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeOfferInfo.allocationSize(value.`offer`)
             )
         }
         is ActionRequiredItem.UnresolvedFailedSwap -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeFailedSwapInfo.allocationSize(value.`failedSwap`)
             )
         }
         is ActionRequiredItem.ChannelClosesFundsAvailable -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeAmount.allocationSize(value.`availableFunds`)
             )
         }
@@ -3801,41 +4326,29 @@ public object FfiConverterTypeActionRequiredItem : FfiConverterRustBuffer<Action
 sealed class Activity {
     
     data class IncomingPayment(
-        
-        val `incomingPaymentInfo`: IncomingPaymentInfo
-        ) : Activity() {
+        val `incomingPaymentInfo`: IncomingPaymentInfo) : Activity() {
         companion object
     }
     
     data class OutgoingPayment(
-        
-        val `outgoingPaymentInfo`: OutgoingPaymentInfo
-        ) : Activity() {
+        val `outgoingPaymentInfo`: OutgoingPaymentInfo) : Activity() {
         companion object
     }
     
     data class OfferClaim(
-        
         val `incomingPaymentInfo`: IncomingPaymentInfo, 
-        
-        val `offerKind`: OfferKind
-        ) : Activity() {
+        val `offerKind`: OfferKind) : Activity() {
         companion object
     }
     
     data class Swap(
-        
         val `incomingPaymentInfo`: IncomingPaymentInfo, 
-        
-        val `swapInfo`: SwapInfo
-        ) : Activity() {
+        val `swapInfo`: SwapInfo) : Activity() {
         companion object
     }
     
     data class ChannelClose(
-        
-        val `channelCloseInfo`: ChannelCloseInfo
-        ) : Activity() {
+        val `channelCloseInfo`: ChannelCloseInfo) : Activity() {
         companion object
     }
     
@@ -3872,21 +4385,21 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
         is Activity.IncomingPayment -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeIncomingPaymentInfo.allocationSize(value.`incomingPaymentInfo`)
             )
         }
         is Activity.OutgoingPayment -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeOutgoingPaymentInfo.allocationSize(value.`outgoingPaymentInfo`)
             )
         }
         is Activity.OfferClaim -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeIncomingPaymentInfo.allocationSize(value.`incomingPaymentInfo`)
                 + FfiConverterTypeOfferKind.allocationSize(value.`offerKind`)
             )
@@ -3894,7 +4407,7 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
         is Activity.Swap -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeIncomingPaymentInfo.allocationSize(value.`incomingPaymentInfo`)
                 + FfiConverterTypeSwapInfo.allocationSize(value.`swapInfo`)
             )
@@ -3902,7 +4415,7 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
         is Activity.ChannelClose -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeChannelCloseInfo.allocationSize(value.`channelCloseInfo`)
             )
         }
@@ -3945,12 +4458,14 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
 
 
 
+
 enum class AnalyticsConfig {
     
     ENABLED,
     DISABLED;
     companion object
 }
+
 
 public object FfiConverterTypeAnalyticsConfig: FfiConverterRustBuffer<AnalyticsConfig> {
     override fun read(buf: ByteBuffer) = try {
@@ -3959,12 +4474,13 @@ public object FfiConverterTypeAnalyticsConfig: FfiConverterRustBuffer<AnalyticsC
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: AnalyticsConfig) = 4
+    override fun allocationSize(value: AnalyticsConfig) = 4UL
 
     override fun write(value: AnalyticsConfig, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
+
 
 
 
@@ -3978,6 +4494,7 @@ enum class BreezHealthCheckStatus {
     companion object
 }
 
+
 public object FfiConverterTypeBreezHealthCheckStatus: FfiConverterRustBuffer<BreezHealthCheckStatus> {
     override fun read(buf: ByteBuffer) = try {
         BreezHealthCheckStatus.values()[buf.getInt() - 1]
@@ -3985,12 +4502,13 @@ public object FfiConverterTypeBreezHealthCheckStatus: FfiConverterRustBuffer<Bre
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: BreezHealthCheckStatus) = 4
+    override fun allocationSize(value: BreezHealthCheckStatus) = 4UL
 
     override fun write(value: BreezHealthCheckStatus, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
+
 
 
 
@@ -4003,6 +4521,7 @@ enum class ChannelCloseState {
     companion object
 }
 
+
 public object FfiConverterTypeChannelCloseState: FfiConverterRustBuffer<ChannelCloseState> {
     override fun read(buf: ByteBuffer) = try {
         ChannelCloseState.values()[buf.getInt() - 1]
@@ -4010,7 +4529,7 @@ public object FfiConverterTypeChannelCloseState: FfiConverterRustBuffer<ChannelC
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: ChannelCloseState) = 4
+    override fun allocationSize(value: ChannelCloseState) = 4UL
 
     override fun write(value: ChannelCloseState, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
@@ -4027,7 +4546,7 @@ sealed class DecodeDataException: Exception() {
     
     class LnUrlException(
         
-        val `msg`: String
+        val `msg`: kotlin.String
         ) : DecodeDataException() {
         override val message
             get() = "msg=${ `msg` }"
@@ -4043,7 +4562,7 @@ sealed class DecodeDataException: Exception() {
     
     class Unrecognized(
         
-        val `msg`: String
+        val `msg`: kotlin.String
         ) : DecodeDataException() {
         override val message
             get() = "msg=${ `msg` }"
@@ -4075,21 +4594,21 @@ public object FfiConverterTypeDecodeDataError : FfiConverterRustBuffer<DecodeDat
         }
     }
 
-    override fun allocationSize(value: DecodeDataException): Int {
+    override fun allocationSize(value: DecodeDataException): ULong {
         return when(value) {
             is DecodeDataException.LnUrlException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`msg`)
             )
             is DecodeDataException.Unsupported -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterTypeUnsupportedDataType.allocationSize(value.`typ`)
             )
             is DecodeDataException.Unrecognized -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`msg`)
             )
         }
@@ -4122,30 +4641,22 @@ public object FfiConverterTypeDecodeDataError : FfiConverterRustBuffer<DecodeDat
 sealed class DecodedData {
     
     data class Bolt11Invoice(
-        
-        val `invoiceDetails`: InvoiceDetails
-        ) : DecodedData() {
+        val `invoiceDetails`: InvoiceDetails) : DecodedData() {
         companion object
     }
     
     data class LnUrlPay(
-        
-        val `lnurlPayDetails`: LnUrlPayDetails
-        ) : DecodedData() {
+        val `lnurlPayDetails`: LnUrlPayDetails) : DecodedData() {
         companion object
     }
     
     data class LnUrlWithdraw(
-        
-        val `lnurlWithdrawDetails`: LnUrlWithdrawDetails
-        ) : DecodedData() {
+        val `lnurlWithdrawDetails`: LnUrlWithdrawDetails) : DecodedData() {
         companion object
     }
     
     data class OnchainAddress(
-        
-        val `onchainAddressDetails`: BitcoinAddressData
-        ) : DecodedData() {
+        val `onchainAddressDetails`: BitcoinAddressData) : DecodedData() {
         companion object
     }
     
@@ -4177,28 +4688,28 @@ public object FfiConverterTypeDecodedData : FfiConverterRustBuffer<DecodedData>{
         is DecodedData.Bolt11Invoice -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeInvoiceDetails.allocationSize(value.`invoiceDetails`)
             )
         }
         is DecodedData.LnUrlPay -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeLnUrlPayDetails.allocationSize(value.`lnurlPayDetails`)
             )
         }
         is DecodedData.LnUrlWithdraw -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeLnUrlWithdrawDetails.allocationSize(value.`lnurlWithdrawDetails`)
             )
         }
         is DecodedData.OnchainAddress -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeBitcoinAddressData.allocationSize(value.`onchainAddressDetails`)
             )
         }
@@ -4234,6 +4745,7 @@ public object FfiConverterTypeDecodedData : FfiConverterRustBuffer<DecodedData>{
 
 
 
+
 enum class EnvironmentCode {
     
     LOCAL,
@@ -4243,6 +4755,7 @@ enum class EnvironmentCode {
     companion object
 }
 
+
 public object FfiConverterTypeEnvironmentCode: FfiConverterRustBuffer<EnvironmentCode> {
     override fun read(buf: ByteBuffer) = try {
         EnvironmentCode.values()[buf.getInt() - 1]
@@ -4250,12 +4763,13 @@ public object FfiConverterTypeEnvironmentCode: FfiConverterRustBuffer<Environmen
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: EnvironmentCode) = 4
+    override fun allocationSize(value: EnvironmentCode) = 4UL
 
     override fun write(value: EnvironmentCode, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
+
 
 
 
@@ -4269,6 +4783,7 @@ enum class InvoiceAffordability {
     companion object
 }
 
+
 public object FfiConverterTypeInvoiceAffordability: FfiConverterRustBuffer<InvoiceAffordability> {
     override fun read(buf: ByteBuffer) = try {
         InvoiceAffordability.values()[buf.getInt() - 1]
@@ -4276,12 +4791,13 @@ public object FfiConverterTypeInvoiceAffordability: FfiConverterRustBuffer<Invoi
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: InvoiceAffordability) = 4
+    override fun allocationSize(value: InvoiceAffordability) = 4UL
 
     override fun write(value: InvoiceAffordability, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
+
 
 
 
@@ -4297,6 +4813,7 @@ enum class Level {
     companion object
 }
 
+
 public object FfiConverterTypeLevel: FfiConverterRustBuffer<Level> {
     override fun read(buf: ByteBuffer) = try {
         Level.values()[buf.getInt() - 1]
@@ -4304,7 +4821,7 @@ public object FfiConverterTypeLevel: FfiConverterRustBuffer<Level> {
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: Level) = 4
+    override fun allocationSize(value: Level) = 4UL
 
     override fun write(value: Level, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
@@ -4321,16 +4838,12 @@ sealed class LiquidityLimit {
     
     
     data class MaxFreeReceive(
-        
-        val `amount`: Amount
-        ) : LiquidityLimit() {
+        val `amount`: Amount) : LiquidityLimit() {
         companion object
     }
     
     data class MinReceive(
-        
-        val `amount`: Amount
-        ) : LiquidityLimit() {
+        val `amount`: Amount) : LiquidityLimit() {
         companion object
     }
     
@@ -4357,20 +4870,20 @@ public object FfiConverterTypeLiquidityLimit : FfiConverterRustBuffer<LiquidityL
         is LiquidityLimit.None -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
             )
         }
         is LiquidityLimit.MaxFreeReceive -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeAmount.allocationSize(value.`amount`)
             )
         }
         is LiquidityLimit.MinReceive -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeAmount.allocationSize(value.`amount`)
             )
         }
@@ -4406,7 +4919,7 @@ sealed class LnException: Exception() {
     
     class InvalidInput(
         
-        val `msg`: String
+        val `msg`: kotlin.String
         ) : LnException() {
         override val message
             get() = "msg=${ `msg` }"
@@ -4416,7 +4929,7 @@ sealed class LnException: Exception() {
         
         val `code`: RuntimeErrorCode, 
         
-        val `msg`: String
+        val `msg`: kotlin.String
         ) : LnException() {
         override val message
             get() = "code=${ `code` }, msg=${ `msg` }"
@@ -4424,7 +4937,7 @@ sealed class LnException: Exception() {
     
     class PermanentFailure(
         
-        val `msg`: String
+        val `msg`: kotlin.String
         ) : LnException() {
         override val message
             get() = "msg=${ `msg` }"
@@ -4457,22 +4970,22 @@ public object FfiConverterTypeLnError : FfiConverterRustBuffer<LnException> {
         }
     }
 
-    override fun allocationSize(value: LnException): Int {
+    override fun allocationSize(value: LnException): ULong {
         return when(value) {
             is LnException.InvalidInput -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`msg`)
             )
             is LnException.RuntimeException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterTypeRuntimeErrorCode.allocationSize(value.`code`)
                 + FfiConverterString.allocationSize(value.`msg`)
             )
             is LnException.PermanentFailure -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`msg`)
             )
         }
@@ -4509,7 +5022,7 @@ sealed class LnUrlPayException: Exception() {
     
     class InvalidInput(
         
-        val `msg`: String
+        val `msg`: kotlin.String
         ) : LnUrlPayException() {
         override val message
             get() = "msg=${ `msg` }"
@@ -4519,7 +5032,7 @@ sealed class LnUrlPayException: Exception() {
         
         val `code`: LnUrlPayErrorCode, 
         
-        val `msg`: String
+        val `msg`: kotlin.String
         ) : LnUrlPayException() {
         override val message
             get() = "code=${ `code` }, msg=${ `msg` }"
@@ -4527,7 +5040,7 @@ sealed class LnUrlPayException: Exception() {
     
     class PermanentFailure(
         
-        val `msg`: String
+        val `msg`: kotlin.String
         ) : LnUrlPayException() {
         override val message
             get() = "msg=${ `msg` }"
@@ -4560,22 +5073,22 @@ public object FfiConverterTypeLnUrlPayError : FfiConverterRustBuffer<LnUrlPayExc
         }
     }
 
-    override fun allocationSize(value: LnUrlPayException): Int {
+    override fun allocationSize(value: LnUrlPayException): ULong {
         return when(value) {
             is LnUrlPayException.InvalidInput -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`msg`)
             )
             is LnUrlPayException.RuntimeException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterTypeLnUrlPayErrorCode.allocationSize(value.`code`)
                 + FfiConverterString.allocationSize(value.`msg`)
             )
             is LnUrlPayException.PermanentFailure -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`msg`)
             )
         }
@@ -4606,6 +5119,7 @@ public object FfiConverterTypeLnUrlPayError : FfiConverterRustBuffer<LnUrlPayExc
 
 
 
+
 enum class LnUrlPayErrorCode {
     
     LN_URL_SERVER_ERROR,
@@ -4619,6 +5133,7 @@ enum class LnUrlPayErrorCode {
     companion object
 }
 
+
 public object FfiConverterTypeLnUrlPayErrorCode: FfiConverterRustBuffer<LnUrlPayErrorCode> {
     override fun read(buf: ByteBuffer) = try {
         LnUrlPayErrorCode.values()[buf.getInt() - 1]
@@ -4626,7 +5141,7 @@ public object FfiConverterTypeLnUrlPayErrorCode: FfiConverterRustBuffer<LnUrlPay
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: LnUrlPayErrorCode) = 4
+    override fun allocationSize(value: LnUrlPayErrorCode) = 4UL
 
     override fun write(value: LnUrlPayErrorCode, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
@@ -4640,16 +5155,12 @@ public object FfiConverterTypeLnUrlPayErrorCode: FfiConverterRustBuffer<LnUrlPay
 sealed class MaxRoutingFeeMode {
     
     data class Relative(
-        
-        val `maxFeePermyriad`: UShort
-        ) : MaxRoutingFeeMode() {
+        val `maxFeePermyriad`: kotlin.UShort) : MaxRoutingFeeMode() {
         companion object
     }
     
     data class Absolute(
-        
-        val `maxFeeAmount`: Amount
-        ) : MaxRoutingFeeMode() {
+        val `maxFeeAmount`: Amount) : MaxRoutingFeeMode() {
         companion object
     }
     
@@ -4675,14 +5186,14 @@ public object FfiConverterTypeMaxRoutingFeeMode : FfiConverterRustBuffer<MaxRout
         is MaxRoutingFeeMode.Relative -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterUShort.allocationSize(value.`maxFeePermyriad`)
             )
         }
         is MaxRoutingFeeMode.Absolute -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeAmount.allocationSize(value.`maxFeeAmount`)
             )
         }
@@ -4714,7 +5225,7 @@ sealed class MnemonicException: Exception() {
     
     class BadWordCount(
         
-        val `count`: ULong
+        val `count`: kotlin.ULong
         ) : MnemonicException() {
         override val message
             get() = "count=${ `count` }"
@@ -4722,7 +5233,7 @@ sealed class MnemonicException: Exception() {
     
     class UnknownWord(
         
-        val `index`: ULong
+        val `index`: kotlin.ULong
         ) : MnemonicException() {
         override val message
             get() = "index=${ `index` }"
@@ -4772,29 +5283,29 @@ public object FfiConverterTypeMnemonicError : FfiConverterRustBuffer<MnemonicExc
         }
     }
 
-    override fun allocationSize(value: MnemonicException): Int {
+    override fun allocationSize(value: MnemonicException): ULong {
         return when(value) {
             is MnemonicException.BadWordCount -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterULong.allocationSize(value.`count`)
             )
             is MnemonicException.UnknownWord -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterULong.allocationSize(value.`index`)
             )
             is MnemonicException.BadEntropyBitCount -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
             )
             is MnemonicException.InvalidChecksum -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
             )
             is MnemonicException.AmbiguousLanguages -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
             )
         }
     }
@@ -4830,6 +5341,7 @@ public object FfiConverterTypeMnemonicError : FfiConverterRustBuffer<MnemonicExc
 
 
 
+
 enum class Network {
     
     BITCOIN,
@@ -4839,6 +5351,7 @@ enum class Network {
     companion object
 }
 
+
 public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
     override fun read(buf: ByteBuffer) = try {
         Network.values()[buf.getInt() - 1]
@@ -4846,7 +5359,7 @@ public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: Network) = 4
+    override fun allocationSize(value: Network) = 4UL
 
     override fun write(value: Network, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
@@ -4860,11 +5373,8 @@ public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
 sealed class Notification {
     
     data class Bolt11PaymentReceived(
-        
-        val `amountSat`: ULong, 
-        
-        val `paymentHash`: String
-        ) : Notification() {
+        val `amountSat`: kotlin.ULong, 
+        val `paymentHash`: kotlin.String) : Notification() {
         companion object
     }
     
@@ -4888,7 +5398,7 @@ public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification
         is Notification.Bolt11PaymentReceived -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterULong.allocationSize(value.`amountSat`)
                 + FfiConverterString.allocationSize(value.`paymentHash`)
             )
@@ -4914,23 +5424,14 @@ public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification
 sealed class OfferKind {
     
     data class Pocket(
-        
-        val `id`: String, 
-        
+        val `id`: kotlin.String, 
         val `exchangeRate`: ExchangeRate, 
-        
-        val `topupValueMinorUnits`: ULong, 
-        
-        val `topupValueSats`: ULong?, 
-        
-        val `exchangeFeeMinorUnits`: ULong, 
-        
-        val `exchangeFeeRatePermyriad`: UShort, 
-        
+        val `topupValueMinorUnits`: kotlin.ULong, 
+        val `topupValueSats`: kotlin.ULong?, 
+        val `exchangeFeeMinorUnits`: kotlin.ULong, 
+        val `exchangeFeeRatePermyriad`: kotlin.UShort, 
         val `lightningPayoutFee`: Amount?, 
-        
-        val `error`: PocketOfferError?
-        ) : OfferKind() {
+        val `error`: PocketOfferError?) : OfferKind() {
         companion object
     }
     
@@ -4960,7 +5461,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
         is OfferKind.Pocket -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`id`)
                 + FfiConverterTypeExchangeRate.allocationSize(value.`exchangeRate`)
                 + FfiConverterULong.allocationSize(value.`topupValueMinorUnits`)
@@ -4995,6 +5496,7 @@ public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
 
 
 
+
 enum class OfferStatus {
     
     READY,
@@ -5004,6 +5506,7 @@ enum class OfferStatus {
     companion object
 }
 
+
 public object FfiConverterTypeOfferStatus: FfiConverterRustBuffer<OfferStatus> {
     override fun read(buf: ByteBuffer) = try {
         OfferStatus.values()[buf.getInt() - 1]
@@ -5011,7 +5514,7 @@ public object FfiConverterTypeOfferStatus: FfiConverterRustBuffer<OfferStatus> {
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: OfferStatus) = 4
+    override fun allocationSize(value: OfferStatus) = 4UL
 
     override fun write(value: OfferStatus, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
@@ -5034,7 +5537,7 @@ sealed class ParseException: Exception() {
     
     class InvalidCharacter(
         
-        val `at`: UInt
+        val `at`: kotlin.UInt
         ) : ParseException() {
         override val message
             get() = "at=${ `at` }"
@@ -5061,15 +5564,15 @@ public object FfiConverterTypeParseError : FfiConverterRustBuffer<ParseException
         }
     }
 
-    override fun allocationSize(value: ParseException): Int {
+    override fun allocationSize(value: ParseException): ULong {
         return when(value) {
             is ParseException.Incomplete -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
             )
             is ParseException.InvalidCharacter -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterUInt.allocationSize(value.`at`)
             )
         }
@@ -5099,7 +5602,7 @@ sealed class PayException: Exception() {
     
     class InvalidInput(
         
-        val `msg`: String
+        val `msg`: kotlin.String
         ) : PayException() {
         override val message
             get() = "msg=${ `msg` }"
@@ -5109,7 +5612,7 @@ sealed class PayException: Exception() {
         
         val `code`: PayErrorCode, 
         
-        val `msg`: String
+        val `msg`: kotlin.String
         ) : PayException() {
         override val message
             get() = "code=${ `code` }, msg=${ `msg` }"
@@ -5117,7 +5620,7 @@ sealed class PayException: Exception() {
     
     class PermanentFailure(
         
-        val `msg`: String
+        val `msg`: kotlin.String
         ) : PayException() {
         override val message
             get() = "msg=${ `msg` }"
@@ -5150,22 +5653,22 @@ public object FfiConverterTypePayError : FfiConverterRustBuffer<PayException> {
         }
     }
 
-    override fun allocationSize(value: PayException): Int {
+    override fun allocationSize(value: PayException): ULong {
         return when(value) {
             is PayException.InvalidInput -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`msg`)
             )
             is PayException.RuntimeException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterTypePayErrorCode.allocationSize(value.`code`)
                 + FfiConverterString.allocationSize(value.`msg`)
             )
             is PayException.PermanentFailure -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`msg`)
             )
         }
@@ -5196,6 +5699,7 @@ public object FfiConverterTypePayError : FfiConverterRustBuffer<PayException> {
 
 
 
+
 enum class PayErrorCode {
     
     ALREADY_USED_INVOICE,
@@ -5210,6 +5714,7 @@ enum class PayErrorCode {
     companion object
 }
 
+
 public object FfiConverterTypePayErrorCode: FfiConverterRustBuffer<PayErrorCode> {
     override fun read(buf: ByteBuffer) = try {
         PayErrorCode.values()[buf.getInt() - 1]
@@ -5217,12 +5722,13 @@ public object FfiConverterTypePayErrorCode: FfiConverterRustBuffer<PayErrorCode>
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: PayErrorCode) = 4
+    override fun allocationSize(value: PayErrorCode) = 4UL
 
     override fun write(value: PayErrorCode, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
+
 
 
 
@@ -5237,6 +5743,7 @@ enum class PaymentSource {
     companion object
 }
 
+
 public object FfiConverterTypePaymentSource: FfiConverterRustBuffer<PaymentSource> {
     override fun read(buf: ByteBuffer) = try {
         PaymentSource.values()[buf.getInt() - 1]
@@ -5244,12 +5751,13 @@ public object FfiConverterTypePaymentSource: FfiConverterRustBuffer<PaymentSourc
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: PaymentSource) = 4
+    override fun allocationSize(value: PaymentSource) = 4UL
 
     override fun write(value: PaymentSource, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
+
 
 
 
@@ -5265,6 +5773,7 @@ enum class PaymentState {
     companion object
 }
 
+
 public object FfiConverterTypePaymentState: FfiConverterRustBuffer<PaymentState> {
     override fun read(buf: ByteBuffer) = try {
         PaymentState.values()[buf.getInt() - 1]
@@ -5272,12 +5781,13 @@ public object FfiConverterTypePaymentState: FfiConverterRustBuffer<PaymentState>
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: PaymentState) = 4
+    override fun allocationSize(value: PaymentState) = 4UL
 
     override fun write(value: PaymentState, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
+
 
 
 
@@ -5296,6 +5806,7 @@ enum class PermanentFailureCode {
     companion object
 }
 
+
 public object FfiConverterTypePermanentFailureCode: FfiConverterRustBuffer<PermanentFailureCode> {
     override fun read(buf: ByteBuffer) = try {
         PermanentFailureCode.values()[buf.getInt() - 1]
@@ -5303,7 +5814,7 @@ public object FfiConverterTypePermanentFailureCode: FfiConverterRustBuffer<Perma
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: PermanentFailureCode) = 4
+    override fun allocationSize(value: PermanentFailureCode) = 4UL
 
     override fun write(value: PermanentFailureCode, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
@@ -5317,16 +5828,12 @@ public object FfiConverterTypePermanentFailureCode: FfiConverterRustBuffer<Perma
 sealed class PocketOfferError {
     
     data class TemporaryFailure(
-        
-        val `code`: TemporaryFailureCode
-        ) : PocketOfferError() {
+        val `code`: TemporaryFailureCode) : PocketOfferError() {
         companion object
     }
     
     data class PermanentFailure(
-        
-        val `code`: PermanentFailureCode
-        ) : PocketOfferError() {
+        val `code`: PermanentFailureCode) : PocketOfferError() {
         companion object
     }
     
@@ -5352,14 +5859,14 @@ public object FfiConverterTypePocketOfferError : FfiConverterRustBuffer<PocketOf
         is PocketOfferError.TemporaryFailure -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeTemporaryFailureCode.allocationSize(value.`code`)
             )
         }
         is PocketOfferError.PermanentFailure -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypePermanentFailureCode.allocationSize(value.`code`)
             )
         }
@@ -5388,16 +5895,12 @@ public object FfiConverterTypePocketOfferError : FfiConverterRustBuffer<PocketOf
 sealed class Recipient {
     
     data class LightningAddress(
-        
-        val `address`: String
-        ) : Recipient() {
+        val `address`: kotlin.String) : Recipient() {
         companion object
     }
     
     data class LnUrlPayDomain(
-        
-        val `domain`: String
-        ) : Recipient() {
+        val `domain`: kotlin.String) : Recipient() {
         companion object
     }
     
@@ -5427,21 +5930,21 @@ public object FfiConverterTypeRecipient : FfiConverterRustBuffer<Recipient>{
         is Recipient.LightningAddress -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`address`)
             )
         }
         is Recipient.LnUrlPayDomain -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`domain`)
             )
         }
         is Recipient.Unknown -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
             )
         }
     }
@@ -5476,9 +5979,7 @@ sealed class RecommendedAction {
     
     
     data class ShowNotification(
-        
-        val `notification`: Notification
-        ) : RecommendedAction() {
+        val `notification`: Notification) : RecommendedAction() {
         companion object
     }
     
@@ -5502,13 +6003,13 @@ public object FfiConverterTypeRecommendedAction : FfiConverterRustBuffer<Recomme
         is RecommendedAction.None -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
             )
         }
         is RecommendedAction.ShowNotification -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterTypeNotification.allocationSize(value.`notification`)
             )
         }
@@ -5533,6 +6034,7 @@ public object FfiConverterTypeRecommendedAction : FfiConverterRustBuffer<Recomme
 
 
 
+
 enum class RuntimeErrorCode {
     
     AUTH_SERVICE_UNAVAILABLE,
@@ -5546,6 +6048,7 @@ enum class RuntimeErrorCode {
     companion object
 }
 
+
 public object FfiConverterTypeRuntimeErrorCode: FfiConverterRustBuffer<RuntimeErrorCode> {
     override fun read(buf: ByteBuffer) = try {
         RuntimeErrorCode.values()[buf.getInt() - 1]
@@ -5553,7 +6056,7 @@ public object FfiConverterTypeRuntimeErrorCode: FfiConverterRustBuffer<RuntimeEr
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: RuntimeErrorCode) = 4
+    override fun allocationSize(value: RuntimeErrorCode) = 4UL
 
     override fun write(value: RuntimeErrorCode, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
@@ -5570,7 +6073,7 @@ sealed class SimpleException: Exception() {
     
     class Simple(
         
-        val `msg`: String
+        val `msg`: kotlin.String
         ) : SimpleException() {
         override val message
             get() = "msg=${ `msg` }"
@@ -5596,11 +6099,11 @@ public object FfiConverterTypeSimpleError : FfiConverterRustBuffer<SimpleExcepti
         }
     }
 
-    override fun allocationSize(value: SimpleException): Int {
+    override fun allocationSize(value: SimpleException): ULong {
         return when(value) {
             is SimpleException.Simple -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`msg`)
             )
         }
@@ -5626,7 +6129,7 @@ sealed class SwapException: Exception() {
     
     class Generic(
         
-        val `err`: String
+        val `err`: kotlin.String
         ) : SwapException() {
         override val message
             get() = "err=${ `err` }"
@@ -5634,7 +6137,7 @@ sealed class SwapException: Exception() {
     
     class ServiceConnectivity(
         
-        val `err`: String
+        val `err`: kotlin.String
         ) : SwapException() {
         override val message
             get() = "err=${ `err` }"
@@ -5642,7 +6145,7 @@ sealed class SwapException: Exception() {
     
     class SwapInProgress(
         
-        val `err`: String
+        val `err`: kotlin.String
         ) : SwapException() {
         override val message
             get() = "err=${ `err` }"
@@ -5674,21 +6177,21 @@ public object FfiConverterTypeSwapError : FfiConverterRustBuffer<SwapException> 
         }
     }
 
-    override fun allocationSize(value: SwapException): Int {
+    override fun allocationSize(value: SwapException): ULong {
         return when(value) {
             is SwapException.Generic -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`err`)
             )
             is SwapException.ServiceConnectivity -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`err`)
             )
             is SwapException.SwapInProgress -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`err`)
             )
         }
@@ -5730,9 +6233,7 @@ sealed class TemporaryFailureCode {
     
     
     data class Unknown(
-        
-        val `msg`: String
-        ) : TemporaryFailureCode() {
+        val `msg`: kotlin.String) : TemporaryFailureCode() {
         companion object
     }
     
@@ -5758,25 +6259,25 @@ public object FfiConverterTypeTemporaryFailureCode : FfiConverterRustBuffer<Temp
         is TemporaryFailureCode.NoRoute -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
             )
         }
         is TemporaryFailureCode.InvoiceExpired -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
             )
         }
         is TemporaryFailureCode.Unexpected -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
             )
         }
         is TemporaryFailureCode.Unknown -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`msg`)
             )
         }
@@ -5809,12 +6310,14 @@ public object FfiConverterTypeTemporaryFailureCode : FfiConverterRustBuffer<Temp
 
 
 
+
 enum class TermsAndConditions {
     
     LIPA,
     POCKET;
     companion object
 }
+
 
 public object FfiConverterTypeTermsAndConditions: FfiConverterRustBuffer<TermsAndConditions> {
     override fun read(buf: ByteBuffer) = try {
@@ -5823,7 +6326,7 @@ public object FfiConverterTypeTermsAndConditions: FfiConverterRustBuffer<TermsAn
         throw RuntimeException("invalid enum value, something is very wrong!!", e)
     }
 
-    override fun allocationSize(value: TermsAndConditions) = 4
+    override fun allocationSize(value: TermsAndConditions) = 4UL
 
     override fun write(value: TermsAndConditions, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
@@ -5849,9 +6352,7 @@ sealed class UnsupportedDataType {
     
     
     data class Network(
-        
-        val `network`: String
-        ) : UnsupportedDataType() {
+        val `network`: kotlin.String) : UnsupportedDataType() {
         companion object
     }
     
@@ -5878,31 +6379,31 @@ public object FfiConverterTypeUnsupportedDataType : FfiConverterRustBuffer<Unsup
         is UnsupportedDataType.BitcoinAddress -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
             )
         }
         is UnsupportedDataType.LnUrlAuth -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
             )
         }
         is UnsupportedDataType.NodeId -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
             )
         }
         is UnsupportedDataType.Url -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
             )
         }
         is UnsupportedDataType.Network -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                4
+                4UL
                 + FfiConverterString.allocationSize(value.`network`)
             )
         }
@@ -5943,13 +6444,13 @@ public object FfiConverterTypeUnsupportedDataType : FfiConverterRustBuffer<Unsup
 
 public interface EventsCallback {
     
-    fun `paymentReceived`(`paymentHash`: String)
+    fun `paymentReceived`(`paymentHash`: kotlin.String)
     
-    fun `paymentSent`(`paymentHash`: String, `paymentPreimage`: String)
+    fun `paymentSent`(`paymentHash`: kotlin.String, `paymentPreimage`: kotlin.String)
     
-    fun `paymentFailed`(`paymentHash`: String)
+    fun `paymentFailed`(`paymentHash`: kotlin.String)
     
-    fun `channelClosed`(`channelId`: String, `reason`: String)
+    fun `channelClosed`(`channelId`: kotlin.String, `reason`: kotlin.String)
     
     fun `breezHealthStatusChangedTo`(`status`: BreezHealthCheckStatus)
     
@@ -5957,42 +6458,6 @@ public interface EventsCallback {
     
     companion object
 }
-
-
-internal typealias UniffiHandle = Long
-internal class ConcurrentHandleMap<T>(
-    private val leftMap: MutableMap<UniffiHandle, T> = mutableMapOf(),
-) {
-    private val lock = java.util.concurrent.locks.ReentrantLock()
-    private val currentHandle = AtomicLong(0L)
-    private val stride = 1L
-
-    fun insert(obj: T): UniffiHandle =
-        lock.withLock {
-            currentHandle.getAndAdd(stride)
-                .also { handle ->
-                    leftMap[handle] = obj
-                }
-            }
-
-    fun get(handle: UniffiHandle) = lock.withLock {
-        leftMap[handle] ?: throw InternalException("No callback in handlemap; this is a Uniffi bug")
-    }
-
-    fun delete(handle: UniffiHandle) {
-        this.remove(handle)
-    }
-
-    fun remove(handle: UniffiHandle): T? =
-        lock.withLock {
-            leftMap.remove(handle)
-        }
-}
-
-interface ForeignCallback : com.sun.jna.Callback {
-    public fun invoke(handle: UniffiHandle, method: Int, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int
-}
-
 // Magic number for the Rust proxy to call using the same mechanism as every other method,
 // to free the callback once it's dropped by Rust.
 internal const val IDX_CALLBACK_FREE = 0
@@ -6001,14 +6466,14 @@ internal const val UNIFFI_CALLBACK_SUCCESS = 0
 internal const val UNIFFI_CALLBACK_ERROR = 1
 internal const val UNIFFI_CALLBACK_UNEXPECTED_ERROR = 2
 
-public abstract class FfiConverterCallbackInterface<CallbackInterface>: FfiConverter<CallbackInterface, UniffiHandle> {
-    internal val handleMap = ConcurrentHandleMap<CallbackInterface>()
+public abstract class FfiConverterCallbackInterface<CallbackInterface: Any>: FfiConverter<CallbackInterface, Long> {
+    internal val handleMap = UniffiHandleMap<CallbackInterface>()
 
-    internal fun drop(handle: UniffiHandle) {
+    internal fun drop(handle: Long) {
         handleMap.remove(handle)
     }
 
-    override fun lift(value: UniffiHandle): CallbackInterface {
+    override fun lift(value: Long): CallbackInterface {
         return handleMap.get(value)
     }
 
@@ -6016,265 +6481,135 @@ public abstract class FfiConverterCallbackInterface<CallbackInterface>: FfiConve
 
     override fun lower(value: CallbackInterface) = handleMap.insert(value)
 
-    override fun allocationSize(value: CallbackInterface) = 8
+    override fun allocationSize(value: CallbackInterface) = 8UL
 
     override fun write(value: CallbackInterface, buf: ByteBuffer) {
         buf.putLong(lower(value))
     }
 }
 
-// Implement the foreign callback handler for EventsCallback
-internal class UniffiCallbackInterfaceEventsCallback : ForeignCallback {
-    @Suppress("TooGenericExceptionCaught")
-    override fun invoke(handle: UniffiHandle, method: Int, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
-        val cb = FfiConverterTypeEventsCallback.handleMap.get(handle)
-        return when (method) {
-            IDX_CALLBACK_FREE -> {
-                FfiConverterTypeEventsCallback.handleMap.remove(handle)
-
-                // Successful return
-                // See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs`
-                UNIFFI_CALLBACK_SUCCESS
+// Put the implementation in an object so we don't pollute the top-level namespace
+internal object uniffiCallbackInterfaceEventsCallback {
+    internal object `paymentReceived`: UniffiCallbackInterfaceEventsCallbackMethod0 {
+        override fun callback(`uniffiHandle`: Long,`paymentHash`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeEventsCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`paymentReceived`(
+                    FfiConverterString.lift(`paymentHash`),
+                )
             }
-            1 -> {
-                // Call the method, write to outBuf and return a status code
-                // See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for info
-                try {
-                    this.`invokePaymentReceived`(cb, argsData, argsLen, outBuf)
-                } catch (e: Throwable) {
-                    // Unexpected error
-                    try {
-                        // Try to serialize the error into a string
-                        outBuf.setValue(FfiConverterString.lower(e.toString()))
-                    } catch (e: Throwable) {
-                        // If that fails, then it's time to give up and just return
-                    }
-                    UNIFFI_CALLBACK_UNEXPECTED_ERROR
-                }
+            val writeReturn = { _: Unit -> Unit }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `paymentSent`: UniffiCallbackInterfaceEventsCallbackMethod1 {
+        override fun callback(`uniffiHandle`: Long,`paymentHash`: RustBuffer.ByValue,`paymentPreimage`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeEventsCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`paymentSent`(
+                    FfiConverterString.lift(`paymentHash`),
+                    FfiConverterString.lift(`paymentPreimage`),
+                )
             }
-            2 -> {
-                // Call the method, write to outBuf and return a status code
-                // See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for info
-                try {
-                    this.`invokePaymentSent`(cb, argsData, argsLen, outBuf)
-                } catch (e: Throwable) {
-                    // Unexpected error
-                    try {
-                        // Try to serialize the error into a string
-                        outBuf.setValue(FfiConverterString.lower(e.toString()))
-                    } catch (e: Throwable) {
-                        // If that fails, then it's time to give up and just return
-                    }
-                    UNIFFI_CALLBACK_UNEXPECTED_ERROR
-                }
+            val writeReturn = { _: Unit -> Unit }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `paymentFailed`: UniffiCallbackInterfaceEventsCallbackMethod2 {
+        override fun callback(`uniffiHandle`: Long,`paymentHash`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeEventsCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`paymentFailed`(
+                    FfiConverterString.lift(`paymentHash`),
+                )
             }
-            3 -> {
-                // Call the method, write to outBuf and return a status code
-                // See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for info
-                try {
-                    this.`invokePaymentFailed`(cb, argsData, argsLen, outBuf)
-                } catch (e: Throwable) {
-                    // Unexpected error
-                    try {
-                        // Try to serialize the error into a string
-                        outBuf.setValue(FfiConverterString.lower(e.toString()))
-                    } catch (e: Throwable) {
-                        // If that fails, then it's time to give up and just return
-                    }
-                    UNIFFI_CALLBACK_UNEXPECTED_ERROR
-                }
+            val writeReturn = { _: Unit -> Unit }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `channelClosed`: UniffiCallbackInterfaceEventsCallbackMethod3 {
+        override fun callback(`uniffiHandle`: Long,`channelId`: RustBuffer.ByValue,`reason`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeEventsCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`channelClosed`(
+                    FfiConverterString.lift(`channelId`),
+                    FfiConverterString.lift(`reason`),
+                )
             }
-            4 -> {
-                // Call the method, write to outBuf and return a status code
-                // See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for info
-                try {
-                    this.`invokeChannelClosed`(cb, argsData, argsLen, outBuf)
-                } catch (e: Throwable) {
-                    // Unexpected error
-                    try {
-                        // Try to serialize the error into a string
-                        outBuf.setValue(FfiConverterString.lower(e.toString()))
-                    } catch (e: Throwable) {
-                        // If that fails, then it's time to give up and just return
-                    }
-                    UNIFFI_CALLBACK_UNEXPECTED_ERROR
-                }
+            val writeReturn = { _: Unit -> Unit }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `breezHealthStatusChangedTo`: UniffiCallbackInterfaceEventsCallbackMethod4 {
+        override fun callback(`uniffiHandle`: Long,`status`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeEventsCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`breezHealthStatusChangedTo`(
+                    FfiConverterTypeBreezHealthCheckStatus.lift(`status`),
+                )
             }
-            5 -> {
-                // Call the method, write to outBuf and return a status code
-                // See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for info
-                try {
-                    this.`invokeBreezHealthStatusChangedTo`(cb, argsData, argsLen, outBuf)
-                } catch (e: Throwable) {
-                    // Unexpected error
-                    try {
-                        // Try to serialize the error into a string
-                        outBuf.setValue(FfiConverterString.lower(e.toString()))
-                    } catch (e: Throwable) {
-                        // If that fails, then it's time to give up and just return
-                    }
-                    UNIFFI_CALLBACK_UNEXPECTED_ERROR
-                }
+            val writeReturn = { _: Unit -> Unit }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `synced`: UniffiCallbackInterfaceEventsCallbackMethod5 {
+        override fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeEventsCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`synced`(
+                )
             }
-            6 -> {
-                // Call the method, write to outBuf and return a status code
-                // See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for info
-                try {
-                    this.`invokeSynced`(cb, argsData, argsLen, outBuf)
-                } catch (e: Throwable) {
-                    // Unexpected error
-                    try {
-                        // Try to serialize the error into a string
-                        outBuf.setValue(FfiConverterString.lower(e.toString()))
-                    } catch (e: Throwable) {
-                        // If that fails, then it's time to give up and just return
-                    }
-                    UNIFFI_CALLBACK_UNEXPECTED_ERROR
-                }
-            }
-            
-            else -> {
-                // An unexpected error happened.
-                // See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs`
-                try {
-                    // Try to serialize the error into a string
-                    outBuf.setValue(FfiConverterString.lower("Invalid Callback index"))
-                } catch (e: Throwable) {
-                    // If that fails, then it's time to give up and just return
-                }
-                UNIFFI_CALLBACK_UNEXPECTED_ERROR
-            }
+            val writeReturn = { _: Unit -> Unit }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
         }
     }
 
-    
-    @Suppress("UNUSED_PARAMETER")
-    private fun `invokePaymentReceived`(kotlinCallbackInterface: EventsCallback, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
-        val argsBuf = argsData.getByteBuffer(0, argsLen.toLong()).also {
-            it.order(ByteOrder.BIG_ENDIAN)
+    internal object uniffiFree: UniffiCallbackInterfaceFree {
+        override fun callback(handle: Long) {
+            FfiConverterTypeEventsCallback.handleMap.remove(handle)
         }
-        fun makeCall() : Int {
-            kotlinCallbackInterface.`paymentReceived`(
-                FfiConverterString.read(argsBuf)
-            )
-            return UNIFFI_CALLBACK_SUCCESS
-        }
-        fun makeCallAndHandleError() : Int = makeCall()
-
-        return makeCallAndHandleError()
     }
-    
-    @Suppress("UNUSED_PARAMETER")
-    private fun `invokePaymentSent`(kotlinCallbackInterface: EventsCallback, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
-        val argsBuf = argsData.getByteBuffer(0, argsLen.toLong()).also {
-            it.order(ByteOrder.BIG_ENDIAN)
-        }
-        fun makeCall() : Int {
-            kotlinCallbackInterface.`paymentSent`(
-                FfiConverterString.read(argsBuf), 
-                FfiConverterString.read(argsBuf)
-            )
-            return UNIFFI_CALLBACK_SUCCESS
-        }
-        fun makeCallAndHandleError() : Int = makeCall()
 
-        return makeCallAndHandleError()
-    }
-    
-    @Suppress("UNUSED_PARAMETER")
-    private fun `invokePaymentFailed`(kotlinCallbackInterface: EventsCallback, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
-        val argsBuf = argsData.getByteBuffer(0, argsLen.toLong()).also {
-            it.order(ByteOrder.BIG_ENDIAN)
-        }
-        fun makeCall() : Int {
-            kotlinCallbackInterface.`paymentFailed`(
-                FfiConverterString.read(argsBuf)
-            )
-            return UNIFFI_CALLBACK_SUCCESS
-        }
-        fun makeCallAndHandleError() : Int = makeCall()
-
-        return makeCallAndHandleError()
-    }
-    
-    @Suppress("UNUSED_PARAMETER")
-    private fun `invokeChannelClosed`(kotlinCallbackInterface: EventsCallback, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
-        val argsBuf = argsData.getByteBuffer(0, argsLen.toLong()).also {
-            it.order(ByteOrder.BIG_ENDIAN)
-        }
-        fun makeCall() : Int {
-            kotlinCallbackInterface.`channelClosed`(
-                FfiConverterString.read(argsBuf), 
-                FfiConverterString.read(argsBuf)
-            )
-            return UNIFFI_CALLBACK_SUCCESS
-        }
-        fun makeCallAndHandleError() : Int = makeCall()
-
-        return makeCallAndHandleError()
-    }
-    
-    @Suppress("UNUSED_PARAMETER")
-    private fun `invokeBreezHealthStatusChangedTo`(kotlinCallbackInterface: EventsCallback, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
-        val argsBuf = argsData.getByteBuffer(0, argsLen.toLong()).also {
-            it.order(ByteOrder.BIG_ENDIAN)
-        }
-        fun makeCall() : Int {
-            kotlinCallbackInterface.`breezHealthStatusChangedTo`(
-                FfiConverterTypeBreezHealthCheckStatus.read(argsBuf)
-            )
-            return UNIFFI_CALLBACK_SUCCESS
-        }
-        fun makeCallAndHandleError() : Int = makeCall()
-
-        return makeCallAndHandleError()
-    }
-    
-    @Suppress("UNUSED_PARAMETER")
-    private fun `invokeSynced`(kotlinCallbackInterface: EventsCallback, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
-        fun makeCall() : Int {
-            kotlinCallbackInterface.`synced`(
-            )
-            return UNIFFI_CALLBACK_SUCCESS
-        }
-        fun makeCallAndHandleError() : Int = makeCall()
-
-        return makeCallAndHandleError()
-    }
-    
+    internal var vtable = UniffiVTableCallbackInterfaceEventsCallback.UniffiByValue(
+        `paymentReceived`,
+        `paymentSent`,
+        `paymentFailed`,
+        `channelClosed`,
+        `breezHealthStatusChangedTo`,
+        `synced`,
+        uniffiFree,
+    )
 
     // Registers the foreign callback with the Rust side.
     // This method is generated for each callback interface.
     internal fun register(lib: UniffiLib) {
-        lib.uniffi_uniffi_lipalightninglib_fn_init_callback_eventscallback(this)
+        lib.uniffi_uniffi_lipalightninglib_fn_init_callback_vtable_eventscallback(vtable)
     }
 }
 
-internal val uniffiCallbackInterfaceEventsCallback = UniffiCallbackInterfaceEventsCallback()
-
-// The ffiConverter which transforms the Callbacks in to UniffiHandles to pass to Rust.
+// The ffiConverter which transforms the Callbacks in to handles to pass to Rust.
 public object FfiConverterTypeEventsCallback: FfiConverterCallbackInterface<EventsCallback>()
 
 
 
 
-public object FfiConverterOptionalULong: FfiConverterRustBuffer<ULong?> {
-    override fun read(buf: ByteBuffer): ULong? {
+public object FfiConverterOptionalULong: FfiConverterRustBuffer<kotlin.ULong?> {
+    override fun read(buf: ByteBuffer): kotlin.ULong? {
         if (buf.get().toInt() == 0) {
             return null
         }
         return FfiConverterULong.read(buf)
     }
 
-    override fun allocationSize(value: ULong?): Int {
+    override fun allocationSize(value: kotlin.ULong?): ULong {
         if (value == null) {
-            return 1
+            return 1UL
         } else {
-            return 1 + FfiConverterULong.allocationSize(value)
+            return 1UL + FfiConverterULong.allocationSize(value)
         }
     }
 
-    override fun write(value: ULong?, buf: ByteBuffer) {
+    override fun write(value: kotlin.ULong?, buf: ByteBuffer) {
         if (value == null) {
             buf.put(0)
         } else {
@@ -6287,23 +6622,23 @@ public object FfiConverterOptionalULong: FfiConverterRustBuffer<ULong?> {
 
 
 
-public object FfiConverterOptionalString: FfiConverterRustBuffer<String?> {
-    override fun read(buf: ByteBuffer): String? {
+public object FfiConverterOptionalString: FfiConverterRustBuffer<kotlin.String?> {
+    override fun read(buf: ByteBuffer): kotlin.String? {
         if (buf.get().toInt() == 0) {
             return null
         }
         return FfiConverterString.read(buf)
     }
 
-    override fun allocationSize(value: String?): Int {
+    override fun allocationSize(value: kotlin.String?): ULong {
         if (value == null) {
-            return 1
+            return 1UL
         } else {
-            return 1 + FfiConverterString.allocationSize(value)
+            return 1UL + FfiConverterString.allocationSize(value)
         }
     }
 
-    override fun write(value: String?, buf: ByteBuffer) {
+    override fun write(value: kotlin.String?, buf: ByteBuffer) {
         if (value == null) {
             buf.put(0)
         } else {
@@ -6324,11 +6659,11 @@ public object FfiConverterOptionalTimestamp: FfiConverterRustBuffer<java.time.In
         return FfiConverterTimestamp.read(buf)
     }
 
-    override fun allocationSize(value: java.time.Instant?): Int {
+    override fun allocationSize(value: java.time.Instant?): ULong {
         if (value == null) {
-            return 1
+            return 1UL
         } else {
-            return 1 + FfiConverterTimestamp.allocationSize(value)
+            return 1UL + FfiConverterTimestamp.allocationSize(value)
         }
     }
 
@@ -6353,11 +6688,11 @@ public object FfiConverterOptionalTypeAmount: FfiConverterRustBuffer<Amount?> {
         return FfiConverterTypeAmount.read(buf)
     }
 
-    override fun allocationSize(value: Amount?): Int {
+    override fun allocationSize(value: Amount?): ULong {
         if (value == null) {
-            return 1
+            return 1UL
         } else {
-            return 1 + FfiConverterTypeAmount.allocationSize(value)
+            return 1UL + FfiConverterTypeAmount.allocationSize(value)
         }
     }
 
@@ -6382,11 +6717,11 @@ public object FfiConverterOptionalTypeExchangeRate: FfiConverterRustBuffer<Excha
         return FfiConverterTypeExchangeRate.read(buf)
     }
 
-    override fun allocationSize(value: ExchangeRate?): Int {
+    override fun allocationSize(value: ExchangeRate?): ULong {
         if (value == null) {
-            return 1
+            return 1UL
         } else {
-            return 1 + FfiConverterTypeExchangeRate.allocationSize(value)
+            return 1UL + FfiConverterTypeExchangeRate.allocationSize(value)
         }
     }
 
@@ -6411,11 +6746,11 @@ public object FfiConverterOptionalTypeFiatTopupInfo: FfiConverterRustBuffer<Fiat
         return FfiConverterTypeFiatTopupInfo.read(buf)
     }
 
-    override fun allocationSize(value: FiatTopupInfo?): Int {
+    override fun allocationSize(value: FiatTopupInfo?): ULong {
         if (value == null) {
-            return 1
+            return 1UL
         } else {
-            return 1 + FfiConverterTypeFiatTopupInfo.allocationSize(value)
+            return 1UL + FfiConverterTypeFiatTopupInfo.allocationSize(value)
         }
     }
 
@@ -6440,11 +6775,11 @@ public object FfiConverterOptionalTypeFiatValue: FfiConverterRustBuffer<FiatValu
         return FfiConverterTypeFiatValue.read(buf)
     }
 
-    override fun allocationSize(value: FiatValue?): Int {
+    override fun allocationSize(value: FiatValue?): ULong {
         if (value == null) {
-            return 1
+            return 1UL
         } else {
-            return 1 + FfiConverterTypeFiatValue.allocationSize(value)
+            return 1UL + FfiConverterTypeFiatValue.allocationSize(value)
         }
     }
 
@@ -6469,11 +6804,11 @@ public object FfiConverterOptionalTypeOpeningFeeParams: FfiConverterRustBuffer<O
         return FfiConverterTypeOpeningFeeParams.read(buf)
     }
 
-    override fun allocationSize(value: OpeningFeeParams?): Int {
+    override fun allocationSize(value: OpeningFeeParams?): ULong {
         if (value == null) {
-            return 1
+            return 1UL
         } else {
-            return 1 + FfiConverterTypeOpeningFeeParams.allocationSize(value)
+            return 1UL + FfiConverterTypeOpeningFeeParams.allocationSize(value)
         }
     }
 
@@ -6498,11 +6833,11 @@ public object FfiConverterOptionalTypeSwapToLightningFees: FfiConverterRustBuffe
         return FfiConverterTypeSwapToLightningFees.read(buf)
     }
 
-    override fun allocationSize(value: SwapToLightningFees?): Int {
+    override fun allocationSize(value: SwapToLightningFees?): ULong {
         if (value == null) {
-            return 1
+            return 1UL
         } else {
-            return 1 + FfiConverterTypeSwapToLightningFees.allocationSize(value)
+            return 1UL + FfiConverterTypeSwapToLightningFees.allocationSize(value)
         }
     }
 
@@ -6527,11 +6862,11 @@ public object FfiConverterOptionalTypeTzTime: FfiConverterRustBuffer<TzTime?> {
         return FfiConverterTypeTzTime.read(buf)
     }
 
-    override fun allocationSize(value: TzTime?): Int {
+    override fun allocationSize(value: TzTime?): ULong {
         if (value == null) {
-            return 1
+            return 1UL
         } else {
-            return 1 + FfiConverterTypeTzTime.allocationSize(value)
+            return 1UL + FfiConverterTypeTzTime.allocationSize(value)
         }
     }
 
@@ -6556,11 +6891,11 @@ public object FfiConverterOptionalTypeLevel: FfiConverterRustBuffer<Level?> {
         return FfiConverterTypeLevel.read(buf)
     }
 
-    override fun allocationSize(value: Level?): Int {
+    override fun allocationSize(value: Level?): ULong {
         if (value == null) {
-            return 1
+            return 1UL
         } else {
-            return 1 + FfiConverterTypeLevel.allocationSize(value)
+            return 1UL + FfiConverterTypeLevel.allocationSize(value)
         }
     }
 
@@ -6585,11 +6920,11 @@ public object FfiConverterOptionalTypePocketOfferError: FfiConverterRustBuffer<P
         return FfiConverterTypePocketOfferError.read(buf)
     }
 
-    override fun allocationSize(value: PocketOfferError?): Int {
+    override fun allocationSize(value: PocketOfferError?): ULong {
         if (value == null) {
-            return 1
+            return 1UL
         } else {
-            return 1 + FfiConverterTypePocketOfferError.allocationSize(value)
+            return 1UL + FfiConverterTypePocketOfferError.allocationSize(value)
         }
     }
 
@@ -6606,23 +6941,23 @@ public object FfiConverterOptionalTypePocketOfferError: FfiConverterRustBuffer<P
 
 
 
-public object FfiConverterSequenceString: FfiConverterRustBuffer<List<String>> {
-    override fun read(buf: ByteBuffer): List<String> {
+public object FfiConverterSequenceString: FfiConverterRustBuffer<List<kotlin.String>> {
+    override fun read(buf: ByteBuffer): List<kotlin.String> {
         val len = buf.getInt()
-        return List<String>(len) {
+        return List<kotlin.String>(len) {
             FfiConverterString.read(buf)
         }
     }
 
-    override fun allocationSize(value: List<String>): Int {
-        val sizeForLength = 4
+    override fun allocationSize(value: List<kotlin.String>): ULong {
+        val sizeForLength = 4UL
         val sizeForItems = value.map { FfiConverterString.allocationSize(it) }.sum()
         return sizeForLength + sizeForItems
     }
 
-    override fun write(value: List<String>, buf: ByteBuffer) {
+    override fun write(value: List<kotlin.String>, buf: ByteBuffer) {
         buf.putInt(value.size)
-        value.forEach {
+        value.iterator().forEach {
             FfiConverterString.write(it, buf)
         }
     }
@@ -6639,15 +6974,15 @@ public object FfiConverterSequenceTypeFailedSwapInfo: FfiConverterRustBuffer<Lis
         }
     }
 
-    override fun allocationSize(value: List<FailedSwapInfo>): Int {
-        val sizeForLength = 4
+    override fun allocationSize(value: List<FailedSwapInfo>): ULong {
+        val sizeForLength = 4UL
         val sizeForItems = value.map { FfiConverterTypeFailedSwapInfo.allocationSize(it) }.sum()
         return sizeForLength + sizeForItems
     }
 
     override fun write(value: List<FailedSwapInfo>, buf: ByteBuffer) {
         buf.putInt(value.size)
-        value.forEach {
+        value.iterator().forEach {
             FfiConverterTypeFailedSwapInfo.write(it, buf)
         }
     }
@@ -6664,15 +6999,15 @@ public object FfiConverterSequenceTypeOfferInfo: FfiConverterRustBuffer<List<Off
         }
     }
 
-    override fun allocationSize(value: List<OfferInfo>): Int {
-        val sizeForLength = 4
+    override fun allocationSize(value: List<OfferInfo>): ULong {
+        val sizeForLength = 4UL
         val sizeForItems = value.map { FfiConverterTypeOfferInfo.allocationSize(it) }.sum()
         return sizeForLength + sizeForItems
     }
 
     override fun write(value: List<OfferInfo>, buf: ByteBuffer) {
         buf.putInt(value.size)
-        value.forEach {
+        value.iterator().forEach {
             FfiConverterTypeOfferInfo.write(it, buf)
         }
     }
@@ -6689,15 +7024,15 @@ public object FfiConverterSequenceTypeActionRequiredItem: FfiConverterRustBuffer
         }
     }
 
-    override fun allocationSize(value: List<ActionRequiredItem>): Int {
-        val sizeForLength = 4
+    override fun allocationSize(value: List<ActionRequiredItem>): ULong {
+        val sizeForLength = 4UL
         val sizeForItems = value.map { FfiConverterTypeActionRequiredItem.allocationSize(it) }.sum()
         return sizeForLength + sizeForItems
     }
 
     override fun write(value: List<ActionRequiredItem>, buf: ByteBuffer) {
         buf.putInt(value.size)
-        value.forEach {
+        value.iterator().forEach {
             FfiConverterTypeActionRequiredItem.write(it, buf)
         }
     }
@@ -6714,88 +7049,93 @@ public object FfiConverterSequenceTypeActivity: FfiConverterRustBuffer<List<Acti
         }
     }
 
-    override fun allocationSize(value: List<Activity>): Int {
-        val sizeForLength = 4
+    override fun allocationSize(value: List<Activity>): ULong {
+        val sizeForLength = 4UL
         val sizeForItems = value.map { FfiConverterTypeActivity.allocationSize(it) }.sum()
         return sizeForLength + sizeForItems
     }
 
     override fun write(value: List<Activity>, buf: ByteBuffer) {
         buf.putInt(value.size)
-        value.forEach {
+        value.iterator().forEach {
             FfiConverterTypeActivity.write(it, buf)
         }
     }
 }
-@Throws(LnException::class)
-
-fun `acceptTermsAndConditions`(`environment`: EnvironmentCode, `seed`: ByteArray, `version`: Long) =
-    
+    @Throws(LnException::class) fun `acceptTermsAndConditions`(`environment`: EnvironmentCode, `seed`: kotlin.ByteArray, `version`: kotlin.Long)
+        = 
     uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterLong.lower(`version`),_status)
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(
+        FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterLong.lower(`version`),_status)
 }
+    
+    
 
-
-@Throws(SimpleException::class)
-
-fun `generateSecret`(`passphrase`: String): Secret {
-    return FfiConverterTypeSecret.lift(
+    @Throws(SimpleException::class) fun `generateSecret`(`passphrase`: kotlin.String): Secret {
+            return FfiConverterTypeSecret.lift(
     uniffiRustCallWithError(SimpleException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_generate_secret(FfiConverterString.lower(`passphrase`),_status)
-})
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_generate_secret(
+        FfiConverterString.lower(`passphrase`),_status)
 }
+    )
+    }
+    
 
-@Throws(LnException::class)
-
-fun `getTermsAndConditionsStatus`(`environment`: EnvironmentCode, `seed`: ByteArray, `termsAndConditions`: TermsAndConditions): TermsAndConditionsStatus {
-    return FfiConverterTypeTermsAndConditionsStatus.lift(
+    @Throws(LnException::class) fun `getTermsAndConditionsStatus`(`environment`: EnvironmentCode, `seed`: kotlin.ByteArray, `termsAndConditions`: TermsAndConditions): TermsAndConditionsStatus {
+            return FfiConverterTypeTermsAndConditionsStatus.lift(
     uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_get_terms_and_conditions_status(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterTypeTermsAndConditions.lower(`termsAndConditions`),_status)
-})
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_get_terms_and_conditions_status(
+        FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterTypeTermsAndConditions.lower(`termsAndConditions`),_status)
 }
+    )
+    }
+    
 
-@Throws(LnException::class)
-
-fun `handleNotification`(`config`: Config, `notificationPayload`: String): RecommendedAction {
-    return FfiConverterTypeRecommendedAction.lift(
+    @Throws(LnException::class) fun `handleNotification`(`config`: Config, `notificationPayload`: kotlin.String): RecommendedAction {
+            return FfiConverterTypeRecommendedAction.lift(
     uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_handle_notification(FfiConverterTypeConfig.lower(`config`),FfiConverterString.lower(`notificationPayload`),_status)
-})
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_handle_notification(
+        FfiConverterTypeConfig.lower(`config`),FfiConverterString.lower(`notificationPayload`),_status)
 }
+    )
+    }
+    
 
-@Throws(MnemonicException::class)
-
-fun `mnemonicToSecret`(`mnemonicString`: List<String>, `passphrase`: String): Secret {
-    return FfiConverterTypeSecret.lift(
+    @Throws(MnemonicException::class) fun `mnemonicToSecret`(`mnemonicString`: List<kotlin.String>, `passphrase`: kotlin.String): Secret {
+            return FfiConverterTypeSecret.lift(
     uniffiRustCallWithError(MnemonicException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_mnemonic_to_secret(FfiConverterSequenceString.lower(`mnemonicString`),FfiConverterString.lower(`passphrase`),_status)
-})
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_mnemonic_to_secret(
+        FfiConverterSequenceString.lower(`mnemonicString`),FfiConverterString.lower(`passphrase`),_status)
 }
-
-@Throws(ParseException::class)
-
-fun `parseLightningAddress`(`address`: String) =
+    )
+    }
     
+
+    @Throws(ParseException::class) fun `parseLightningAddress`(`address`: kotlin.String)
+        = 
     uniffiRustCallWithError(ParseException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_parse_lightning_address(FfiConverterString.lower(`address`),_status)
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_parse_lightning_address(
+        FfiConverterString.lower(`address`),_status)
 }
-
-
-@Throws(LnException::class)
-
-fun `recoverLightningNode`(`environment`: EnvironmentCode, `seed`: ByteArray, `localPersistencePath`: String, `fileLoggingLevel`: Level?) =
     
+    
+
+    @Throws(LnException::class) fun `recoverLightningNode`(`environment`: EnvironmentCode, `seed`: kotlin.ByteArray, `localPersistencePath`: kotlin.String, `fileLoggingLevel`: Level?)
+        = 
     uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterString.lower(`localPersistencePath`),FfiConverterOptionalTypeLevel.lower(`fileLoggingLevel`),_status)
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(
+        FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterString.lower(`localPersistencePath`),FfiConverterOptionalTypeLevel.lower(`fileLoggingLevel`),_status)
 }
-
-
-
-fun `wordsByPrefix`(`prefix`: String): List<String> {
-    return FfiConverterSequenceString.lift(
+    
+    
+ fun `wordsByPrefix`(`prefix`: kotlin.String): List<kotlin.String> {
+            return FfiConverterSequenceString.lift(
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_words_by_prefix(FfiConverterString.lower(`prefix`),_status)
-})
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_words_by_prefix(
+        FfiConverterString.lower(`prefix`),_status)
 }
+    )
+    }
+    
 
 
