@@ -2057,6 +2057,7 @@ public interface LightningNodeInterface {
     
     companion object
 }
+
 open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
 
     constructor(pointer: Pointer) {
@@ -6458,6 +6459,7 @@ public interface EventsCallback {
     
     companion object
 }
+
 // Magic number for the Rust proxy to call using the same mechanism as every other method,
 // to free the callback once it's dropped by Rust.
 internal const val IDX_CALLBACK_FREE = 0
