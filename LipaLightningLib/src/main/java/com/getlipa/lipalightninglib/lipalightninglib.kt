@@ -4038,7 +4038,7 @@ public object FfiConverterTypeSwapAddressInfo: FfiConverterRustBuffer<SwapAddres
 data class SwapInfo (
     var `bitcoinAddress`: kotlin.String, 
     var `createdAt`: TzTime, 
-    var `paidMsats`: kotlin.ULong
+    var `paidAmount`: Amount
 ) {
     
     companion object
@@ -4049,20 +4049,20 @@ public object FfiConverterTypeSwapInfo: FfiConverterRustBuffer<SwapInfo> {
         return SwapInfo(
             FfiConverterString.read(buf),
             FfiConverterTypeTzTime.read(buf),
-            FfiConverterULong.read(buf),
+            FfiConverterTypeAmount.read(buf),
         )
     }
 
     override fun allocationSize(value: SwapInfo) = (
             FfiConverterString.allocationSize(value.`bitcoinAddress`) +
             FfiConverterTypeTzTime.allocationSize(value.`createdAt`) +
-            FfiConverterULong.allocationSize(value.`paidMsats`)
+            FfiConverterTypeAmount.allocationSize(value.`paidAmount`)
     )
 
     override fun write(value: SwapInfo, buf: ByteBuffer) {
             FfiConverterString.write(value.`bitcoinAddress`, buf)
             FfiConverterTypeTzTime.write(value.`createdAt`, buf)
-            FfiConverterULong.write(value.`paidMsats`, buf)
+            FfiConverterTypeAmount.write(value.`paidAmount`, buf)
     }
 }
 
@@ -4347,7 +4347,7 @@ sealed class Activity {
     }
     
     data class Swap(
-        val `incomingPaymentInfo`: IncomingPaymentInfo, 
+        val `incomingPaymentInfo`: IncomingPaymentInfo?, 
         val `swapInfo`: SwapInfo) : Activity() {
         companion object
     }
@@ -4376,7 +4376,7 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
                 FfiConverterTypeOfferKind.read(buf),
                 )
             4 -> Activity.Swap(
-                FfiConverterTypeIncomingPaymentInfo.read(buf),
+                FfiConverterOptionalTypeIncomingPaymentInfo.read(buf),
                 FfiConverterTypeSwapInfo.read(buf),
                 )
             5 -> Activity.ChannelClose(
@@ -4413,7 +4413,7 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4UL
-                + FfiConverterTypeIncomingPaymentInfo.allocationSize(value.`incomingPaymentInfo`)
+                + FfiConverterOptionalTypeIncomingPaymentInfo.allocationSize(value.`incomingPaymentInfo`)
                 + FfiConverterTypeSwapInfo.allocationSize(value.`swapInfo`)
             )
         }
@@ -4446,7 +4446,7 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
             }
             is Activity.Swap -> {
                 buf.putInt(4)
-                FfiConverterTypeIncomingPaymentInfo.write(value.`incomingPaymentInfo`, buf)
+                FfiConverterOptionalTypeIncomingPaymentInfo.write(value.`incomingPaymentInfo`, buf)
                 FfiConverterTypeSwapInfo.write(value.`swapInfo`, buf)
                 Unit
             }
@@ -6795,6 +6795,35 @@ public object FfiConverterOptionalTypeFiatValue: FfiConverterRustBuffer<FiatValu
         } else {
             buf.put(1)
             FfiConverterTypeFiatValue.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeIncomingPaymentInfo: FfiConverterRustBuffer<IncomingPaymentInfo?> {
+    override fun read(buf: ByteBuffer): IncomingPaymentInfo? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeIncomingPaymentInfo.read(buf)
+    }
+
+    override fun allocationSize(value: IncomingPaymentInfo?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeIncomingPaymentInfo.allocationSize(value)
+        }
+    }
+
+    override fun write(value: IncomingPaymentInfo?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeIncomingPaymentInfo.write(value, buf)
         }
     }
 }
