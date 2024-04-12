@@ -963,7 +963,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(`ptr`: Pointer,`invoiceDetails`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_lnurlp(`ptr`: Pointer,`lnurlPayRequestData`: RustBuffer.ByValue,`amountSat`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_lnurlp(`ptr`: Pointer,`lnurlPayRequestData`: RustBuffer.ByValue,`amountSat`: Long,`comment`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_open_invoice(`ptr`: Pointer,`invoiceDetails`: RustBuffer.ByValue,`amountSat`: Long,`metadata`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
@@ -1405,7 +1405,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice() != 55741.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_lnurlp() != 19760.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_lnurlp() != 19853.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_open_invoice() != 20722.toShort()) {
@@ -2017,7 +2017,7 @@ public interface LightningNodeInterface {
     
     fun `payInvoice`(`invoiceDetails`: InvoiceDetails, `metadata`: PaymentMetadata)
     
-    fun `payLnurlp`(`lnurlPayRequestData`: LnUrlPayRequestData, `amountSat`: kotlin.ULong): kotlin.String
+    fun `payLnurlp`(`lnurlPayRequestData`: LnUrlPayRequestData, `amountSat`: kotlin.ULong, `comment`: kotlin.String?): kotlin.String
     
     fun `payOpenInvoice`(`invoiceDetails`: InvoiceDetails, `amountSat`: kotlin.ULong, `metadata`: PaymentMetadata)
     
@@ -2560,12 +2560,12 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
-    @Throws(LnUrlPayException::class)override fun `payLnurlp`(`lnurlPayRequestData`: LnUrlPayRequestData, `amountSat`: kotlin.ULong): kotlin.String {
+    @Throws(LnUrlPayException::class)override fun `payLnurlp`(`lnurlPayRequestData`: LnUrlPayRequestData, `amountSat`: kotlin.ULong, `comment`: kotlin.String?): kotlin.String {
             return FfiConverterString.lift(
     callWithPointer {
     uniffiRustCallWithError(LnUrlPayException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_lnurlp(
-        it, FfiConverterTypeLnUrlPayRequestData.lower(`lnurlPayRequestData`),FfiConverterULong.lower(`amountSat`),_status)
+        it, FfiConverterTypeLnUrlPayRequestData.lower(`lnurlPayRequestData`),FfiConverterULong.lower(`amountSat`),FfiConverterOptionalString.lower(`comment`),_status)
 }
     }
     )
@@ -3458,6 +3458,7 @@ data class LnUrlPayDetails (
     var `longDescription`: kotlin.String?, 
     var `minSendable`: Amount, 
     var `maxSendable`: Amount, 
+    var `maxCommentLength`: kotlin.UShort, 
     var `requestData`: LnUrlPayRequestData
 ) {
     
@@ -3472,6 +3473,7 @@ public object FfiConverterTypeLnUrlPayDetails: FfiConverterRustBuffer<LnUrlPayDe
             FfiConverterOptionalString.read(buf),
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeAmount.read(buf),
+            FfiConverterUShort.read(buf),
             FfiConverterTypeLnUrlPayRequestData.read(buf),
         )
     }
@@ -3482,6 +3484,7 @@ public object FfiConverterTypeLnUrlPayDetails: FfiConverterRustBuffer<LnUrlPayDe
             FfiConverterOptionalString.allocationSize(value.`longDescription`) +
             FfiConverterTypeAmount.allocationSize(value.`minSendable`) +
             FfiConverterTypeAmount.allocationSize(value.`maxSendable`) +
+            FfiConverterUShort.allocationSize(value.`maxCommentLength`) +
             FfiConverterTypeLnUrlPayRequestData.allocationSize(value.`requestData`)
     )
 
@@ -3491,6 +3494,7 @@ public object FfiConverterTypeLnUrlPayDetails: FfiConverterRustBuffer<LnUrlPayDe
             FfiConverterOptionalString.write(value.`longDescription`, buf)
             FfiConverterTypeAmount.write(value.`minSendable`, buf)
             FfiConverterTypeAmount.write(value.`maxSendable`, buf)
+            FfiConverterUShort.write(value.`maxCommentLength`, buf)
             FfiConverterTypeLnUrlPayRequestData.write(value.`requestData`, buf)
     }
 }
