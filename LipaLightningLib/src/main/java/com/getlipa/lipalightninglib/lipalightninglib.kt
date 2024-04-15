@@ -1291,7 +1291,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_get_terms_and_conditions_status() != 32529.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_handle_notification() != 48833.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_handle_notification() != 51899.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret() != 23900.toShort()) {
@@ -3508,6 +3508,8 @@ data class LnUrlPayRequestData (
     var `metadataStr`: kotlin.String, 
     var `commentAllowed`: kotlin.UShort, 
     var `domain`: kotlin.String, 
+    var `allowsNostr`: kotlin.Boolean, 
+    var `nostrPubkey`: kotlin.String?, 
     var `lnAddress`: kotlin.String?
 ) {
     
@@ -3523,6 +3525,8 @@ public object FfiConverterTypeLnUrlPayRequestData: FfiConverterRustBuffer<LnUrlP
             FfiConverterString.read(buf),
             FfiConverterUShort.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterOptionalString.read(buf),
             FfiConverterOptionalString.read(buf),
         )
     }
@@ -3534,6 +3538,8 @@ public object FfiConverterTypeLnUrlPayRequestData: FfiConverterRustBuffer<LnUrlP
             FfiConverterString.allocationSize(value.`metadataStr`) +
             FfiConverterUShort.allocationSize(value.`commentAllowed`) +
             FfiConverterString.allocationSize(value.`domain`) +
+            FfiConverterBoolean.allocationSize(value.`allowsNostr`) +
+            FfiConverterOptionalString.allocationSize(value.`nostrPubkey`) +
             FfiConverterOptionalString.allocationSize(value.`lnAddress`)
     )
 
@@ -3544,6 +3550,8 @@ public object FfiConverterTypeLnUrlPayRequestData: FfiConverterRustBuffer<LnUrlP
             FfiConverterString.write(value.`metadataStr`, buf)
             FfiConverterUShort.write(value.`commentAllowed`, buf)
             FfiConverterString.write(value.`domain`, buf)
+            FfiConverterBoolean.write(value.`allowsNostr`, buf)
+            FfiConverterOptionalString.write(value.`nostrPubkey`, buf)
             FfiConverterOptionalString.write(value.`lnAddress`, buf)
     }
 }
@@ -5383,6 +5391,12 @@ sealed class Notification {
         companion object
     }
     
+    data class OnchainPaymentSwappedIn(
+        val `amountSat`: kotlin.ULong, 
+        val `paymentHash`: kotlin.String) : Notification() {
+        companion object
+    }
+    
 
     
     companion object
@@ -5395,12 +5409,24 @@ public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification
                 FfiConverterULong.read(buf),
                 FfiConverterString.read(buf),
                 )
+            2 -> Notification.OnchainPaymentSwappedIn(
+                FfiConverterULong.read(buf),
+                FfiConverterString.read(buf),
+                )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
         }
     }
 
     override fun allocationSize(value: Notification) = when(value) {
         is Notification.Bolt11PaymentReceived -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterULong.allocationSize(value.`amountSat`)
+                + FfiConverterString.allocationSize(value.`paymentHash`)
+            )
+        }
+        is Notification.OnchainPaymentSwappedIn -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4UL
@@ -5418,7 +5444,143 @@ public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification
                 FfiConverterString.write(value.`paymentHash`, buf)
                 Unit
             }
+            is Notification.OnchainPaymentSwappedIn -> {
+                buf.putInt(2)
+                FfiConverterULong.write(value.`amountSat`, buf)
+                FfiConverterString.write(value.`paymentHash`, buf)
+                Unit
+            }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+
+
+sealed class NotificationHandlingException: Exception() {
+    
+    class InvalidInput(
+        
+        val `msg`: kotlin.String
+        ) : NotificationHandlingException() {
+        override val message
+            get() = "msg=${ `msg` }"
+    }
+    
+    class RuntimeException(
+        
+        val `code`: NotificationHandlingErrorCode, 
+        
+        val `msg`: kotlin.String
+        ) : NotificationHandlingException() {
+        override val message
+            get() = "code=${ `code` }, msg=${ `msg` }"
+    }
+    
+    class PermanentFailure(
+        
+        val `msg`: kotlin.String
+        ) : NotificationHandlingException() {
+        override val message
+            get() = "msg=${ `msg` }"
+    }
+    
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<NotificationHandlingException> {
+        override fun lift(error_buf: RustBuffer.ByValue): NotificationHandlingException = FfiConverterTypeNotificationHandlingError.lift(error_buf)
+    }
+
+    
+}
+
+public object FfiConverterTypeNotificationHandlingError : FfiConverterRustBuffer<NotificationHandlingException> {
+    override fun read(buf: ByteBuffer): NotificationHandlingException {
+        
+
+        return when(buf.getInt()) {
+            1 -> NotificationHandlingException.InvalidInput(
+                FfiConverterString.read(buf),
+                )
+            2 -> NotificationHandlingException.RuntimeException(
+                FfiConverterTypeNotificationHandlingErrorCode.read(buf),
+                FfiConverterString.read(buf),
+                )
+            3 -> NotificationHandlingException.PermanentFailure(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: NotificationHandlingException): ULong {
+        return when(value) {
+            is NotificationHandlingException.InvalidInput -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
+            is NotificationHandlingException.RuntimeException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterTypeNotificationHandlingErrorCode.allocationSize(value.`code`)
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
+            is NotificationHandlingException.PermanentFailure -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
+        }
+    }
+
+    override fun write(value: NotificationHandlingException, buf: ByteBuffer) {
+        when(value) {
+            is NotificationHandlingException.InvalidInput -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`msg`, buf)
+                Unit
+            }
+            is NotificationHandlingException.RuntimeException -> {
+                buf.putInt(2)
+                FfiConverterTypeNotificationHandlingErrorCode.write(value.`code`, buf)
+                FfiConverterString.write(value.`msg`, buf)
+                Unit
+            }
+            is NotificationHandlingException.PermanentFailure -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`msg`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+
+enum class NotificationHandlingErrorCode {
+    
+    NODE_UNAVAILABLE,
+    IN_PROGRESS_SWAP_NOT_FOUND;
+    companion object
+}
+
+
+public object FfiConverterTypeNotificationHandlingErrorCode: FfiConverterRustBuffer<NotificationHandlingErrorCode> {
+    override fun read(buf: ByteBuffer) = try {
+        NotificationHandlingErrorCode.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: NotificationHandlingErrorCode) = 4UL
+
+    override fun write(value: NotificationHandlingErrorCode, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
     }
 }
 
@@ -7126,9 +7288,9 @@ public object FfiConverterSequenceTypeActivity: FfiConverterRustBuffer<List<Acti
     }
     
 
-    @Throws(LnException::class) fun `handleNotification`(`config`: Config, `notificationPayload`: kotlin.String): RecommendedAction {
+    @Throws(NotificationHandlingException::class) fun `handleNotification`(`config`: Config, `notificationPayload`: kotlin.String): RecommendedAction {
             return FfiConverterTypeRecommendedAction.lift(
-    uniffiRustCallWithError(LnException) { _status ->
+    uniffiRustCallWithError(NotificationHandlingException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_handle_notification(
         FfiConverterTypeConfig.lower(`config`),FfiConverterString.lower(`notificationPayload`),_status)
 }
