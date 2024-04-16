@@ -646,19 +646,23 @@ internal interface UniffiCallbackInterfaceEventsCallbackMethod3 : com.sun.jna.Ca
     fun callback(`uniffiHandle`: Long,`channelId`: RustBuffer.ByValue,`reason`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
 }
 internal interface UniffiCallbackInterfaceEventsCallbackMethod4 : com.sun.jna.Callback {
-    fun callback(`uniffiHandle`: Long,`status`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+    fun callback(`uniffiHandle`: Long,`paymentHash`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
 }
 internal interface UniffiCallbackInterfaceEventsCallbackMethod5 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`status`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceEventsCallbackMethod6 : com.sun.jna.Callback {
     fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
 }
-@Structure.FieldOrder("paymentReceived", "paymentSent", "paymentFailed", "channelClosed", "breezHealthStatusChangedTo", "synced", "uniffiFree")
+@Structure.FieldOrder("paymentReceived", "paymentSent", "paymentFailed", "channelClosed", "swapReceived", "breezHealthStatusChangedTo", "synced", "uniffiFree")
 internal open class UniffiVTableCallbackInterfaceEventsCallback(
     @JvmField internal var `paymentReceived`: UniffiCallbackInterfaceEventsCallbackMethod0? = null,
     @JvmField internal var `paymentSent`: UniffiCallbackInterfaceEventsCallbackMethod1? = null,
     @JvmField internal var `paymentFailed`: UniffiCallbackInterfaceEventsCallbackMethod2? = null,
     @JvmField internal var `channelClosed`: UniffiCallbackInterfaceEventsCallbackMethod3? = null,
-    @JvmField internal var `breezHealthStatusChangedTo`: UniffiCallbackInterfaceEventsCallbackMethod4? = null,
-    @JvmField internal var `synced`: UniffiCallbackInterfaceEventsCallbackMethod5? = null,
+    @JvmField internal var `swapReceived`: UniffiCallbackInterfaceEventsCallbackMethod4? = null,
+    @JvmField internal var `breezHealthStatusChangedTo`: UniffiCallbackInterfaceEventsCallbackMethod5? = null,
+    @JvmField internal var `synced`: UniffiCallbackInterfaceEventsCallbackMethod6? = null,
     @JvmField internal var `uniffiFree`: UniffiCallbackInterfaceFree? = null,
 ) : Structure() {
     class UniffiByValue(
@@ -666,22 +670,25 @@ internal open class UniffiVTableCallbackInterfaceEventsCallback(
         `paymentSent`: UniffiCallbackInterfaceEventsCallbackMethod1? = null,
         `paymentFailed`: UniffiCallbackInterfaceEventsCallbackMethod2? = null,
         `channelClosed`: UniffiCallbackInterfaceEventsCallbackMethod3? = null,
-        `breezHealthStatusChangedTo`: UniffiCallbackInterfaceEventsCallbackMethod4? = null,
-        `synced`: UniffiCallbackInterfaceEventsCallbackMethod5? = null,
+        `swapReceived`: UniffiCallbackInterfaceEventsCallbackMethod4? = null,
+        `breezHealthStatusChangedTo`: UniffiCallbackInterfaceEventsCallbackMethod5? = null,
+        `synced`: UniffiCallbackInterfaceEventsCallbackMethod6? = null,
         `uniffiFree`: UniffiCallbackInterfaceFree? = null,
-    ): UniffiVTableCallbackInterfaceEventsCallback(`paymentReceived`,`paymentSent`,`paymentFailed`,`channelClosed`,`breezHealthStatusChangedTo`,`synced`,`uniffiFree`,), Structure.ByValue
+    ): UniffiVTableCallbackInterfaceEventsCallback(`paymentReceived`,`paymentSent`,`paymentFailed`,`channelClosed`,`swapReceived`,`breezHealthStatusChangedTo`,`synced`,`uniffiFree`,), Structure.ByValue
 
    internal fun uniffiSetValue(other: UniffiVTableCallbackInterfaceEventsCallback) {
         `paymentReceived` = other.`paymentReceived`
         `paymentSent` = other.`paymentSent`
         `paymentFailed` = other.`paymentFailed`
         `channelClosed` = other.`channelClosed`
+        `swapReceived` = other.`swapReceived`
         `breezHealthStatusChangedTo` = other.`breezHealthStatusChangedTo`
         `synced` = other.`synced`
         `uniffiFree` = other.`uniffiFree`
     }
 
 }
+
 
 
 
@@ -1261,6 +1268,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_channel_closed(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_swap_received(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_breez_health_status_changed_to(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_synced(
@@ -1475,6 +1484,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_channel_closed() != 22287.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_swap_received() != 19106.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_breez_health_status_changed_to() != 40320.toShort()) {
@@ -6619,6 +6631,8 @@ public interface EventsCallback {
     
     fun `channelClosed`(`channelId`: kotlin.String, `reason`: kotlin.String)
     
+    fun `swapReceived`(`paymentHash`: kotlin.String)
+    
     fun `breezHealthStatusChangedTo`(`status`: BreezHealthCheckStatus)
     
     fun `synced`()
@@ -6708,7 +6722,19 @@ internal object uniffiCallbackInterfaceEventsCallback {
             uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
         }
     }
-    internal object `breezHealthStatusChangedTo`: UniffiCallbackInterfaceEventsCallbackMethod4 {
+    internal object `swapReceived`: UniffiCallbackInterfaceEventsCallbackMethod4 {
+        override fun callback(`uniffiHandle`: Long,`paymentHash`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeEventsCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`swapReceived`(
+                    FfiConverterString.lift(`paymentHash`),
+                )
+            }
+            val writeReturn = { _: Unit -> Unit }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `breezHealthStatusChangedTo`: UniffiCallbackInterfaceEventsCallbackMethod5 {
         override fun callback(`uniffiHandle`: Long,`status`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
             val uniffiObj = FfiConverterTypeEventsCallback.handleMap.get(uniffiHandle)
             val makeCall = { ->
@@ -6720,7 +6746,7 @@ internal object uniffiCallbackInterfaceEventsCallback {
             uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
         }
     }
-    internal object `synced`: UniffiCallbackInterfaceEventsCallbackMethod5 {
+    internal object `synced`: UniffiCallbackInterfaceEventsCallbackMethod6 {
         override fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
             val uniffiObj = FfiConverterTypeEventsCallback.handleMap.get(uniffiHandle)
             val makeCall = { ->
@@ -6743,6 +6769,7 @@ internal object uniffiCallbackInterfaceEventsCallback {
         `paymentSent`,
         `paymentFailed`,
         `channelClosed`,
+        `swapReceived`,
         `breezHealthStatusChangedTo`,
         `synced`,
         uniffiFree,
