@@ -878,6 +878,8 @@ internal open class UniffiVTableCallbackInterfaceEventsCallback(
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -979,6 +981,8 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_resolve_failed_swap(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,`toAddress`: RustBuffer.ByValue,`onchainFeeRate`: Int,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_sweep(`ptr`: Pointer,`address`: RustBuffer.ByValue,`onchainFeeRate`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_lightning_address(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_lsp_fee(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1230,6 +1234,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_sweep(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lightning_address(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lsp_fee(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_onchain_fee_rate(
@@ -1427,6 +1433,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_sweep() != 23224.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lightning_address() != 22893.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lsp_fee() != 32663.toShort()) {
@@ -2039,6 +2048,8 @@ public interface LightningNodeInterface {
     
     fun `prepareSweep`(`address`: kotlin.String, `onchainFeeRate`: kotlin.UInt): SweepInfo
     
+    fun `queryLightningAddress`(): kotlin.String?
+    
     fun `queryLspFee`(): LspFee
     
     fun `queryOnchainFeeRate`(): kotlin.UInt
@@ -2629,6 +2640,19 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_sweep(
         it, FfiConverterString.lower(`address`),FfiConverterUInt.lower(`onchainFeeRate`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `queryLightningAddress`(): kotlin.String? {
+            return FfiConverterOptionalString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_lightning_address(
+        it, _status)
 }
     }
     )
@@ -3803,7 +3827,8 @@ public object FfiConverterTypeOpeningFeeParams: FfiConverterRustBuffer<OpeningFe
 data class OutgoingPaymentInfo (
     var `paymentInfo`: PaymentInfo, 
     var `networkFees`: Amount, 
-    var `recipient`: Recipient
+    var `recipient`: Recipient, 
+    var `commentForRecipient`: kotlin.String?
 ) {
     
     companion object
@@ -3815,19 +3840,22 @@ public object FfiConverterTypeOutgoingPaymentInfo: FfiConverterRustBuffer<Outgoi
             FfiConverterTypePaymentInfo.read(buf),
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeRecipient.read(buf),
+            FfiConverterOptionalString.read(buf),
         )
     }
 
     override fun allocationSize(value: OutgoingPaymentInfo) = (
             FfiConverterTypePaymentInfo.allocationSize(value.`paymentInfo`) +
             FfiConverterTypeAmount.allocationSize(value.`networkFees`) +
-            FfiConverterTypeRecipient.allocationSize(value.`recipient`)
+            FfiConverterTypeRecipient.allocationSize(value.`recipient`) +
+            FfiConverterOptionalString.allocationSize(value.`commentForRecipient`)
     )
 
     override fun write(value: OutgoingPaymentInfo, buf: ByteBuffer) {
             FfiConverterTypePaymentInfo.write(value.`paymentInfo`, buf)
             FfiConverterTypeAmount.write(value.`networkFees`, buf)
             FfiConverterTypeRecipient.write(value.`recipient`, buf)
+            FfiConverterOptionalString.write(value.`commentForRecipient`, buf)
     }
 }
 
