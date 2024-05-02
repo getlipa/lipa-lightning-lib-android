@@ -880,6 +880,8 @@ internal open class UniffiVTableCallbackInterfaceEventsCallback(
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -1011,6 +1013,8 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_swap_onchain_to_lightning(`ptr`: Pointer,`satsPerVbyte`: Int,`lspFeeParams`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`sweepInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_withdraw_lnurlw(`ptr`: Pointer,`lnurlWithdrawRequestData`: RustBuffer.ByValue,`amountSat`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_init_callback_vtable_eventscallback(`vtable`: UniffiVTableCallbackInterfaceEventsCallback,
     ): Unit
@@ -1264,6 +1268,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_withdraw_lnurlw(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_constructor_lightningnode_new(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_payment_received(
@@ -1478,6 +1484,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep() != 63698.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_withdraw_lnurlw() != 52161.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_constructor_lightningnode_new() != 11021.toShort()) {
@@ -2077,6 +2086,8 @@ public interface LightningNodeInterface {
     fun `swapOnchainToLightning`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String
     
     fun `sweep`(`sweepInfo`: SweepInfo): kotlin.String
+    
+    fun `withdrawLnurlw`(`lnurlWithdrawRequestData`: LnUrlWithdrawRequestData, `amountSat`: kotlin.ULong): kotlin.String
     
     companion object
 }
@@ -2831,6 +2842,19 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(
         it, FfiConverterTypeSweepInfo.lower(`sweepInfo`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnUrlWithdrawException::class)override fun `withdrawLnurlw`(`lnurlWithdrawRequestData`: LnUrlWithdrawRequestData, `amountSat`: kotlin.ULong): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnUrlWithdrawException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_withdraw_lnurlw(
+        it, FfiConverterTypeLnUrlWithdrawRequestData.lower(`lnurlWithdrawRequestData`),FfiConverterULong.lower(`amountSat`),_status)
 }
     }
     )
@@ -5197,6 +5221,137 @@ public object FfiConverterTypeLnUrlPayErrorCode: FfiConverterRustBuffer<LnUrlPay
     override fun allocationSize(value: LnUrlPayErrorCode) = 4UL
 
     override fun write(value: LnUrlPayErrorCode, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
+
+sealed class LnUrlWithdrawException: Exception() {
+    
+    class InvalidInput(
+        
+        val `msg`: kotlin.String
+        ) : LnUrlWithdrawException() {
+        override val message
+            get() = "msg=${ `msg` }"
+    }
+    
+    class RuntimeException(
+        
+        val `code`: LnUrlWithdrawErrorCode, 
+        
+        val `msg`: kotlin.String
+        ) : LnUrlWithdrawException() {
+        override val message
+            get() = "code=${ `code` }, msg=${ `msg` }"
+    }
+    
+    class PermanentFailure(
+        
+        val `msg`: kotlin.String
+        ) : LnUrlWithdrawException() {
+        override val message
+            get() = "msg=${ `msg` }"
+    }
+    
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<LnUrlWithdrawException> {
+        override fun lift(error_buf: RustBuffer.ByValue): LnUrlWithdrawException = FfiConverterTypeLnUrlWithdrawError.lift(error_buf)
+    }
+
+    
+}
+
+public object FfiConverterTypeLnUrlWithdrawError : FfiConverterRustBuffer<LnUrlWithdrawException> {
+    override fun read(buf: ByteBuffer): LnUrlWithdrawException {
+        
+
+        return when(buf.getInt()) {
+            1 -> LnUrlWithdrawException.InvalidInput(
+                FfiConverterString.read(buf),
+                )
+            2 -> LnUrlWithdrawException.RuntimeException(
+                FfiConverterTypeLnUrlWithdrawErrorCode.read(buf),
+                FfiConverterString.read(buf),
+                )
+            3 -> LnUrlWithdrawException.PermanentFailure(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: LnUrlWithdrawException): ULong {
+        return when(value) {
+            is LnUrlWithdrawException.InvalidInput -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
+            is LnUrlWithdrawException.RuntimeException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterTypeLnUrlWithdrawErrorCode.allocationSize(value.`code`)
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
+            is LnUrlWithdrawException.PermanentFailure -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
+        }
+    }
+
+    override fun write(value: LnUrlWithdrawException, buf: ByteBuffer) {
+        when(value) {
+            is LnUrlWithdrawException.InvalidInput -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`msg`, buf)
+                Unit
+            }
+            is LnUrlWithdrawException.RuntimeException -> {
+                buf.putInt(2)
+                FfiConverterTypeLnUrlWithdrawErrorCode.write(value.`code`, buf)
+                FfiConverterString.write(value.`msg`, buf)
+                Unit
+            }
+            is LnUrlWithdrawException.PermanentFailure -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`msg`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+
+enum class LnUrlWithdrawErrorCode {
+    
+    LN_URL_SERVER_ERROR,
+    SERVICE_CONNECTIVITY,
+    UNEXPECTED_ERROR;
+    companion object
+}
+
+
+public object FfiConverterTypeLnUrlWithdrawErrorCode: FfiConverterRustBuffer<LnUrlWithdrawErrorCode> {
+    override fun read(buf: ByteBuffer) = try {
+        LnUrlWithdrawErrorCode.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: LnUrlWithdrawErrorCode) = 4UL
+
+    override fun write(value: LnUrlWithdrawErrorCode, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
