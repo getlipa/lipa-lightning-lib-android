@@ -1312,7 +1312,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_get_terms_and_conditions_status() != 32529.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_handle_notification() != 51899.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_handle_notification() != 38954.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret() != 23900.toShort()) {
@@ -5760,7 +5760,8 @@ public object FfiConverterTypeNotificationHandlingError : FfiConverterRustBuffer
 enum class NotificationHandlingErrorCode {
     
     NODE_UNAVAILABLE,
-    IN_PROGRESS_SWAP_NOT_FOUND;
+    IN_PROGRESS_SWAP_NOT_FOUND,
+    EXPECTED_PAYMENT_NOT_RECEIVED;
     companion object
 }
 
@@ -6325,67 +6326,6 @@ public object FfiConverterTypeRecipient : FfiConverterRustBuffer<Recipient>{
             }
             is Recipient.Unknown -> {
                 buf.putInt(3)
-                Unit
-            }
-        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
-    }
-}
-
-
-
-
-
-sealed class RecommendedAction {
-    
-    object None : RecommendedAction()
-    
-    
-    data class ShowNotification(
-        val `notification`: Notification) : RecommendedAction() {
-        companion object
-    }
-    
-
-    
-    companion object
-}
-
-public object FfiConverterTypeRecommendedAction : FfiConverterRustBuffer<RecommendedAction>{
-    override fun read(buf: ByteBuffer): RecommendedAction {
-        return when(buf.getInt()) {
-            1 -> RecommendedAction.None
-            2 -> RecommendedAction.ShowNotification(
-                FfiConverterTypeNotification.read(buf),
-                )
-            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
-        }
-    }
-
-    override fun allocationSize(value: RecommendedAction) = when(value) {
-        is RecommendedAction.None -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-            )
-        }
-        is RecommendedAction.ShowNotification -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterTypeNotification.allocationSize(value.`notification`)
-            )
-        }
-    }
-
-    override fun write(value: RecommendedAction, buf: ByteBuffer) {
-        when(value) {
-            is RecommendedAction.None -> {
-                buf.putInt(1)
-                Unit
-            }
-            is RecommendedAction.ShowNotification -> {
-                buf.putInt(2)
-                FfiConverterTypeNotification.write(value.`notification`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -7498,8 +7438,8 @@ public object FfiConverterSequenceTypeActivity: FfiConverterRustBuffer<List<Acti
     }
     
 
-    @Throws(NotificationHandlingException::class) fun `handleNotification`(`config`: Config, `notificationPayload`: kotlin.String): RecommendedAction {
-            return FfiConverterTypeRecommendedAction.lift(
+    @Throws(NotificationHandlingException::class) fun `handleNotification`(`config`: Config, `notificationPayload`: kotlin.String): Notification {
+            return FfiConverterTypeNotification.lift(
     uniffiRustCallWithError(NotificationHandlingException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_handle_notification(
         FfiConverterTypeConfig.lower(`config`),FfiConverterString.lower(`notificationPayload`),_status)
