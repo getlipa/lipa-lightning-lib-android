@@ -4184,7 +4184,7 @@ public object FfiConverterTypeSwapToLightningFees: FfiConverterRustBuffer<SwapTo
 data class SweepInfo (
     var `address`: kotlin.String, 
     var `onchainFeeRate`: kotlin.UInt, 
-    var `onchainFeeSat`: Amount, 
+    var `onchainFeeAmount`: Amount, 
     var `amount`: Amount
 ) {
     
@@ -4204,14 +4204,14 @@ public object FfiConverterTypeSweepInfo: FfiConverterRustBuffer<SweepInfo> {
     override fun allocationSize(value: SweepInfo) = (
             FfiConverterString.allocationSize(value.`address`) +
             FfiConverterUInt.allocationSize(value.`onchainFeeRate`) +
-            FfiConverterTypeAmount.allocationSize(value.`onchainFeeSat`) +
+            FfiConverterTypeAmount.allocationSize(value.`onchainFeeAmount`) +
             FfiConverterTypeAmount.allocationSize(value.`amount`)
     )
 
     override fun write(value: SweepInfo, buf: ByteBuffer) {
             FfiConverterString.write(value.`address`, buf)
             FfiConverterUInt.write(value.`onchainFeeRate`, buf)
-            FfiConverterTypeAmount.write(value.`onchainFeeSat`, buf)
+            FfiConverterTypeAmount.write(value.`onchainFeeAmount`, buf)
             FfiConverterTypeAmount.write(value.`amount`, buf)
     }
 }
