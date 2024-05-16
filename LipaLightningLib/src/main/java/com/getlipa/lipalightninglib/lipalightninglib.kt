@@ -3375,7 +3375,9 @@ public object FfiConverterTypeFiatValue: FfiConverterRustBuffer<FiatValue> {
 data class IncomingPaymentInfo (
     var `paymentInfo`: PaymentInfo, 
     var `requestedAmount`: Amount, 
-    var `lspFees`: Amount
+    var `lspFees`: Amount, 
+    var `receivedOn`: Recipient?, 
+    var `receivedLnurlComment`: kotlin.String?
 ) {
     
     companion object
@@ -3387,19 +3389,25 @@ public object FfiConverterTypeIncomingPaymentInfo: FfiConverterRustBuffer<Incomi
             FfiConverterTypePaymentInfo.read(buf),
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeAmount.read(buf),
+            FfiConverterOptionalTypeRecipient.read(buf),
+            FfiConverterOptionalString.read(buf),
         )
     }
 
     override fun allocationSize(value: IncomingPaymentInfo) = (
             FfiConverterTypePaymentInfo.allocationSize(value.`paymentInfo`) +
             FfiConverterTypeAmount.allocationSize(value.`requestedAmount`) +
-            FfiConverterTypeAmount.allocationSize(value.`lspFees`)
+            FfiConverterTypeAmount.allocationSize(value.`lspFees`) +
+            FfiConverterOptionalTypeRecipient.allocationSize(value.`receivedOn`) +
+            FfiConverterOptionalString.allocationSize(value.`receivedLnurlComment`)
     )
 
     override fun write(value: IncomingPaymentInfo, buf: ByteBuffer) {
             FfiConverterTypePaymentInfo.write(value.`paymentInfo`, buf)
             FfiConverterTypeAmount.write(value.`requestedAmount`, buf)
             FfiConverterTypeAmount.write(value.`lspFees`, buf)
+            FfiConverterOptionalTypeRecipient.write(value.`receivedOn`, buf)
+            FfiConverterOptionalString.write(value.`receivedLnurlComment`, buf)
     }
 }
 
@@ -5592,6 +5600,11 @@ sealed class Notification {
         companion object
     }
     
+    data class LnurlInvoiceCreated(
+        val `amountSat`: kotlin.ULong) : Notification() {
+        companion object
+    }
+    
 
     
     companion object
@@ -5607,6 +5620,9 @@ public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification
             2 -> Notification.OnchainPaymentSwappedIn(
                 FfiConverterULong.read(buf),
                 FfiConverterString.read(buf),
+                )
+            3 -> Notification.LnurlInvoiceCreated(
+                FfiConverterULong.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
         }
@@ -5629,6 +5645,13 @@ public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification
                 + FfiConverterString.allocationSize(value.`paymentHash`)
             )
         }
+        is Notification.LnurlInvoiceCreated -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterULong.allocationSize(value.`amountSat`)
+            )
+        }
     }
 
     override fun write(value: Notification, buf: ByteBuffer) {
@@ -5643,6 +5666,11 @@ public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification
                 buf.putInt(2)
                 FfiConverterULong.write(value.`amountSat`, buf)
                 FfiConverterString.write(value.`paymentHash`, buf)
+                Unit
+            }
+            is Notification.LnurlInvoiceCreated -> {
+                buf.putInt(3)
+                FfiConverterULong.write(value.`amountSat`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -5761,7 +5789,9 @@ enum class NotificationHandlingErrorCode {
     
     NODE_UNAVAILABLE,
     IN_PROGRESS_SWAP_NOT_FOUND,
-    EXPECTED_PAYMENT_NOT_RECEIVED;
+    EXPECTED_PAYMENT_NOT_RECEIVED,
+    INSUFFICIENT_INBOUND_LIQUIDITY,
+    LIPA_SERVICE_UNAVAILABLE;
     companion object
 }
 
@@ -7281,6 +7311,35 @@ public object FfiConverterOptionalTypePocketOfferError: FfiConverterRustBuffer<P
         } else {
             buf.put(1)
             FfiConverterTypePocketOfferError.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeRecipient: FfiConverterRustBuffer<Recipient?> {
+    override fun read(buf: ByteBuffer): Recipient? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeRecipient.read(buf)
+    }
+
+    override fun allocationSize(value: Recipient?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeRecipient.allocationSize(value)
+        }
+    }
+
+    override fun write(value: Recipient?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeRecipient.write(value, buf)
         }
     }
 }
