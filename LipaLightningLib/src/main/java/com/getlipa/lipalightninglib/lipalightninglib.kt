@@ -882,6 +882,8 @@ internal open class UniffiVTableCallbackInterfaceEventsCallback(
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -968,10 +970,12 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_lightning_addresses(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_recipients(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_parse_phone_number(`ptr`: Pointer,`phoneNumber`: RustBuffer.ByValue,`allowedCountriesCountryIso31661Alpha2`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(`ptr`: Pointer,`invoiceDetails`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_lnurlp(`ptr`: Pointer,`lnurlPayRequestData`: RustBuffer.ByValue,`amountSat`: Long,`comment`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -1222,9 +1226,11 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_currency_codes(
     ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_lightning_addresses(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_recipients(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_log_debug_info(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_parse_phone_number(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice(
     ): Short
@@ -1417,10 +1423,13 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_currency_codes() != 24404.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_lightning_addresses() != 40035.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_recipients() != 10482.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_log_debug_info() != 60092.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_parse_phone_number() != 42233.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice() != 55741.toShort()) {
@@ -2041,9 +2050,11 @@ public interface LightningNodeInterface {
     
     fun `listCurrencyCodes`(): List<kotlin.String>
     
-    fun `listLightningAddresses`(): List<kotlin.String>
+    fun `listRecipients`(): List<Recipient>
     
     fun `logDebugInfo`()
+    
+    fun `parsePhoneNumber`(`phoneNumber`: kotlin.String, `allowedCountriesCountryIso31661Alpha2`: List<kotlin.String>): kotlin.String
     
     fun `payInvoice`(`invoiceDetails`: InvoiceDetails, `metadata`: PaymentMetadata)
     
@@ -2557,11 +2568,11 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
-    @Throws(LnException::class)override fun `listLightningAddresses`(): List<kotlin.String> {
-            return FfiConverterSequenceString.lift(
+    @Throws(LnException::class)override fun `listRecipients`(): List<Recipient> {
+            return FfiConverterSequenceTypeRecipient.lift(
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_lightning_addresses(
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_recipients(
         it, _status)
 }
     }
@@ -2579,6 +2590,19 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
 }
     }
     
+    
+
+    
+    @Throws(ParsePhoneNumberException::class)override fun `parsePhoneNumber`(`phoneNumber`: kotlin.String, `allowedCountriesCountryIso31661Alpha2`: List<kotlin.String>): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(ParsePhoneNumberException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_parse_phone_number(
+        it, FfiConverterString.lower(`phoneNumber`),FfiConverterSequenceString.lower(`allowedCountriesCountryIso31661Alpha2`),_status)
+}
+    }
+    )
+    }
     
 
     
@@ -5991,6 +6015,116 @@ public object FfiConverterTypeParseError : FfiConverterRustBuffer<ParseException
 
 
 
+sealed class ParsePhoneNumberException: Exception() {
+    
+    class ParsingException(
+        ) : ParsePhoneNumberException() {
+        override val message
+            get() = ""
+    }
+    
+    class MissingCountryCode(
+        ) : ParsePhoneNumberException() {
+        override val message
+            get() = ""
+    }
+    
+    class InvalidCountryCode(
+        ) : ParsePhoneNumberException() {
+        override val message
+            get() = ""
+    }
+    
+    class InvalidPhoneNumber(
+        ) : ParsePhoneNumberException() {
+        override val message
+            get() = ""
+    }
+    
+    class UnsupportedCountry(
+        ) : ParsePhoneNumberException() {
+        override val message
+            get() = ""
+    }
+    
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<ParsePhoneNumberException> {
+        override fun lift(error_buf: RustBuffer.ByValue): ParsePhoneNumberException = FfiConverterTypeParsePhoneNumberError.lift(error_buf)
+    }
+
+    
+}
+
+public object FfiConverterTypeParsePhoneNumberError : FfiConverterRustBuffer<ParsePhoneNumberException> {
+    override fun read(buf: ByteBuffer): ParsePhoneNumberException {
+        
+
+        return when(buf.getInt()) {
+            1 -> ParsePhoneNumberException.ParsingException()
+            2 -> ParsePhoneNumberException.MissingCountryCode()
+            3 -> ParsePhoneNumberException.InvalidCountryCode()
+            4 -> ParsePhoneNumberException.InvalidPhoneNumber()
+            5 -> ParsePhoneNumberException.UnsupportedCountry()
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: ParsePhoneNumberException): ULong {
+        return when(value) {
+            is ParsePhoneNumberException.ParsingException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is ParsePhoneNumberException.MissingCountryCode -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is ParsePhoneNumberException.InvalidCountryCode -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is ParsePhoneNumberException.InvalidPhoneNumber -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is ParsePhoneNumberException.UnsupportedCountry -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+        }
+    }
+
+    override fun write(value: ParsePhoneNumberException, buf: ByteBuffer) {
+        when(value) {
+            is ParsePhoneNumberException.ParsingException -> {
+                buf.putInt(1)
+                Unit
+            }
+            is ParsePhoneNumberException.MissingCountryCode -> {
+                buf.putInt(2)
+                Unit
+            }
+            is ParsePhoneNumberException.InvalidCountryCode -> {
+                buf.putInt(3)
+                Unit
+            }
+            is ParsePhoneNumberException.InvalidPhoneNumber -> {
+                buf.putInt(4)
+                Unit
+            }
+            is ParsePhoneNumberException.UnsupportedCountry -> {
+                buf.putInt(5)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+
+
 sealed class PayException: Exception() {
     
     class InvalidInput(
@@ -6297,6 +6431,11 @@ sealed class Recipient {
         companion object
     }
     
+    data class PhoneNumber(
+        val `e164`: kotlin.String) : Recipient() {
+        companion object
+    }
+    
     object Unknown : Recipient()
     
     
@@ -6314,7 +6453,10 @@ public object FfiConverterTypeRecipient : FfiConverterRustBuffer<Recipient>{
             2 -> Recipient.LnUrlPayDomain(
                 FfiConverterString.read(buf),
                 )
-            3 -> Recipient.Unknown
+            3 -> Recipient.PhoneNumber(
+                FfiConverterString.read(buf),
+                )
+            4 -> Recipient.Unknown
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
         }
     }
@@ -6332,6 +6474,13 @@ public object FfiConverterTypeRecipient : FfiConverterRustBuffer<Recipient>{
             (
                 4UL
                 + FfiConverterString.allocationSize(value.`domain`)
+            )
+        }
+        is Recipient.PhoneNumber -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`e164`)
             )
         }
         is Recipient.Unknown -> {
@@ -6354,8 +6503,13 @@ public object FfiConverterTypeRecipient : FfiConverterRustBuffer<Recipient>{
                 FfiConverterString.write(value.`domain`, buf)
                 Unit
             }
-            is Recipient.Unknown -> {
+            is Recipient.PhoneNumber -> {
                 buf.putInt(3)
+                FfiConverterString.write(value.`e164`, buf)
+                Unit
+            }
+            is Recipient.Unknown -> {
+                buf.putInt(4)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -7465,6 +7619,31 @@ public object FfiConverterSequenceTypeActivity: FfiConverterRustBuffer<List<Acti
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeActivity.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeRecipient: FfiConverterRustBuffer<List<Recipient>> {
+    override fun read(buf: ByteBuffer): List<Recipient> {
+        val len = buf.getInt()
+        return List<Recipient>(len) {
+            FfiConverterTypeRecipient.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<Recipient>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeRecipient.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<Recipient>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeRecipient.write(it, buf)
         }
     }
 }
