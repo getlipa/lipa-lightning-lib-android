@@ -884,6 +884,12 @@ internal open class UniffiVTableCallbackInterfaceEventsCallback(
 
 
 
+
+
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -974,7 +980,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_parse_phone_number(`ptr`: Pointer,`phoneNumber`: RustBuffer.ByValue,`allowedCountriesCountryIso31661Alpha2`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_parse_phone_number_to_lightning_address(`ptr`: Pointer,`phoneNumber`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_pay_invoice(`ptr`: Pointer,`invoiceDetails`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
@@ -996,6 +1002,8 @@ internal interface UniffiLib : Library {
     ): Int
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_uncompleted_offers(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_verified_phone_number(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(`ptr`: Pointer,`email`: RustBuffer.ByValue,`userIban`: RustBuffer.ByValue,`userCurrency`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_lightning_address(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -1004,6 +1012,8 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_request_offer_collection(`ptr`: Pointer,`offer`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_request_phone_number_verification(`ptr`: Pointer,`phoneNumber`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_reset_fiat_topup(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_resolve_failed_swap(`ptr`: Pointer,`resolveFailedSwapInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -1018,6 +1028,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`sweepInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_verify_phone_number(`ptr`: Pointer,`phoneNumber`: RustBuffer.ByValue,`otp`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_withdraw_lnurlw(`ptr`: Pointer,`lnurlWithdrawRequestData`: RustBuffer.ByValue,`amountSat`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_init_callback_vtable_eventscallback(`vtable`: UniffiVTableCallbackInterfaceEventsCallback,
@@ -1230,7 +1242,7 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_log_debug_info(
     ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_parse_phone_number(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_parse_phone_number_to_lightning_address(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice(
     ): Short
@@ -1252,6 +1264,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_uncompleted_offers(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_verified_phone_number(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_fiat_topup(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_lightning_address(
@@ -1259,6 +1273,8 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_notification_token(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_request_offer_collection(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_request_phone_number_verification(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_reset_fiat_topup(
     ): Short
@@ -1273,6 +1289,8 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_swap_onchain_to_lightning(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_verify_phone_number(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_withdraw_lnurlw(
     ): Short
@@ -1429,7 +1447,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_log_debug_info() != 60092.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_parse_phone_number() != 42233.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_parse_phone_number_to_lightning_address() != 44470.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice() != 55741.toShort()) {
@@ -1462,6 +1480,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_uncompleted_offers() != 16092.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_verified_phone_number() != 38376.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_fiat_topup() != 12958.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1472,6 +1493,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_request_offer_collection() != 9125.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_request_phone_number_verification() != 25416.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_reset_fiat_topup() != 23479.toShort()) {
@@ -1493,6 +1517,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep() != 63698.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_verify_phone_number() != 57506.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_withdraw_lnurlw() != 52161.toShort()) {
@@ -2054,7 +2081,7 @@ public interface LightningNodeInterface {
     
     fun `logDebugInfo`()
     
-    fun `parsePhoneNumber`(`phoneNumber`: kotlin.String, `allowedCountriesCountryIso31661Alpha2`: List<kotlin.String>): kotlin.String
+    fun `parsePhoneNumberToLightningAddress`(`phoneNumber`: kotlin.String): kotlin.String
     
     fun `payInvoice`(`invoiceDetails`: InvoiceDetails, `metadata`: PaymentMetadata)
     
@@ -2076,6 +2103,8 @@ public interface LightningNodeInterface {
     
     fun `queryUncompletedOffers`(): List<OfferInfo>
     
+    fun `queryVerifiedPhoneNumber`(): kotlin.String?
+    
     fun `registerFiatTopup`(`email`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo
     
     fun `registerLightningAddress`(): kotlin.String
@@ -2083,6 +2112,8 @@ public interface LightningNodeInterface {
     fun `registerNotificationToken`(`notificationToken`: kotlin.String, `languageIso6391`: kotlin.String, `countryIso31661Alpha2`: kotlin.String)
     
     fun `requestOfferCollection`(`offer`: OfferInfo): kotlin.String
+    
+    fun `requestPhoneNumberVerification`(`phoneNumber`: kotlin.String)
     
     fun `resetFiatTopup`()
     
@@ -2097,6 +2128,8 @@ public interface LightningNodeInterface {
     fun `swapOnchainToLightning`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String
     
     fun `sweep`(`sweepInfo`: SweepInfo): kotlin.String
+    
+    fun `verifyPhoneNumber`(`phoneNumber`: kotlin.String, `otp`: kotlin.String)
     
     fun `withdrawLnurlw`(`lnurlWithdrawRequestData`: LnUrlWithdrawRequestData, `amountSat`: kotlin.ULong): kotlin.String
     
@@ -2593,12 +2626,12 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
-    @Throws(ParsePhoneNumberException::class)override fun `parsePhoneNumber`(`phoneNumber`: kotlin.String, `allowedCountriesCountryIso31661Alpha2`: List<kotlin.String>): kotlin.String {
+    @Throws(ParsePhoneNumberException::class)override fun `parsePhoneNumberToLightningAddress`(`phoneNumber`: kotlin.String): kotlin.String {
             return FfiConverterString.lift(
     callWithPointer {
     uniffiRustCallWithError(ParsePhoneNumberException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_parse_phone_number(
-        it, FfiConverterString.lower(`phoneNumber`),FfiConverterSequenceString.lower(`allowedCountriesCountryIso31661Alpha2`),_status)
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_parse_phone_number_to_lightning_address(
+        it, FfiConverterString.lower(`phoneNumber`),_status)
 }
     }
     )
@@ -2734,6 +2767,19 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
+    @Throws(LnException::class)override fun `queryVerifiedPhoneNumber`(): kotlin.String? {
+            return FfiConverterOptionalString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_verified_phone_number(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
     @Throws(LnException::class)override fun `registerFiatTopup`(`email`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo {
             return FfiConverterTypeFiatTopupInfo.lift(
     callWithPointer {
@@ -2782,6 +2828,18 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     }
     )
     }
+    
+
+    
+    @Throws(LnException::class)override fun `requestPhoneNumberVerification`(`phoneNumber`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_request_phone_number_verification(
+        it, FfiConverterString.lower(`phoneNumber`),_status)
+}
+    }
+    
     
 
     
@@ -2870,6 +2928,18 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     }
     )
     }
+    
+
+    
+    @Throws(LnException::class)override fun `verifyPhoneNumber`(`phoneNumber`: kotlin.String, `otp`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_verify_phone_number(
+        it, FfiConverterString.lower(`phoneNumber`),FfiConverterString.lower(`otp`),_status)
+}
+    }
+    
     
 
     
@@ -3169,7 +3239,8 @@ data class Config (
     var `fiatCurrency`: kotlin.String, 
     var `localPersistencePath`: kotlin.String, 
     var `timezoneConfig`: TzConfig, 
-    var `fileLoggingLevel`: Level?
+    var `fileLoggingLevel`: Level?, 
+    var `phoneNumberAllowedCountriesIso31661Alpha2`: List<kotlin.String>
 ) {
     
     companion object
@@ -3184,6 +3255,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
             FfiConverterString.read(buf),
             FfiConverterTypeTzConfig.read(buf),
             FfiConverterOptionalTypeLevel.read(buf),
+            FfiConverterSequenceString.read(buf),
         )
     }
 
@@ -3193,7 +3265,8 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
             FfiConverterString.allocationSize(value.`fiatCurrency`) +
             FfiConverterString.allocationSize(value.`localPersistencePath`) +
             FfiConverterTypeTzConfig.allocationSize(value.`timezoneConfig`) +
-            FfiConverterOptionalTypeLevel.allocationSize(value.`fileLoggingLevel`)
+            FfiConverterOptionalTypeLevel.allocationSize(value.`fileLoggingLevel`) +
+            FfiConverterSequenceString.allocationSize(value.`phoneNumberAllowedCountriesIso31661Alpha2`)
     )
 
     override fun write(value: Config, buf: ByteBuffer) {
@@ -3203,6 +3276,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
             FfiConverterString.write(value.`localPersistencePath`, buf)
             FfiConverterTypeTzConfig.write(value.`timezoneConfig`, buf)
             FfiConverterOptionalTypeLevel.write(value.`fileLoggingLevel`, buf)
+            FfiConverterSequenceString.write(value.`phoneNumberAllowedCountriesIso31661Alpha2`, buf)
     }
 }
 
