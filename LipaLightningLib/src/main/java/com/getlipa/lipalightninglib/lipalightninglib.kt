@@ -1040,7 +1040,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_get_terms_and_conditions_status(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`termsAndConditions`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_func_handle_notification(`config`: RustBuffer.ByValue,`notificationPayload`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_handle_notification(`config`: RustBuffer.ByValue,`notificationPayload`: RustBuffer.ByValue,`notificationToggles`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_mnemonic_to_secret(`mnemonicString`: RustBuffer.ByValue,`passphrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1336,7 +1336,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_get_terms_and_conditions_status() != 32529.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_handle_notification() != 38954.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_handle_notification() != 18957.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret() != 23900.toShort()) {
@@ -3864,6 +3864,39 @@ public object FfiConverterTypeNodeInfo: FfiConverterRustBuffer<NodeInfo> {
 
 
 
+data class NotificationToggles (
+    var `paymentReceivedIsEnabled`: kotlin.Boolean, 
+    var `addressTxsConfirmedIsEnabled`: kotlin.Boolean, 
+    var `lnurlPayRequestIsEnabled`: kotlin.Boolean
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeNotificationToggles: FfiConverterRustBuffer<NotificationToggles> {
+    override fun read(buf: ByteBuffer): NotificationToggles {
+        return NotificationToggles(
+            FfiConverterBoolean.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterBoolean.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: NotificationToggles) = (
+            FfiConverterBoolean.allocationSize(value.`paymentReceivedIsEnabled`) +
+            FfiConverterBoolean.allocationSize(value.`addressTxsConfirmedIsEnabled`) +
+            FfiConverterBoolean.allocationSize(value.`lnurlPayRequestIsEnabled`)
+    )
+
+    override fun write(value: NotificationToggles, buf: ByteBuffer) {
+            FfiConverterBoolean.write(value.`paymentReceivedIsEnabled`, buf)
+            FfiConverterBoolean.write(value.`addressTxsConfirmedIsEnabled`, buf)
+            FfiConverterBoolean.write(value.`lnurlPayRequestIsEnabled`, buf)
+    }
+}
+
+
+
 data class OfferInfo (
     var `offerKind`: OfferKind, 
     var `amount`: Amount, 
@@ -5889,7 +5922,8 @@ enum class NotificationHandlingErrorCode {
     IN_PROGRESS_SWAP_NOT_FOUND,
     EXPECTED_PAYMENT_NOT_RECEIVED,
     INSUFFICIENT_INBOUND_LIQUIDITY,
-    LIPA_SERVICE_UNAVAILABLE;
+    LIPA_SERVICE_UNAVAILABLE,
+    NOTIFICATION_DISABLED_IN_NOTIFICATION_TOGGLES;
     companion object
 }
 
@@ -7750,11 +7784,11 @@ public object FfiConverterSequenceTypeRecipient: FfiConverterRustBuffer<List<Rec
     }
     
 
-    @Throws(NotificationHandlingException::class) fun `handleNotification`(`config`: Config, `notificationPayload`: kotlin.String): Notification {
+    @Throws(NotificationHandlingException::class) fun `handleNotification`(`config`: Config, `notificationPayload`: kotlin.String, `notificationToggles`: NotificationToggles): Notification {
             return FfiConverterTypeNotification.lift(
     uniffiRustCallWithError(NotificationHandlingException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_handle_notification(
-        FfiConverterTypeConfig.lower(`config`),FfiConverterString.lower(`notificationPayload`),_status)
+        FfiConverterTypeConfig.lower(`config`),FfiConverterString.lower(`notificationPayload`),FfiConverterTypeNotificationToggles.lower(`notificationToggles`),_status)
 }
     )
     }
