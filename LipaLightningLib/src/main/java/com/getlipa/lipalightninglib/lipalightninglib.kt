@@ -1040,7 +1040,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_get_terms_and_conditions_status(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`termsAndConditions`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_func_handle_notification(`config`: RustBuffer.ByValue,`notificationPayload`: RustBuffer.ByValue,`notificationToggles`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_handle_notification(`config`: RustBuffer.ByValue,`notificationPayload`: RustBuffer.ByValue,`notificationToggles`: RustBuffer.ByValue,`timeout`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_mnemonic_to_secret(`mnemonicString`: RustBuffer.ByValue,`passphrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1336,7 +1336,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_get_terms_and_conditions_status() != 32529.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_handle_notification() != 18957.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_handle_notification() != 53366.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret() != 23900.toShort()) {
@@ -7784,11 +7784,11 @@ public object FfiConverterSequenceTypeRecipient: FfiConverterRustBuffer<List<Rec
     }
     
 
-    @Throws(NotificationHandlingException::class) fun `handleNotification`(`config`: Config, `notificationPayload`: kotlin.String, `notificationToggles`: NotificationToggles): Notification {
+    @Throws(NotificationHandlingException::class) fun `handleNotification`(`config`: Config, `notificationPayload`: kotlin.String, `notificationToggles`: NotificationToggles, `timeout`: java.time.Duration): Notification {
             return FfiConverterTypeNotification.lift(
     uniffiRustCallWithError(NotificationHandlingException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_handle_notification(
-        FfiConverterTypeConfig.lower(`config`),FfiConverterString.lower(`notificationPayload`),FfiConverterTypeNotificationToggles.lower(`notificationToggles`),_status)
+        FfiConverterTypeConfig.lower(`config`),FfiConverterString.lower(`notificationPayload`),FfiConverterTypeNotificationToggles.lower(`notificationToggles`),FfiConverterDuration.lower(`timeout`),_status)
 }
     )
     }
