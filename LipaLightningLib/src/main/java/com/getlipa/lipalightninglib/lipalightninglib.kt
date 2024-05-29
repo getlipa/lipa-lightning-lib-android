@@ -890,6 +890,8 @@ internal open class UniffiVTableCallbackInterfaceEventsCallback(
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -979,6 +981,8 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_recipients(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_parse_phone_number_prefix(`ptr`: Pointer,`phoneNumber`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_parse_phone_number_to_lightning_address(`ptr`: Pointer,`phoneNumber`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1242,6 +1246,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_log_debug_info(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_parse_phone_number_prefix(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_parse_phone_number_to_lightning_address(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_pay_invoice(
@@ -1445,6 +1451,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_log_debug_info() != 60092.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_parse_phone_number_prefix() != 63325.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_parse_phone_number_to_lightning_address() != 44470.toShort()) {
@@ -2081,6 +2090,8 @@ public interface LightningNodeInterface {
     
     fun `logDebugInfo`()
     
+    fun `parsePhoneNumberPrefix`(`phoneNumber`: kotlin.String)
+    
     fun `parsePhoneNumberToLightningAddress`(`phoneNumber`: kotlin.String): kotlin.String
     
     fun `payInvoice`(`invoiceDetails`: InvoiceDetails, `metadata`: PaymentMetadata)
@@ -2620,6 +2631,18 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_log_debug_info(
         it, _status)
+}
+    }
+    
+    
+
+    
+    @Throws(ParsePhoneNumberPrefixException::class)override fun `parsePhoneNumberPrefix`(`phoneNumber`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(ParsePhoneNumberPrefixException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_parse_phone_number_prefix(
+        it, FfiConverterString.lower(`phoneNumber`),_status)
 }
     }
     
@@ -6222,6 +6245,92 @@ public object FfiConverterTypeParsePhoneNumberError : FfiConverterRustBuffer<Par
             }
             is ParsePhoneNumberException.UnsupportedCountry -> {
                 buf.putInt(5)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+
+
+sealed class ParsePhoneNumberPrefixException: Exception() {
+    
+    class Incomplete(
+        ) : ParsePhoneNumberPrefixException() {
+        override val message
+            get() = ""
+    }
+    
+    class InvalidCharacter(
+        
+        val `at`: kotlin.UInt
+        ) : ParsePhoneNumberPrefixException() {
+        override val message
+            get() = "at=${ `at` }"
+    }
+    
+    class UnsupportedCountry(
+        ) : ParsePhoneNumberPrefixException() {
+        override val message
+            get() = ""
+    }
+    
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<ParsePhoneNumberPrefixException> {
+        override fun lift(error_buf: RustBuffer.ByValue): ParsePhoneNumberPrefixException = FfiConverterTypeParsePhoneNumberPrefixError.lift(error_buf)
+    }
+
+    
+}
+
+public object FfiConverterTypeParsePhoneNumberPrefixError : FfiConverterRustBuffer<ParsePhoneNumberPrefixException> {
+    override fun read(buf: ByteBuffer): ParsePhoneNumberPrefixException {
+        
+
+        return when(buf.getInt()) {
+            1 -> ParsePhoneNumberPrefixException.Incomplete()
+            2 -> ParsePhoneNumberPrefixException.InvalidCharacter(
+                FfiConverterUInt.read(buf),
+                )
+            3 -> ParsePhoneNumberPrefixException.UnsupportedCountry()
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: ParsePhoneNumberPrefixException): ULong {
+        return when(value) {
+            is ParsePhoneNumberPrefixException.Incomplete -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is ParsePhoneNumberPrefixException.InvalidCharacter -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterUInt.allocationSize(value.`at`)
+            )
+            is ParsePhoneNumberPrefixException.UnsupportedCountry -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+        }
+    }
+
+    override fun write(value: ParsePhoneNumberPrefixException, buf: ByteBuffer) {
+        when(value) {
+            is ParsePhoneNumberPrefixException.Incomplete -> {
+                buf.putInt(1)
+                Unit
+            }
+            is ParsePhoneNumberPrefixException.InvalidCharacter -> {
+                buf.putInt(2)
+                FfiConverterUInt.write(value.`at`, buf)
+                Unit
+            }
+            is ParsePhoneNumberPrefixException.UnsupportedCountry -> {
+                buf.putInt(3)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
