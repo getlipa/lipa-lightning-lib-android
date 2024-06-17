@@ -3,7 +3,7 @@
 
 @file:Suppress("NAME_SHADOWING")
 
-package uniffi.lipalightninglib;
+package uniffi.lipalightninglib
 
 // Common helper code.
 //
@@ -235,7 +235,7 @@ internal open class UniffiRustCallStatus : Structure() {
     }
 }
 
-class InternalException(message: String) : Exception(message)
+class InternalException(message: String) : kotlin.Exception(message)
 
 // Each top-level error class has a companion object that can lift the error from the call status's rust buffer
 interface UniffiRustCallStatusErrorHandler<E> {
@@ -247,15 +247,15 @@ interface UniffiRustCallStatusErrorHandler<E> {
 // synchronize itself
 
 // Call a rust function that returns a Result<>.  Pass in the Error class companion that corresponds to the Err
-private inline fun <U, E: Exception> uniffiRustCallWithError(errorHandler: UniffiRustCallStatusErrorHandler<E>, callback: (UniffiRustCallStatus) -> U): U {
-    var status = UniffiRustCallStatus();
+private inline fun <U, E: kotlin.Exception> uniffiRustCallWithError(errorHandler: UniffiRustCallStatusErrorHandler<E>, callback: (UniffiRustCallStatus) -> U): U {
+    var status = UniffiRustCallStatus()
     val return_value = callback(status)
     uniffiCheckCallStatus(errorHandler, status)
     return return_value
 }
 
 // Check UniffiRustCallStatus and throw an error if the call wasn't successful
-private fun<E: Exception> uniffiCheckCallStatus(errorHandler: UniffiRustCallStatusErrorHandler<E>, status: UniffiRustCallStatus) {
+private fun<E: kotlin.Exception> uniffiCheckCallStatus(errorHandler: UniffiRustCallStatusErrorHandler<E>, status: UniffiRustCallStatus) {
     if (status.isSuccess()) {
         return
     } else if (status.isError()) {
@@ -284,7 +284,7 @@ object UniffiNullRustCallStatusErrorHandler: UniffiRustCallStatusErrorHandler<In
 
 // Call a rust function that returns a plain value
 private inline fun <U> uniffiRustCall(callback: (UniffiRustCallStatus) -> U): U {
-    return uniffiRustCallWithError(UniffiNullRustCallStatusErrorHandler, callback);
+    return uniffiRustCallWithError(UniffiNullRustCallStatusErrorHandler, callback)
 }
 
 internal inline fun<T> uniffiTraitInterfaceCall(
@@ -294,7 +294,7 @@ internal inline fun<T> uniffiTraitInterfaceCall(
 ) {
     try {
         writeReturn(makeCall())
-    } catch(e: Exception) {
+    } catch(e: kotlin.Exception) {
         callStatus.code = UNIFFI_CALL_UNEXPECTED_ERROR
         callStatus.error_buf = FfiConverterString.lower(e.toString())
     }
@@ -308,7 +308,7 @@ internal inline fun<T, reified E: Throwable> uniffiTraitInterfaceCallWithError(
 ) {
     try {
         writeReturn(makeCall())
-    } catch(e: Exception) {
+    } catch(e: kotlin.Exception) {
         if (e is E) {
             callStatus.code = UNIFFI_CALL_ERROR
             callStatus.error_buf = lowerError(e)
@@ -930,6 +930,8 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_change_timezone_config(`ptr`: Pointer,`timezoneConfig`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_check_clear_wallet_feasibility(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_clear_wallet(`ptr`: Pointer,`clearWalletInfo`: RustBuffer.ByValue,`destinationOnchainAddressData`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_create_invoice(`ptr`: Pointer,`amountSat`: Long,`lspFeeParams`: RustBuffer.ByValue,`description`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -972,8 +974,6 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_topup(`ptr`: Pointer,`id`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_is_clear_wallet_feasible(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_action_required_items(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -1194,6 +1194,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_change_timezone_config(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_check_clear_wallet_feasibility(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_clear_wallet(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_create_invoice(
@@ -1235,8 +1237,6 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_wallet_pubkey_id(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_topup(
-    ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_is_clear_wallet_feasible(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_action_required_items(
     ): Short
@@ -1375,6 +1375,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_change_timezone_config() != 21160.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_check_clear_wallet_feasibility() != 8958.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_clear_wallet() != 22211.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1436,9 +1439,6 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_topup() != 9954.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_is_clear_wallet_feasible() != 27512.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_action_required_items() != 17350.toShort()) {
@@ -1695,6 +1695,26 @@ public object FfiConverterLong: FfiConverter<Long, Long> {
 
     override fun write(value: Long, buf: ByteBuffer) {
         buf.putLong(value)
+    }
+}
+
+public object FfiConverterDouble: FfiConverter<Double, Double> {
+    override fun lift(value: Double): Double {
+        return value
+    }
+
+    override fun read(buf: ByteBuffer): Double {
+        return buf.getDouble()
+    }
+
+    override fun lower(value: Double): Double {
+        return value
+    }
+
+    override fun allocationSize(value: Double) = 8UL
+
+    override fun write(value: Double, buf: ByteBuffer) {
+        buf.putDouble(value)
     }
 }
 
@@ -2038,6 +2058,8 @@ public interface LightningNodeInterface {
     
     fun `changeTimezoneConfig`(`timezoneConfig`: TzConfig)
     
+    fun `checkClearWalletFeasibility`(): RangeHit
+    
     fun `clearWallet`(`clearWalletInfo`: ClearWalletInfo, `destinationOnchainAddressData`: BitcoinAddressData)
     
     fun `createInvoice`(`amountSat`: kotlin.ULong, `lspFeeParams`: OpeningFeeParams?, `description`: kotlin.String, `metadata`: InvoiceCreationMetadata): InvoiceDetails
@@ -2079,8 +2101,6 @@ public interface LightningNodeInterface {
     fun `getWalletPubkeyId`(): kotlin.String
     
     fun `hideTopup`(`id`: kotlin.String)
-    
-    fun `isClearWalletFeasible`(): kotlin.Boolean
     
     fun `listActionRequiredItems`(): List<ActionRequiredItem>
     
@@ -2304,6 +2324,19 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
 }
     }
     
+    
+
+    
+    @Throws(LnException::class)override fun `checkClearWalletFeasibility`(): RangeHit {
+            return FfiConverterTypeRangeHit.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_check_clear_wallet_feasibility(
+        it, _status)
+}
+    }
+    )
+    }
     
 
     
@@ -2571,19 +2604,6 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
 }
     }
     
-    
-
-    
-    @Throws(LnException::class)override fun `isClearWalletFeasible`(): kotlin.Boolean {
-            return FfiConverterBoolean.lift(
-    callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_is_clear_wallet_feasible(
-        it, _status)
-}
-    }
-    )
-    }
     
 
     
@@ -3220,7 +3240,7 @@ data class ClearWalletInfo (
     var `totalEstimatedFees`: Amount, 
     var `onchainFee`: Amount, 
     var `swapFee`: Amount, 
-    var `feesHash`: kotlin.String
+    var `prepareResponse`: PrepareOnchainPaymentResponse
 ) {
     
     companion object
@@ -3233,7 +3253,7 @@ public object FfiConverterTypeClearWalletInfo: FfiConverterRustBuffer<ClearWalle
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeAmount.read(buf),
-            FfiConverterString.read(buf),
+            FfiConverterTypePrepareOnchainPaymentResponse.read(buf),
         )
     }
 
@@ -3242,7 +3262,7 @@ public object FfiConverterTypeClearWalletInfo: FfiConverterRustBuffer<ClearWalle
             FfiConverterTypeAmount.allocationSize(value.`totalEstimatedFees`) +
             FfiConverterTypeAmount.allocationSize(value.`onchainFee`) +
             FfiConverterTypeAmount.allocationSize(value.`swapFee`) +
-            FfiConverterString.allocationSize(value.`feesHash`)
+            FfiConverterTypePrepareOnchainPaymentResponse.allocationSize(value.`prepareResponse`)
     )
 
     override fun write(value: ClearWalletInfo, buf: ByteBuffer) {
@@ -3250,7 +3270,7 @@ public object FfiConverterTypeClearWalletInfo: FfiConverterRustBuffer<ClearWalle
             FfiConverterTypeAmount.write(value.`totalEstimatedFees`, buf)
             FfiConverterTypeAmount.write(value.`onchainFee`, buf)
             FfiConverterTypeAmount.write(value.`swapFee`, buf)
-            FfiConverterString.write(value.`feesHash`, buf)
+            FfiConverterTypePrepareOnchainPaymentResponse.write(value.`prepareResponse`, buf)
     }
 }
 
@@ -4158,6 +4178,55 @@ public object FfiConverterTypePaymentMetadata: FfiConverterRustBuffer<PaymentMet
 
 
 
+data class PrepareOnchainPaymentResponse (
+    var `feesHash`: kotlin.String, 
+    var `feesPercentage`: kotlin.Double, 
+    var `feesLockup`: kotlin.ULong, 
+    var `feesClaim`: kotlin.ULong, 
+    var `senderAmountSat`: kotlin.ULong, 
+    var `recipientAmountSat`: kotlin.ULong, 
+    var `totalFees`: kotlin.ULong
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypePrepareOnchainPaymentResponse: FfiConverterRustBuffer<PrepareOnchainPaymentResponse> {
+    override fun read(buf: ByteBuffer): PrepareOnchainPaymentResponse {
+        return PrepareOnchainPaymentResponse(
+            FfiConverterString.read(buf),
+            FfiConverterDouble.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PrepareOnchainPaymentResponse) = (
+            FfiConverterString.allocationSize(value.`feesHash`) +
+            FfiConverterDouble.allocationSize(value.`feesPercentage`) +
+            FfiConverterULong.allocationSize(value.`feesLockup`) +
+            FfiConverterULong.allocationSize(value.`feesClaim`) +
+            FfiConverterULong.allocationSize(value.`senderAmountSat`) +
+            FfiConverterULong.allocationSize(value.`recipientAmountSat`) +
+            FfiConverterULong.allocationSize(value.`totalFees`)
+    )
+
+    override fun write(value: PrepareOnchainPaymentResponse, buf: ByteBuffer) {
+            FfiConverterString.write(value.`feesHash`, buf)
+            FfiConverterDouble.write(value.`feesPercentage`, buf)
+            FfiConverterULong.write(value.`feesLockup`, buf)
+            FfiConverterULong.write(value.`feesClaim`, buf)
+            FfiConverterULong.write(value.`senderAmountSat`, buf)
+            FfiConverterULong.write(value.`recipientAmountSat`, buf)
+            FfiConverterULong.write(value.`totalFees`, buf)
+    }
+}
+
+
+
 data class ResolveFailedSwapInfo (
     var `swapAddress`: kotlin.String, 
     var `recoveredAmount`: Amount, 
@@ -4781,7 +4850,7 @@ public object FfiConverterTypeChannelCloseState: FfiConverterRustBuffer<ChannelC
 
 
 
-sealed class DecodeDataException: Exception() {
+sealed class DecodeDataException: kotlin.Exception() {
     
     class LnUrlException(
         
@@ -5154,7 +5223,7 @@ public object FfiConverterTypeLiquidityLimit : FfiConverterRustBuffer<LiquidityL
 
 
 
-sealed class LnException: Exception() {
+sealed class LnException: kotlin.Exception() {
     
     class InvalidInput(
         
@@ -5257,7 +5326,7 @@ public object FfiConverterTypeLnError : FfiConverterRustBuffer<LnException> {
 
 
 
-sealed class LnUrlPayException: Exception() {
+sealed class LnUrlPayException: kotlin.Exception() {
     
     class InvalidInput(
         
@@ -5393,7 +5462,7 @@ public object FfiConverterTypeLnUrlPayErrorCode: FfiConverterRustBuffer<LnUrlPay
 
 
 
-sealed class LnUrlWithdrawException: Exception() {
+sealed class LnUrlWithdrawException: kotlin.Exception() {
     
     class InvalidInput(
         
@@ -5591,7 +5660,7 @@ public object FfiConverterTypeMaxRoutingFeeMode : FfiConverterRustBuffer<MaxRout
 
 
 
-sealed class MnemonicException: Exception() {
+sealed class MnemonicException: kotlin.Exception() {
     
     class BadWordCount(
         
@@ -5837,7 +5906,7 @@ public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification
 
 
 
-sealed class NotificationHandlingException: Exception() {
+sealed class NotificationHandlingException: kotlin.Exception() {
     
     class InvalidInput(
         
@@ -6075,7 +6144,7 @@ public object FfiConverterTypeOfferStatus: FfiConverterRustBuffer<OfferStatus> {
 
 
 
-sealed class ParseException: Exception() {
+sealed class ParseException: kotlin.Exception() {
     
     class Incomplete(
         ) : ParseException() {
@@ -6146,7 +6215,7 @@ public object FfiConverterTypeParseError : FfiConverterRustBuffer<ParseException
 
 
 
-sealed class ParsePhoneNumberException: Exception() {
+sealed class ParsePhoneNumberException: kotlin.Exception() {
     
     class ParsingException(
         ) : ParsePhoneNumberException() {
@@ -6256,7 +6325,7 @@ public object FfiConverterTypeParsePhoneNumberError : FfiConverterRustBuffer<Par
 
 
 
-sealed class ParsePhoneNumberPrefixException: Exception() {
+sealed class ParsePhoneNumberPrefixException: kotlin.Exception() {
     
     class Incomplete(
         ) : ParsePhoneNumberPrefixException() {
@@ -6342,7 +6411,7 @@ public object FfiConverterTypeParsePhoneNumberPrefixError : FfiConverterRustBuff
 
 
 
-sealed class PayException: Exception() {
+sealed class PayException: kotlin.Exception() {
     
     class InvalidInput(
         
@@ -6636,6 +6705,87 @@ public object FfiConverterTypePocketOfferError : FfiConverterRustBuffer<PocketOf
 
 
 
+sealed class RangeHit {
+    
+    data class Below(
+        val `min`: Amount) : RangeHit() {
+        companion object
+    }
+    
+    object In : RangeHit()
+    
+    
+    data class Above(
+        val `max`: Amount) : RangeHit() {
+        companion object
+    }
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypeRangeHit : FfiConverterRustBuffer<RangeHit>{
+    override fun read(buf: ByteBuffer): RangeHit {
+        return when(buf.getInt()) {
+            1 -> RangeHit.Below(
+                FfiConverterTypeAmount.read(buf),
+                )
+            2 -> RangeHit.In
+            3 -> RangeHit.Above(
+                FfiConverterTypeAmount.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: RangeHit) = when(value) {
+        is RangeHit.Below -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeAmount.allocationSize(value.`min`)
+            )
+        }
+        is RangeHit.In -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is RangeHit.Above -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeAmount.allocationSize(value.`max`)
+            )
+        }
+    }
+
+    override fun write(value: RangeHit, buf: ByteBuffer) {
+        when(value) {
+            is RangeHit.Below -> {
+                buf.putInt(1)
+                FfiConverterTypeAmount.write(value.`min`, buf)
+                Unit
+            }
+            is RangeHit.In -> {
+                buf.putInt(2)
+                Unit
+            }
+            is RangeHit.Above -> {
+                buf.putInt(3)
+                FfiConverterTypeAmount.write(value.`max`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
 sealed class Recipient {
     
     data class LightningAddress(
@@ -6772,7 +6922,7 @@ public object FfiConverterTypeRuntimeErrorCode: FfiConverterRustBuffer<RuntimeEr
 
 
 
-sealed class SimpleException: Exception() {
+sealed class SimpleException: kotlin.Exception() {
     
     class Simple(
         
@@ -6828,7 +6978,7 @@ public object FfiConverterTypeSimpleError : FfiConverterRustBuffer<SimpleExcepti
 
 
 
-sealed class SwapException: Exception() {
+sealed class SwapException: kotlin.Exception() {
     
     class Generic(
         
