@@ -4268,6 +4268,39 @@ public object FfiConverterTypeResolveFailedSwapInfo: FfiConverterRustBuffer<Reso
 
 
 
+data class ReverseSwapInfo (
+    var `paidOnchainAmount`: Amount, 
+    var `claimTxid`: kotlin.String?, 
+    var `status`: ReverseSwapStatus
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeReverseSwapInfo: FfiConverterRustBuffer<ReverseSwapInfo> {
+    override fun read(buf: ByteBuffer): ReverseSwapInfo {
+        return ReverseSwapInfo(
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterTypeReverseSwapStatus.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ReverseSwapInfo) = (
+            FfiConverterTypeAmount.allocationSize(value.`paidOnchainAmount`) +
+            FfiConverterOptionalString.allocationSize(value.`claimTxid`) +
+            FfiConverterTypeReverseSwapStatus.allocationSize(value.`status`)
+    )
+
+    override fun write(value: ReverseSwapInfo, buf: ByteBuffer) {
+            FfiConverterTypeAmount.write(value.`paidOnchainAmount`, buf)
+            FfiConverterOptionalString.write(value.`claimTxid`, buf)
+            FfiConverterTypeReverseSwapStatus.write(value.`status`, buf)
+    }
+}
+
+
+
 data class Secret (
     var `mnemonic`: List<kotlin.String>, 
     var `passphrase`: kotlin.String, 
@@ -4655,6 +4688,12 @@ sealed class Activity {
         companion object
     }
     
+    data class ReverseSwap(
+        val `outgoingPaymentInfo`: OutgoingPaymentInfo, 
+        val `reverseSwapInfo`: ReverseSwapInfo) : Activity() {
+        companion object
+    }
+    
     data class ChannelClose(
         val `channelCloseInfo`: ChannelCloseInfo) : Activity() {
         companion object
@@ -4682,7 +4721,11 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
                 FfiConverterOptionalTypeIncomingPaymentInfo.read(buf),
                 FfiConverterTypeSwapInfo.read(buf),
                 )
-            5 -> Activity.ChannelClose(
+            5 -> Activity.ReverseSwap(
+                FfiConverterTypeOutgoingPaymentInfo.read(buf),
+                FfiConverterTypeReverseSwapInfo.read(buf),
+                )
+            6 -> Activity.ChannelClose(
                 FfiConverterTypeChannelCloseInfo.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
@@ -4720,6 +4763,14 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
                 + FfiConverterTypeSwapInfo.allocationSize(value.`swapInfo`)
             )
         }
+        is Activity.ReverseSwap -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeOutgoingPaymentInfo.allocationSize(value.`outgoingPaymentInfo`)
+                + FfiConverterTypeReverseSwapInfo.allocationSize(value.`reverseSwapInfo`)
+            )
+        }
         is Activity.ChannelClose -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
@@ -4753,8 +4804,14 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
                 FfiConverterTypeSwapInfo.write(value.`swapInfo`, buf)
                 Unit
             }
-            is Activity.ChannelClose -> {
+            is Activity.ReverseSwap -> {
                 buf.putInt(5)
+                FfiConverterTypeOutgoingPaymentInfo.write(value.`outgoingPaymentInfo`, buf)
+                FfiConverterTypeReverseSwapInfo.write(value.`reverseSwapInfo`, buf)
+                Unit
+            }
+            is Activity.ChannelClose -> {
+                buf.putInt(6)
                 FfiConverterTypeChannelCloseInfo.write(value.`channelCloseInfo`, buf)
                 Unit
             }
@@ -6880,6 +6937,36 @@ public object FfiConverterTypeRecipient : FfiConverterRustBuffer<Recipient>{
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+
+enum class ReverseSwapStatus {
+    
+    INITIAL,
+    IN_PROGRESS,
+    CANCELLED,
+    COMPLETED_SEEN,
+    COMPLETED_CONFIRMED;
+    companion object
+}
+
+
+public object FfiConverterTypeReverseSwapStatus: FfiConverterRustBuffer<ReverseSwapStatus> {
+    override fun read(buf: ByteBuffer) = try {
+        ReverseSwapStatus.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: ReverseSwapStatus) = 4UL
+
+    override fun write(value: ReverseSwapStatus, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
     }
 }
 
