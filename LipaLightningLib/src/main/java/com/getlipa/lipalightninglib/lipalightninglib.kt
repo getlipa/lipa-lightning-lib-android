@@ -892,6 +892,8 @@ internal open class UniffiVTableCallbackInterfaceEventsCallback(
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -1025,6 +1027,8 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_retrieve_latest_fiat_topup_info(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_set_analytics_config(`ptr`: Pointer,`config`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_set_feature_flag(`ptr`: Pointer,`feature`: RustBuffer.ByValue,`flagEnabled`: Byte,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_set_payment_personal_note(`ptr`: Pointer,`paymentHash`: RustBuffer.ByValue,`note`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
@@ -1290,6 +1294,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_set_analytics_config(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_set_feature_flag(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_set_payment_personal_note(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_swap_onchain_to_lightning(
@@ -1517,6 +1523,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_set_analytics_config() != 38927.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_set_feature_flag() != 11828.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_set_payment_personal_note() != 48745.toShort()) {
@@ -2153,6 +2162,8 @@ public interface LightningNodeInterface {
     fun `retrieveLatestFiatTopupInfo`(): FiatTopupInfo?
     
     fun `setAnalyticsConfig`(`config`: AnalyticsConfig)
+    
+    fun `setFeatureFlag`(`feature`: FeatureFlag, `flagEnabled`: kotlin.Boolean)
     
     fun `setPaymentPersonalNote`(`paymentHash`: kotlin.String, `note`: kotlin.String)
     
@@ -2930,6 +2941,18 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_set_analytics_config(
         it, FfiConverterTypeAnalyticsConfig.lower(`config`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `setFeatureFlag`(`feature`: FeatureFlag, `flagEnabled`: kotlin.Boolean)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_set_feature_flag(
+        it, FfiConverterTypeFeatureFlag.lower(`feature`),FfiConverterBoolean.lower(`flagEnabled`),_status)
 }
     }
     
@@ -5131,6 +5154,33 @@ public object FfiConverterTypeEnvironmentCode: FfiConverterRustBuffer<Environmen
     override fun allocationSize(value: EnvironmentCode) = 4UL
 
     override fun write(value: EnvironmentCode, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
+enum class FeatureFlag {
+    
+    LIGHTNING_ADDRESS,
+    PHONE_NUMBER;
+    companion object
+}
+
+
+public object FfiConverterTypeFeatureFlag: FfiConverterRustBuffer<FeatureFlag> {
+    override fun read(buf: ByteBuffer) = try {
+        FeatureFlag.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: FeatureFlag) = 4UL
+
+    override fun write(value: FeatureFlag, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
