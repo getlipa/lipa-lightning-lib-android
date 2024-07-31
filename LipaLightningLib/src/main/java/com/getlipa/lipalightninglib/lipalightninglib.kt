@@ -894,6 +894,8 @@ internal open class UniffiVTableCallbackInterfaceEventsCallback(
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -974,6 +976,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_wallet_pubkey_id(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_channel_closes_funds_available_action_required_item(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_topup(`ptr`: Pointer,`id`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_action_required_items(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -1240,6 +1244,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_wallet_pubkey_id(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_channel_closes_funds_available_action_required_item(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_topup(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_action_required_items(
@@ -1402,7 +1408,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_analytics_config() != 15582.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_channel_close_resolving_fees() != 52527.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_channel_close_resolving_fees() != 63795.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_exchange_rate() != 15675.toShort()) {
@@ -1442,6 +1448,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_wallet_pubkey_id() != 64850.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_channel_closes_funds_available_action_required_item() != 40997.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_topup() != 9954.toShort()) {
@@ -2081,7 +2090,7 @@ public interface LightningNodeInterface {
     
     fun `getAnalyticsConfig`(): AnalyticsConfig
     
-    fun `getChannelCloseResolvingFees`(): ChannelCloseResolvingFees
+    fun `getChannelCloseResolvingFees`(): ChannelCloseResolvingFees?
     
     fun `getExchangeRate`(): ExchangeRate?
     
@@ -2108,6 +2117,8 @@ public interface LightningNodeInterface {
     fun `getUnresolvedFailedSwaps`(): List<FailedSwapInfo>
     
     fun `getWalletPubkeyId`(): kotlin.String
+    
+    fun `hideChannelClosesFundsAvailableActionRequiredItem`()
     
     fun `hideTopup`(`id`: kotlin.String)
     
@@ -2426,8 +2437,8 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
-    @Throws(LnException::class)override fun `getChannelCloseResolvingFees`(): ChannelCloseResolvingFees {
-            return FfiConverterTypeChannelCloseResolvingFees.lift(
+    @Throws(LnException::class)override fun `getChannelCloseResolvingFees`(): ChannelCloseResolvingFees? {
+            return FfiConverterOptionalTypeChannelCloseResolvingFees.lift(
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_channel_close_resolving_fees(
@@ -2603,6 +2614,18 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     }
     )
     }
+    
+
+    
+    @Throws(LnException::class)override fun `hideChannelClosesFundsAvailableActionRequiredItem`()
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_channel_closes_funds_available_action_required_item(
+        it, _status)
+}
+    }
+    
     
 
     
@@ -7708,6 +7731,35 @@ public object FfiConverterOptionalTypeAmount: FfiConverterRustBuffer<Amount?> {
         } else {
             buf.put(1)
             FfiConverterTypeAmount.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeChannelCloseResolvingFees: FfiConverterRustBuffer<ChannelCloseResolvingFees?> {
+    override fun read(buf: ByteBuffer): ChannelCloseResolvingFees? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeChannelCloseResolvingFees.read(buf)
+    }
+
+    override fun allocationSize(value: ChannelCloseResolvingFees?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeChannelCloseResolvingFees.allocationSize(value)
+        }
+    }
+
+    override fun write(value: ChannelCloseResolvingFees?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeChannelCloseResolvingFees.write(value, buf)
         }
     }
 }
