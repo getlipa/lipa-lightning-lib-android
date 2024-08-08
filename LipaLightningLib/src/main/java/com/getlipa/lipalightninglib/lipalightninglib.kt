@@ -1489,7 +1489,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_resolve_failed_swap() != 48057.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_sweep() != 23224.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_sweep() != 55427.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lightning_address() != 22893.toShort()) {
@@ -1540,7 +1540,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_set_payment_personal_note() != 48745.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_swap_onchain_to_lightning() != 56740.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_swap_onchain_to_lightning() != 2389.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep() != 63698.toShort()) {
@@ -2779,10 +2779,10 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
-    @Throws(LnException::class)override fun `prepareSweep`(`address`: kotlin.String, `onchainFeeRate`: kotlin.UInt): SweepInfo {
+    @Throws(SweepException::class)override fun `prepareSweep`(`address`: kotlin.String, `onchainFeeRate`: kotlin.UInt): SweepInfo {
             return FfiConverterTypeSweepInfo.lift(
     callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
+    uniffiRustCallWithError(SweepException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_sweep(
         it, FfiConverterString.lower(`address`),FfiConverterUInt.lower(`onchainFeeRate`),_status)
 }
@@ -2994,10 +2994,10 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
-    @Throws(SwapException::class)override fun `swapOnchainToLightning`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String {
+    @Throws(SweepException::class)override fun `swapOnchainToLightning`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String {
             return FfiConverterString.lift(
     callWithPointer {
-    uniffiRustCallWithError(SwapException) { _status ->
+    uniffiRustCallWithError(SweepException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_swap_onchain_to_lightning(
         it, FfiConverterUInt.lower(`satsPerVbyte`),FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),_status)
 }
@@ -7223,6 +7223,104 @@ public object FfiConverterTypeSwapError : FfiConverterRustBuffer<SwapException> 
                 Unit
             }
             is SwapException.SwapInProgress -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`err`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+
+
+sealed class SweepException: kotlin.Exception() {
+    
+    class Generic(
+        
+        val `err`: kotlin.String
+        ) : SweepException() {
+        override val message
+            get() = "err=${ `err` }"
+    }
+    
+    class ServiceConnectivity(
+        
+        val `err`: kotlin.String
+        ) : SweepException() {
+        override val message
+            get() = "err=${ `err` }"
+    }
+    
+    class InsufficientFunds(
+        
+        val `err`: kotlin.String
+        ) : SweepException() {
+        override val message
+            get() = "err=${ `err` }"
+    }
+    
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<SweepException> {
+        override fun lift(error_buf: RustBuffer.ByValue): SweepException = FfiConverterTypeSweepError.lift(error_buf)
+    }
+
+    
+}
+
+public object FfiConverterTypeSweepError : FfiConverterRustBuffer<SweepException> {
+    override fun read(buf: ByteBuffer): SweepException {
+        
+
+        return when(buf.getInt()) {
+            1 -> SweepException.Generic(
+                FfiConverterString.read(buf),
+                )
+            2 -> SweepException.ServiceConnectivity(
+                FfiConverterString.read(buf),
+                )
+            3 -> SweepException.InsufficientFunds(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: SweepException): ULong {
+        return when(value) {
+            is SweepException.Generic -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`err`)
+            )
+            is SweepException.ServiceConnectivity -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`err`)
+            )
+            is SweepException.InsufficientFunds -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`err`)
+            )
+        }
+    }
+
+    override fun write(value: SweepException, buf: ByteBuffer) {
+        when(value) {
+            is SweepException.Generic -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`err`, buf)
+                Unit
+            }
+            is SweepException.ServiceConnectivity -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`err`, buf)
+                Unit
+            }
+            is SweepException.InsufficientFunds -> {
                 buf.putInt(3)
                 FfiConverterString.write(value.`err`, buf)
                 Unit
