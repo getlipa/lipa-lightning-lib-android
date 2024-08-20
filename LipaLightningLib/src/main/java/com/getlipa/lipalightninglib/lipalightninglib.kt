@@ -922,7 +922,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_constructor_lightningnode_new(`config`: RustBuffer.ByValue,`eventsCallback`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(`ptr`: Pointer,`version`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(`ptr`: Pointer,`version`: Long,`fingerprint`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_background(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
@@ -1046,11 +1046,11 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_init_callback_vtable_eventscallback(`vtable`: UniffiVTableCallbackInterfaceEventsCallback,
     ): Unit
-    fun uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`version`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(`backendUrl`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`version`: Long,`fingerprint`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_func_generate_secret(`passphrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_func_get_terms_and_conditions_status(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`termsAndConditions`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_get_terms_and_conditions_status(`backendUrl`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`termsAndConditions`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_handle_notification(`config`: RustBuffer.ByValue,`notificationPayload`: RustBuffer.ByValue,`notificationToggles`: RustBuffer.ByValue,`timeout`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1058,7 +1058,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_parse_lightning_address(`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(`environment`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`localPersistencePath`: RustBuffer.ByValue,`fileLoggingLevel`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(`backendUrl`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`localPersistencePath`: RustBuffer.ByValue,`fileLoggingLevel`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_func_words_by_prefix(`prefix`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1345,13 +1345,13 @@ private fun uniffiCheckContractApiVersion(lib: UniffiLib) {
 
 @Suppress("UNUSED_PARAMETER")
 private fun uniffiCheckApiChecksums(lib: UniffiLib) {
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_accept_terms_and_conditions() != 2731.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_accept_terms_and_conditions() != 11801.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_generate_secret() != 27916.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_get_terms_and_conditions_status() != 32529.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_get_terms_and_conditions_status() != 65178.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_handle_notification() != 53366.toShort()) {
@@ -1363,13 +1363,13 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_parse_lightning_address() != 40400.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_recover_lightning_node() != 45110.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_recover_lightning_node() != 64552.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_words_by_prefix() != 18339.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_accept_pocket_terms_and_conditions() != 31695.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_accept_pocket_terms_and_conditions() != 25155.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_background() != 28178.toShort()) {
@@ -2064,7 +2064,7 @@ private class JavaLangRefCleanable(
 }
 public interface LightningNodeInterface {
     
-    fun `acceptPocketTermsAndConditions`(`version`: kotlin.Long)
+    fun `acceptPocketTermsAndConditions`(`version`: kotlin.Long, `fingerprint`: kotlin.String)
     
     fun `background`()
     
@@ -2278,12 +2278,12 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     }
 
     
-    @Throws(LnException::class)override fun `acceptPocketTermsAndConditions`(`version`: kotlin.Long)
+    @Throws(LnException::class)override fun `acceptPocketTermsAndConditions`(`version`: kotlin.Long, `fingerprint`: kotlin.String)
         = 
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(
-        it, FfiConverterLong.lower(`version`),_status)
+        it, FfiConverterLong.lower(`version`),FfiConverterString.lower(`fingerprint`),_status)
 }
     }
     
@@ -3149,6 +3149,39 @@ public object FfiConverterTypeBitcoinAddressData: FfiConverterRustBuffer<Bitcoin
 
 
 
+data class BreezSdkConfig (
+    var `breezSdkApiKey`: kotlin.String, 
+    var `breezSdkPartnerCertificate`: kotlin.String, 
+    var `breezSdkPartnerKey`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeBreezSdkConfig: FfiConverterRustBuffer<BreezSdkConfig> {
+    override fun read(buf: ByteBuffer): BreezSdkConfig {
+        return BreezSdkConfig(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: BreezSdkConfig) = (
+            FfiConverterString.allocationSize(value.`breezSdkApiKey`) +
+            FfiConverterString.allocationSize(value.`breezSdkPartnerCertificate`) +
+            FfiConverterString.allocationSize(value.`breezSdkPartnerKey`)
+    )
+
+    override fun write(value: BreezSdkConfig, buf: ByteBuffer) {
+            FfiConverterString.write(value.`breezSdkApiKey`, buf)
+            FfiConverterString.write(value.`breezSdkPartnerCertificate`, buf)
+            FfiConverterString.write(value.`breezSdkPartnerKey`, buf)
+    }
+}
+
+
+
 data class CalculateLspFeeResponse (
     var `lspFee`: Amount, 
     var `lspFeeParams`: OpeningFeeParams?
@@ -3323,13 +3356,16 @@ public object FfiConverterTypeClearWalletInfo: FfiConverterRustBuffer<ClearWalle
 
 
 data class Config (
-    var `environment`: EnvironmentCode, 
     var `seed`: kotlin.ByteArray, 
     var `fiatCurrency`: kotlin.String, 
     var `localPersistencePath`: kotlin.String, 
     var `timezoneConfig`: TzConfig, 
     var `fileLoggingLevel`: Level?, 
-    var `phoneNumberAllowedCountriesIso31661Alpha2`: List<kotlin.String>
+    var `phoneNumberAllowedCountriesIso31661Alpha2`: List<kotlin.String>, 
+    var `remoteServicesConfig`: RemoteServicesConfig, 
+    var `breezSdkConfig`: BreezSdkConfig, 
+    var `maxRoutingFeeConfig`: MaxRoutingFeeConfig, 
+    var `receiveLimitsConfig`: ReceiveLimitsConfig
 ) {
     
     companion object
@@ -3338,34 +3374,43 @@ data class Config (
 public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
     override fun read(buf: ByteBuffer): Config {
         return Config(
-            FfiConverterTypeEnvironmentCode.read(buf),
             FfiConverterByteArray.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterTypeTzConfig.read(buf),
             FfiConverterOptionalTypeLevel.read(buf),
             FfiConverterSequenceString.read(buf),
+            FfiConverterTypeRemoteServicesConfig.read(buf),
+            FfiConverterTypeBreezSdkConfig.read(buf),
+            FfiConverterTypeMaxRoutingFeeConfig.read(buf),
+            FfiConverterTypeReceiveLimitsConfig.read(buf),
         )
     }
 
     override fun allocationSize(value: Config) = (
-            FfiConverterTypeEnvironmentCode.allocationSize(value.`environment`) +
             FfiConverterByteArray.allocationSize(value.`seed`) +
             FfiConverterString.allocationSize(value.`fiatCurrency`) +
             FfiConverterString.allocationSize(value.`localPersistencePath`) +
             FfiConverterTypeTzConfig.allocationSize(value.`timezoneConfig`) +
             FfiConverterOptionalTypeLevel.allocationSize(value.`fileLoggingLevel`) +
-            FfiConverterSequenceString.allocationSize(value.`phoneNumberAllowedCountriesIso31661Alpha2`)
+            FfiConverterSequenceString.allocationSize(value.`phoneNumberAllowedCountriesIso31661Alpha2`) +
+            FfiConverterTypeRemoteServicesConfig.allocationSize(value.`remoteServicesConfig`) +
+            FfiConverterTypeBreezSdkConfig.allocationSize(value.`breezSdkConfig`) +
+            FfiConverterTypeMaxRoutingFeeConfig.allocationSize(value.`maxRoutingFeeConfig`) +
+            FfiConverterTypeReceiveLimitsConfig.allocationSize(value.`receiveLimitsConfig`)
     )
 
     override fun write(value: Config, buf: ByteBuffer) {
-            FfiConverterTypeEnvironmentCode.write(value.`environment`, buf)
             FfiConverterByteArray.write(value.`seed`, buf)
             FfiConverterString.write(value.`fiatCurrency`, buf)
             FfiConverterString.write(value.`localPersistencePath`, buf)
             FfiConverterTypeTzConfig.write(value.`timezoneConfig`, buf)
             FfiConverterOptionalTypeLevel.write(value.`fileLoggingLevel`, buf)
             FfiConverterSequenceString.write(value.`phoneNumberAllowedCountriesIso31661Alpha2`, buf)
+            FfiConverterTypeRemoteServicesConfig.write(value.`remoteServicesConfig`, buf)
+            FfiConverterTypeBreezSdkConfig.write(value.`breezSdkConfig`, buf)
+            FfiConverterTypeMaxRoutingFeeConfig.write(value.`maxRoutingFeeConfig`, buf)
+            FfiConverterTypeReceiveLimitsConfig.write(value.`receiveLimitsConfig`, buf)
     }
 }
 
@@ -3916,6 +3961,35 @@ public object FfiConverterTypeLspFee: FfiConverterRustBuffer<LspFee> {
 
 
 
+data class MaxRoutingFeeConfig (
+    var `maxRoutingFeePermyriad`: kotlin.UShort, 
+    var `maxRoutingFeeExemptFeeSats`: kotlin.ULong
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeMaxRoutingFeeConfig: FfiConverterRustBuffer<MaxRoutingFeeConfig> {
+    override fun read(buf: ByteBuffer): MaxRoutingFeeConfig {
+        return MaxRoutingFeeConfig(
+            FfiConverterUShort.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: MaxRoutingFeeConfig) = (
+            FfiConverterUShort.allocationSize(value.`maxRoutingFeePermyriad`) +
+            FfiConverterULong.allocationSize(value.`maxRoutingFeeExemptFeeSats`)
+    )
+
+    override fun write(value: MaxRoutingFeeConfig, buf: ByteBuffer) {
+            FfiConverterUShort.write(value.`maxRoutingFeePermyriad`, buf)
+            FfiConverterULong.write(value.`maxRoutingFeeExemptFeeSats`, buf)
+    }
+}
+
+
+
 data class NodeInfo (
     var `nodePubkey`: kotlin.String, 
     var `peers`: List<kotlin.String>, 
@@ -4268,6 +4342,76 @@ public object FfiConverterTypePrepareOnchainPaymentResponse: FfiConverterRustBuf
             FfiConverterULong.write(value.`senderAmountSat`, buf)
             FfiConverterULong.write(value.`recipientAmountSat`, buf)
             FfiConverterULong.write(value.`totalFees`, buf)
+    }
+}
+
+
+
+data class ReceiveLimitsConfig (
+    var `maxReceiveAmountSat`: kotlin.ULong, 
+    var `minReceiveChannelOpenFeeMultiplier`: kotlin.Double
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeReceiveLimitsConfig: FfiConverterRustBuffer<ReceiveLimitsConfig> {
+    override fun read(buf: ByteBuffer): ReceiveLimitsConfig {
+        return ReceiveLimitsConfig(
+            FfiConverterULong.read(buf),
+            FfiConverterDouble.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ReceiveLimitsConfig) = (
+            FfiConverterULong.allocationSize(value.`maxReceiveAmountSat`) +
+            FfiConverterDouble.allocationSize(value.`minReceiveChannelOpenFeeMultiplier`)
+    )
+
+    override fun write(value: ReceiveLimitsConfig, buf: ByteBuffer) {
+            FfiConverterULong.write(value.`maxReceiveAmountSat`, buf)
+            FfiConverterDouble.write(value.`minReceiveChannelOpenFeeMultiplier`, buf)
+    }
+}
+
+
+
+data class RemoteServicesConfig (
+    var `backendUrl`: kotlin.String, 
+    var `pocketUrl`: kotlin.String, 
+    var `notificationWebhookBaseUrl`: kotlin.String, 
+    var `notificationWebhookSecretHex`: kotlin.String, 
+    var `lipaLightningDomain`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeRemoteServicesConfig: FfiConverterRustBuffer<RemoteServicesConfig> {
+    override fun read(buf: ByteBuffer): RemoteServicesConfig {
+        return RemoteServicesConfig(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: RemoteServicesConfig) = (
+            FfiConverterString.allocationSize(value.`backendUrl`) +
+            FfiConverterString.allocationSize(value.`pocketUrl`) +
+            FfiConverterString.allocationSize(value.`notificationWebhookBaseUrl`) +
+            FfiConverterString.allocationSize(value.`notificationWebhookSecretHex`) +
+            FfiConverterString.allocationSize(value.`lipaLightningDomain`)
+    )
+
+    override fun write(value: RemoteServicesConfig, buf: ByteBuffer) {
+            FfiConverterString.write(value.`backendUrl`, buf)
+            FfiConverterString.write(value.`pocketUrl`, buf)
+            FfiConverterString.write(value.`notificationWebhookBaseUrl`, buf)
+            FfiConverterString.write(value.`notificationWebhookSecretHex`, buf)
+            FfiConverterString.write(value.`lipaLightningDomain`, buf)
     }
 }
 
@@ -5149,35 +5293,6 @@ public object FfiConverterTypeDecodedData : FfiConverterRustBuffer<DecodedData>{
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
-    }
-}
-
-
-
-
-
-
-enum class EnvironmentCode {
-    
-    LOCAL,
-    DEV,
-    STAGE,
-    PROD;
-    companion object
-}
-
-
-public object FfiConverterTypeEnvironmentCode: FfiConverterRustBuffer<EnvironmentCode> {
-    override fun read(buf: ByteBuffer) = try {
-        EnvironmentCode.values()[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: EnvironmentCode) = 4UL
-
-    override fun write(value: EnvironmentCode, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
     }
 }
 
@@ -8301,11 +8416,11 @@ public object FfiConverterSequenceTypeRecipient: FfiConverterRustBuffer<List<Rec
         }
     }
 }
-    @Throws(LnException::class) fun `acceptTermsAndConditions`(`environment`: EnvironmentCode, `seed`: kotlin.ByteArray, `version`: kotlin.Long)
+    @Throws(LnException::class) fun `acceptTermsAndConditions`(`backendUrl`: kotlin.String, `seed`: kotlin.ByteArray, `version`: kotlin.Long, `fingerprint`: kotlin.String)
         = 
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_accept_terms_and_conditions(
-        FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterLong.lower(`version`),_status)
+        FfiConverterString.lower(`backendUrl`),FfiConverterByteArray.lower(`seed`),FfiConverterLong.lower(`version`),FfiConverterString.lower(`fingerprint`),_status)
 }
     
     
@@ -8320,11 +8435,11 @@ public object FfiConverterSequenceTypeRecipient: FfiConverterRustBuffer<List<Rec
     }
     
 
-    @Throws(LnException::class) fun `getTermsAndConditionsStatus`(`environment`: EnvironmentCode, `seed`: kotlin.ByteArray, `termsAndConditions`: TermsAndConditions): TermsAndConditionsStatus {
+    @Throws(LnException::class) fun `getTermsAndConditionsStatus`(`backendUrl`: kotlin.String, `seed`: kotlin.ByteArray, `termsAndConditions`: TermsAndConditions): TermsAndConditionsStatus {
             return FfiConverterTypeTermsAndConditionsStatus.lift(
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_get_terms_and_conditions_status(
-        FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterTypeTermsAndConditions.lower(`termsAndConditions`),_status)
+        FfiConverterString.lower(`backendUrl`),FfiConverterByteArray.lower(`seed`),FfiConverterTypeTermsAndConditions.lower(`termsAndConditions`),_status)
 }
     )
     }
@@ -8359,11 +8474,11 @@ public object FfiConverterSequenceTypeRecipient: FfiConverterRustBuffer<List<Rec
     
     
 
-    @Throws(LnException::class) fun `recoverLightningNode`(`environment`: EnvironmentCode, `seed`: kotlin.ByteArray, `localPersistencePath`: kotlin.String, `fileLoggingLevel`: Level?)
+    @Throws(LnException::class) fun `recoverLightningNode`(`backendUrl`: kotlin.String, `seed`: kotlin.ByteArray, `localPersistencePath`: kotlin.String, `fileLoggingLevel`: Level?)
         = 
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(
-        FfiConverterTypeEnvironmentCode.lower(`environment`),FfiConverterByteArray.lower(`seed`),FfiConverterString.lower(`localPersistencePath`),FfiConverterOptionalTypeLevel.lower(`fileLoggingLevel`),_status)
+        FfiConverterString.lower(`backendUrl`),FfiConverterByteArray.lower(`seed`),FfiConverterString.lower(`localPersistencePath`),FfiConverterOptionalTypeLevel.lower(`fileLoggingLevel`),_status)
 }
     
     
