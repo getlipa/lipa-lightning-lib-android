@@ -3283,7 +3283,8 @@ public object FfiConverterTypeChannelCloseResolvingFees: FfiConverterRustBuffer<
 
 data class ChannelsInfo (
     var `localBalance`: Amount, 
-    var `inboundCapacity`: Amount, 
+    var `maxReceivableSinglePayment`: Amount, 
+    var `totalInboundCapacity`: Amount, 
     var `outboundCapacity`: Amount
 ) {
     
@@ -3296,18 +3297,21 @@ public object FfiConverterTypeChannelsInfo: FfiConverterRustBuffer<ChannelsInfo>
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeAmount.read(buf),
         )
     }
 
     override fun allocationSize(value: ChannelsInfo) = (
             FfiConverterTypeAmount.allocationSize(value.`localBalance`) +
-            FfiConverterTypeAmount.allocationSize(value.`inboundCapacity`) +
+            FfiConverterTypeAmount.allocationSize(value.`maxReceivableSinglePayment`) +
+            FfiConverterTypeAmount.allocationSize(value.`totalInboundCapacity`) +
             FfiConverterTypeAmount.allocationSize(value.`outboundCapacity`)
     )
 
     override fun write(value: ChannelsInfo, buf: ByteBuffer) {
             FfiConverterTypeAmount.write(value.`localBalance`, buf)
-            FfiConverterTypeAmount.write(value.`inboundCapacity`, buf)
+            FfiConverterTypeAmount.write(value.`maxReceivableSinglePayment`, buf)
+            FfiConverterTypeAmount.write(value.`totalInboundCapacity`, buf)
             FfiConverterTypeAmount.write(value.`outboundCapacity`, buf)
     }
 }
