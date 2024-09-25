@@ -4464,6 +4464,7 @@ public object FfiConverterTypeResolveFailedSwapInfo: FfiConverterRustBuffer<Reso
 
 data class ReverseSwapInfo (
     var `paidOnchainAmount`: Amount, 
+    var `swapFeesAmount`: Amount, 
     var `claimTxid`: kotlin.String?, 
     var `status`: ReverseSwapStatus
 ) {
@@ -4475,6 +4476,7 @@ public object FfiConverterTypeReverseSwapInfo: FfiConverterRustBuffer<ReverseSwa
     override fun read(buf: ByteBuffer): ReverseSwapInfo {
         return ReverseSwapInfo(
             FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeAmount.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterTypeReverseSwapStatus.read(buf),
         )
@@ -4482,12 +4484,14 @@ public object FfiConverterTypeReverseSwapInfo: FfiConverterRustBuffer<ReverseSwa
 
     override fun allocationSize(value: ReverseSwapInfo) = (
             FfiConverterTypeAmount.allocationSize(value.`paidOnchainAmount`) +
+            FfiConverterTypeAmount.allocationSize(value.`swapFeesAmount`) +
             FfiConverterOptionalString.allocationSize(value.`claimTxid`) +
             FfiConverterTypeReverseSwapStatus.allocationSize(value.`status`)
     )
 
     override fun write(value: ReverseSwapInfo, buf: ByteBuffer) {
             FfiConverterTypeAmount.write(value.`paidOnchainAmount`, buf)
+            FfiConverterTypeAmount.write(value.`swapFeesAmount`, buf)
             FfiConverterOptionalString.write(value.`claimTxid`, buf)
             FfiConverterTypeReverseSwapStatus.write(value.`status`, buf)
     }
