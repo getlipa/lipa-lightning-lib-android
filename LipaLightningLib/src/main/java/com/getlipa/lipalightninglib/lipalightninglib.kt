@@ -36,6 +36,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 // A rust-owned buffer is represented by its capacity, its current length, and a
 // pointer to the underlying data.
 
+/**
+ * @suppress
+ */
 @Structure.FieldOrder("capacity", "len", "data")
 open class RustBuffer : Structure() {
     // Note: `capacity` and `len` are actually `ULong` values, but JVM only supports signed values.
@@ -88,6 +91,8 @@ open class RustBuffer : Structure() {
  * Required for callbacks taking in an out pointer.
  *
  * Size is the sum of all values in the struct.
+ *
+ * @suppress
  */
 class RustBufferByReference : ByReference(16) {
     /**
@@ -122,16 +127,20 @@ class RustBufferByReference : ByReference(16) {
 // completeness.
 
 @Structure.FieldOrder("len", "data")
-open class ForeignBytes : Structure() {
+internal open class ForeignBytes : Structure() {
     @JvmField var len: Int = 0
     @JvmField var data: Pointer? = null
 
     class ByValue : ForeignBytes(), Structure.ByValue
 }
-// The FfiConverter interface handles converter types to and from the FFI
-//
-// All implementing objects should be public to support external types.  When a
-// type is external we need to import it's FfiConverter.
+/**
+ * The FfiConverter interface handles converter types to and from the FFI
+ *
+ * All implementing objects should be public to support external types.  When a
+ * type is external we need to import it's FfiConverter.
+ *
+ * @suppress
+ */
 public interface FfiConverter<KotlinType, FfiType> {
     // Convert an FFI type to a Kotlin type
     fun lift(value: FfiType): KotlinType
@@ -194,7 +203,11 @@ public interface FfiConverter<KotlinType, FfiType> {
     }
 }
 
-// FfiConverter that uses `RustBuffer` as the FfiType
+/**
+ * FfiConverter that uses `RustBuffer` as the FfiType
+ *
+ * @suppress
+ */
 public interface FfiConverterRustBuffer<KotlinType>: FfiConverter<KotlinType, RustBuffer.ByValue> {
     override fun lift(value: RustBuffer.ByValue) = liftFromRustBuffer(value)
     override fun lower(value: KotlinType) = lowerIntoRustBuffer(value)
@@ -237,7 +250,11 @@ internal open class UniffiRustCallStatus : Structure() {
 
 class InternalException(message: String) : kotlin.Exception(message)
 
-// Each top-level error class has a companion object that can lift the error from the call status's rust buffer
+/**
+ * Each top-level error class has a companion object that can lift the error from the call status's rust buffer
+ *
+ * @suppress
+ */
 interface UniffiRustCallStatusErrorHandler<E> {
     fun lift(error_buf: RustBuffer.ByValue): E;
 }
@@ -274,7 +291,11 @@ private fun<E: kotlin.Exception> uniffiCheckCallStatus(errorHandler: UniffiRustC
     }
 }
 
-// UniffiRustCallStatusErrorHandler implementation for times when we don't expect a CALL_ERROR
+/**
+ * UniffiRustCallStatusErrorHandler implementation for times when we don't expect a CALL_ERROR
+ *
+ * @suppress
+ */
 object UniffiNullRustCallStatusErrorHandler: UniffiRustCallStatusErrorHandler<InternalException> {
     override fun lift(error_buf: RustBuffer.ByValue): InternalException {
         RustBuffer.free(error_buf)
@@ -896,6 +917,12 @@ internal open class UniffiVTableCallbackInterfaceEventsCallback(
 
 
 
+
+
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -952,6 +979,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_exchange_rate(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_failed_swap_resolving_fees(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_health_status(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_incoming_payment(`ptr`: Pointer,`hash`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -980,6 +1009,8 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_topup(`ptr`: Pointer,`id`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_unresolved_failed_swap_action_required_item(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_action_required_items(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -1002,7 +1033,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_resolve_failed_swap(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,`toAddress`: RustBuffer.ByValue,`onchainFeeRate`: Int,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_sweep(`ptr`: Pointer,`address`: RustBuffer.ByValue,`onchainFeeRate`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_sweep_funds_from_channel_closes(`ptr`: Pointer,`address`: RustBuffer.ByValue,`onchainFeeRate`: Int,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_lightning_address(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1036,9 +1067,11 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_set_payment_personal_note(`ptr`: Pointer,`paymentHash`: RustBuffer.ByValue,`note`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_swap_onchain_to_lightning(`ptr`: Pointer,`satsPerVbyte`: Int,`lspFeeParams`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_swap_channel_close_funds_to_lightning(`ptr`: Pointer,`satsPerVbyte`: Int,`lspFeeParams`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(`ptr`: Pointer,`sweepInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_swap_failed_swap_funds_to_lightning(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,`satPerVbyte`: Int,`lspFeeParam`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep_funds_from_channel_closes(`ptr`: Pointer,`sweepInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_verify_phone_number(`ptr`: Pointer,`phoneNumber`: RustBuffer.ByValue,`otp`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
@@ -1220,6 +1253,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_exchange_rate(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_failed_swap_resolving_fees(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_health_status(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_incoming_payment(
@@ -1248,6 +1283,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_topup(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_unresolved_failed_swap_action_required_item(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_action_required_items(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_currency_codes(
@@ -1270,7 +1307,7 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_resolve_failed_swap(
     ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_sweep(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_sweep_funds_from_channel_closes(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lightning_address(
     ): Short
@@ -1304,9 +1341,11 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_set_payment_personal_note(
     ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_swap_onchain_to_lightning(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_swap_channel_close_funds_to_lightning(
     ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep(
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_swap_failed_swap_funds_to_lightning(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep_funds_from_channel_closes(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_verify_phone_number(
     ): Short
@@ -1408,10 +1447,13 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_analytics_config() != 15582.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_channel_close_resolving_fees() != 63795.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_channel_close_resolving_fees() != 20341.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_exchange_rate() != 15675.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_failed_swap_resolving_fees() != 398.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_get_health_status() != 64525.toShort()) {
@@ -1456,6 +1498,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_topup() != 9954.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_unresolved_failed_swap_action_required_item() != 22326.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_action_required_items() != 17350.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1489,7 +1534,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_resolve_failed_swap() != 48057.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_sweep() != 55427.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_prepare_sweep_funds_from_channel_closes() != 4648.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_lightning_address() != 22893.toShort()) {
@@ -1540,10 +1585,13 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_set_payment_personal_note() != 48745.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_swap_onchain_to_lightning() != 2389.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_swap_channel_close_funds_to_lightning() != 37915.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep() != 63698.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_swap_failed_swap_funds_to_lightning() != 24245.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_sweep_funds_from_channel_closes() != 53207.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_verify_phone_number() != 57506.toShort()) {
@@ -1601,6 +1649,9 @@ interface Disposable {
     }
 }
 
+/**
+ * @suppress
+ */
 inline fun <T : Disposable?, R> T.use(block: (T) -> R) =
     try {
         block(this)
@@ -1613,9 +1664,16 @@ inline fun <T : Disposable?, R> T.use(block: (T) -> R) =
         }
     }
 
-/** Used to instantiate an interface without an actual pointer, for fakes in tests, mostly. */
+/** 
+ * Used to instantiate an interface without an actual pointer, for fakes in tests, mostly.
+ *
+ * @suppress
+ * */
 object NoPointer
 
+/**
+ * @suppress
+ */
 public object FfiConverterUShort: FfiConverter<UShort, Short> {
     override fun lift(value: Short): UShort {
         return value.toUShort()
@@ -1636,6 +1694,9 @@ public object FfiConverterUShort: FfiConverter<UShort, Short> {
     }
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterUInt: FfiConverter<UInt, Int> {
     override fun lift(value: Int): UInt {
         return value.toUInt()
@@ -1656,6 +1717,9 @@ public object FfiConverterUInt: FfiConverter<UInt, Int> {
     }
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterInt: FfiConverter<Int, Int> {
     override fun lift(value: Int): Int {
         return value
@@ -1676,6 +1740,9 @@ public object FfiConverterInt: FfiConverter<Int, Int> {
     }
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterULong: FfiConverter<ULong, Long> {
     override fun lift(value: Long): ULong {
         return value.toULong()
@@ -1696,6 +1763,9 @@ public object FfiConverterULong: FfiConverter<ULong, Long> {
     }
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterLong: FfiConverter<Long, Long> {
     override fun lift(value: Long): Long {
         return value
@@ -1716,6 +1786,9 @@ public object FfiConverterLong: FfiConverter<Long, Long> {
     }
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterDouble: FfiConverter<Double, Double> {
     override fun lift(value: Double): Double {
         return value
@@ -1736,6 +1809,9 @@ public object FfiConverterDouble: FfiConverter<Double, Double> {
     }
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterBoolean: FfiConverter<Boolean, Byte> {
     override fun lift(value: Byte): Boolean {
         return value.toInt() != 0
@@ -1756,6 +1832,9 @@ public object FfiConverterBoolean: FfiConverter<Boolean, Byte> {
     }
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterString: FfiConverter<String, RustBuffer.ByValue> {
     // Note: we don't inherit from FfiConverterRustBuffer, because we use a
     // special encoding when lowering/lifting.  We can use `RustBuffer.len` to
@@ -1810,6 +1889,9 @@ public object FfiConverterString: FfiConverter<String, RustBuffer.ByValue> {
     }
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterByteArray: FfiConverterRustBuffer<ByteArray> {
     override fun read(buf: ByteBuffer): ByteArray {
         val len = buf.getInt()
@@ -1827,6 +1909,9 @@ public object FfiConverterByteArray: FfiConverterRustBuffer<ByteArray> {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTimestamp: FfiConverterRustBuffer<java.time.Instant> {
     override fun read(buf: ByteBuffer): java.time.Instant {
         val seconds = buf.getLong()
@@ -1867,6 +1952,9 @@ public object FfiConverterTimestamp: FfiConverterRustBuffer<java.time.Instant> {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterDuration: FfiConverterRustBuffer<java.time.Duration> {
     override fun read(buf: ByteBuffer): java.time.Duration {
         // Type mismatch (should be u64) but we check for overflow/underflow below
@@ -2003,12 +2091,16 @@ public object FfiConverterDuration: FfiConverterRustBuffer<java.time.Duration> {
 //
 
 
-// The cleaner interface for Object finalization code to run.
-// This is the entry point to any implementation that we're using.
-//
-// The cleaner registers objects and returns cleanables, so now we are
-// defining a `UniffiCleaner` with a `UniffiClenaer.Cleanable` to abstract the
-// different implmentations available at compile time.
+/**
+ * The cleaner interface for Object finalization code to run.
+ * This is the entry point to any implementation that we're using.
+ *
+ * The cleaner registers objects and returns cleanables, so now we are
+ * defining a `UniffiCleaner` with a `UniffiClenaer.Cleanable` to abstract the
+ * different implmentations available at compile time.
+ *
+ * @suppress
+ */
 interface UniffiCleaner {
     interface Cleanable {
         fun clean()
@@ -2090,9 +2182,11 @@ public interface LightningNodeInterface {
     
     fun `getAnalyticsConfig`(): AnalyticsConfig
     
-    fun `getChannelCloseResolvingFees`(): ChannelCloseResolvingFees?
+    fun `getChannelCloseResolvingFees`(): OnchainResolvingFees?
     
     fun `getExchangeRate`(): ExchangeRate?
+    
+    fun `getFailedSwapResolvingFees`(`failedSwapInfo`: FailedSwapInfo): OnchainResolvingFees?
     
     fun `getHealthStatus`(): BreezHealthCheckStatus
     
@@ -2122,6 +2216,8 @@ public interface LightningNodeInterface {
     
     fun `hideTopup`(`id`: kotlin.String)
     
+    fun `hideUnresolvedFailedSwapActionRequiredItem`(`failedSwapInfo`: FailedSwapInfo)
+    
     fun `listActionRequiredItems`(): List<ActionRequiredItem>
     
     fun `listCurrencyCodes`(): List<kotlin.String>
@@ -2144,7 +2240,7 @@ public interface LightningNodeInterface {
     
     fun `prepareResolveFailedSwap`(`failedSwapInfo`: FailedSwapInfo, `toAddress`: kotlin.String, `onchainFeeRate`: kotlin.UInt): ResolveFailedSwapInfo
     
-    fun `prepareSweep`(`address`: kotlin.String, `onchainFeeRate`: kotlin.UInt): SweepInfo
+    fun `prepareSweepFundsFromChannelCloses`(`address`: kotlin.String, `onchainFeeRate`: kotlin.UInt): SweepInfo
     
     fun `queryLightningAddress`(): kotlin.String?
     
@@ -2178,9 +2274,11 @@ public interface LightningNodeInterface {
     
     fun `setPaymentPersonalNote`(`paymentHash`: kotlin.String, `note`: kotlin.String)
     
-    fun `swapOnchainToLightning`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String
+    fun `swapChannelCloseFundsToLightning`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String
     
-    fun `sweep`(`sweepInfo`: SweepInfo): kotlin.String
+    fun `swapFailedSwapFundsToLightning`(`failedSwapInfo`: FailedSwapInfo, `satPerVbyte`: kotlin.UInt, `lspFeeParam`: OpeningFeeParams?): kotlin.String
+    
+    fun `sweepFundsFromChannelCloses`(`sweepInfo`: SweepInfo): kotlin.String
     
     fun `verifyPhoneNumber`(`phoneNumber`: kotlin.String, `otp`: kotlin.String)
     
@@ -2437,8 +2535,8 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
-    @Throws(LnException::class)override fun `getChannelCloseResolvingFees`(): ChannelCloseResolvingFees? {
-            return FfiConverterOptionalTypeChannelCloseResolvingFees.lift(
+    @Throws(LnException::class)override fun `getChannelCloseResolvingFees`(): OnchainResolvingFees? {
+            return FfiConverterOptionalTypeOnchainResolvingFees.lift(
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_channel_close_resolving_fees(
@@ -2455,6 +2553,19 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     uniffiRustCall() { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_exchange_rate(
         it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getFailedSwapResolvingFees`(`failedSwapInfo`: FailedSwapInfo): OnchainResolvingFees? {
+            return FfiConverterOptionalTypeOnchainResolvingFees.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_get_failed_swap_resolving_fees(
+        it, FfiConverterTypeFailedSwapInfo.lower(`failedSwapInfo`),_status)
 }
     }
     )
@@ -2641,6 +2752,18 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
+    @Throws(LnException::class)override fun `hideUnresolvedFailedSwapActionRequiredItem`(`failedSwapInfo`: FailedSwapInfo)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_unresolved_failed_swap_action_required_item(
+        it, FfiConverterTypeFailedSwapInfo.lower(`failedSwapInfo`),_status)
+}
+    }
+    
+    
+
+    
     @Throws(LnException::class)override fun `listActionRequiredItems`(): List<ActionRequiredItem> {
             return FfiConverterSequenceTypeActionRequiredItem.lift(
     callWithPointer {
@@ -2779,11 +2902,11 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
-    @Throws(SweepException::class)override fun `prepareSweep`(`address`: kotlin.String, `onchainFeeRate`: kotlin.UInt): SweepInfo {
+    @Throws(SweepException::class)override fun `prepareSweepFundsFromChannelCloses`(`address`: kotlin.String, `onchainFeeRate`: kotlin.UInt): SweepInfo {
             return FfiConverterTypeSweepInfo.lift(
     callWithPointer {
     uniffiRustCallWithError(SweepException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_sweep(
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_prepare_sweep_funds_from_channel_closes(
         it, FfiConverterString.lower(`address`),FfiConverterUInt.lower(`onchainFeeRate`),_status)
 }
     }
@@ -2994,11 +3117,11 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
-    @Throws(SweepException::class)override fun `swapOnchainToLightning`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String {
+    @Throws(SweepException::class)override fun `swapChannelCloseFundsToLightning`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String {
             return FfiConverterString.lift(
     callWithPointer {
     uniffiRustCallWithError(SweepException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_swap_onchain_to_lightning(
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_swap_channel_close_funds_to_lightning(
         it, FfiConverterUInt.lower(`satsPerVbyte`),FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),_status)
 }
     }
@@ -3007,11 +3130,24 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
-    @Throws(LnException::class)override fun `sweep`(`sweepInfo`: SweepInfo): kotlin.String {
+    @Throws(LnException::class)override fun `swapFailedSwapFundsToLightning`(`failedSwapInfo`: FailedSwapInfo, `satPerVbyte`: kotlin.UInt, `lspFeeParam`: OpeningFeeParams?): kotlin.String {
             return FfiConverterString.lift(
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep(
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_swap_failed_swap_funds_to_lightning(
+        it, FfiConverterTypeFailedSwapInfo.lower(`failedSwapInfo`),FfiConverterUInt.lower(`satPerVbyte`),FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParam`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `sweepFundsFromChannelCloses`(`sweepInfo`: SweepInfo): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_sweep_funds_from_channel_closes(
         it, FfiConverterTypeSweepInfo.lower(`sweepInfo`),_status)
 }
     }
@@ -3052,6 +3188,9 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLightningNode: FfiConverter<LightningNode, Pointer> {
 
     override fun lower(value: LightningNode): Pointer {
@@ -3087,6 +3226,9 @@ data class Amount (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeAmount: FfiConverterRustBuffer<Amount> {
     override fun read(buf: ByteBuffer): Amount {
         return Amount(
@@ -3119,6 +3261,9 @@ data class BitcoinAddressData (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeBitcoinAddressData: FfiConverterRustBuffer<BitcoinAddressData> {
     override fun read(buf: ByteBuffer): BitcoinAddressData {
         return BitcoinAddressData(
@@ -3158,6 +3303,9 @@ data class BreezSdkConfig (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeBreezSdkConfig: FfiConverterRustBuffer<BreezSdkConfig> {
     override fun read(buf: ByteBuffer): BreezSdkConfig {
         return BreezSdkConfig(
@@ -3190,6 +3338,9 @@ data class CalculateLspFeeResponse (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeCalculateLspFeeResponse: FfiConverterRustBuffer<CalculateLspFeeResponse> {
     override fun read(buf: ByteBuffer): CalculateLspFeeResponse {
         return CalculateLspFeeResponse(
@@ -3221,6 +3372,9 @@ data class ChannelCloseInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeChannelCloseInfo: FfiConverterRustBuffer<ChannelCloseInfo> {
     override fun read(buf: ByteBuffer): ChannelCloseInfo {
         return ChannelCloseInfo(
@@ -3248,39 +3402,6 @@ public object FfiConverterTypeChannelCloseInfo: FfiConverterRustBuffer<ChannelCl
 
 
 
-data class ChannelCloseResolvingFees (
-    var `swapFees`: SwapToLightningFees?, 
-    var `sweepOnchainFeeEstimate`: Amount, 
-    var `satPerVbyte`: kotlin.UInt
-) {
-    
-    companion object
-}
-
-public object FfiConverterTypeChannelCloseResolvingFees: FfiConverterRustBuffer<ChannelCloseResolvingFees> {
-    override fun read(buf: ByteBuffer): ChannelCloseResolvingFees {
-        return ChannelCloseResolvingFees(
-            FfiConverterOptionalTypeSwapToLightningFees.read(buf),
-            FfiConverterTypeAmount.read(buf),
-            FfiConverterUInt.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: ChannelCloseResolvingFees) = (
-            FfiConverterOptionalTypeSwapToLightningFees.allocationSize(value.`swapFees`) +
-            FfiConverterTypeAmount.allocationSize(value.`sweepOnchainFeeEstimate`) +
-            FfiConverterUInt.allocationSize(value.`satPerVbyte`)
-    )
-
-    override fun write(value: ChannelCloseResolvingFees, buf: ByteBuffer) {
-            FfiConverterOptionalTypeSwapToLightningFees.write(value.`swapFees`, buf)
-            FfiConverterTypeAmount.write(value.`sweepOnchainFeeEstimate`, buf)
-            FfiConverterUInt.write(value.`satPerVbyte`, buf)
-    }
-}
-
-
-
 data class ChannelsInfo (
     var `localBalance`: Amount, 
     var `maxReceivableSinglePayment`: Amount, 
@@ -3291,6 +3412,9 @@ data class ChannelsInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeChannelsInfo: FfiConverterRustBuffer<ChannelsInfo> {
     override fun read(buf: ByteBuffer): ChannelsInfo {
         return ChannelsInfo(
@@ -3329,6 +3453,9 @@ data class ClearWalletInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeClearWalletInfo: FfiConverterRustBuffer<ClearWalletInfo> {
     override fun read(buf: ByteBuffer): ClearWalletInfo {
         return ClearWalletInfo(
@@ -3375,6 +3502,9 @@ data class Config (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
     override fun read(buf: ByteBuffer): Config {
         return Config(
@@ -3429,6 +3559,9 @@ data class ExchangeRate (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeExchangeRate: FfiConverterRustBuffer<ExchangeRate> {
     override fun read(buf: ByteBuffer): ExchangeRate {
         return ExchangeRate(
@@ -3462,6 +3595,9 @@ data class FailedSwapInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeFailedSwapInfo: FfiConverterRustBuffer<FailedSwapInfo> {
     override fun read(buf: ByteBuffer): FailedSwapInfo {
         return FailedSwapInfo(
@@ -3508,6 +3644,9 @@ data class FiatTopupInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInfo> {
     override fun read(buf: ByteBuffer): FiatTopupInfo {
         return FiatTopupInfo(
@@ -3581,6 +3720,9 @@ data class FiatValue (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeFiatValue: FfiConverterRustBuffer<FiatValue> {
     override fun read(buf: ByteBuffer): FiatValue {
         return FiatValue(
@@ -3619,6 +3761,9 @@ data class IncomingPaymentInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeIncomingPaymentInfo: FfiConverterRustBuffer<IncomingPaymentInfo> {
     override fun read(buf: ByteBuffer): IncomingPaymentInfo {
         return IncomingPaymentInfo(
@@ -3656,6 +3801,9 @@ data class InvoiceCreationMetadata (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeInvoiceCreationMetadata: FfiConverterRustBuffer<InvoiceCreationMetadata> {
     override fun read(buf: ByteBuffer): InvoiceCreationMetadata {
         return InvoiceCreationMetadata(
@@ -3688,6 +3836,9 @@ data class InvoiceDetails (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeInvoiceDetails: FfiConverterRustBuffer<InvoiceDetails> {
     override fun read(buf: ByteBuffer): InvoiceDetails {
         return InvoiceDetails(
@@ -3735,6 +3886,9 @@ data class ListActivitiesResponse (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeListActivitiesResponse: FfiConverterRustBuffer<ListActivitiesResponse> {
     override fun read(buf: ByteBuffer): ListActivitiesResponse {
         return ListActivitiesResponse(
@@ -3769,6 +3923,9 @@ data class LnUrlPayDetails (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLnUrlPayDetails: FfiConverterRustBuffer<LnUrlPayDetails> {
     override fun read(buf: ByteBuffer): LnUrlPayDetails {
         return LnUrlPayDetails(
@@ -3820,6 +3977,9 @@ data class LnUrlPayRequestData (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLnUrlPayRequestData: FfiConverterRustBuffer<LnUrlPayRequestData> {
     override fun read(buf: ByteBuffer): LnUrlPayRequestData {
         return LnUrlPayRequestData(
@@ -3871,6 +4031,9 @@ data class LnUrlWithdrawDetails (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLnUrlWithdrawDetails: FfiConverterRustBuffer<LnUrlWithdrawDetails> {
     override fun read(buf: ByteBuffer): LnUrlWithdrawDetails {
         return LnUrlWithdrawDetails(
@@ -3906,6 +4069,9 @@ data class LnUrlWithdrawRequestData (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLnUrlWithdrawRequestData: FfiConverterRustBuffer<LnUrlWithdrawRequestData> {
     override fun read(buf: ByteBuffer): LnUrlWithdrawRequestData {
         return LnUrlWithdrawRequestData(
@@ -3944,6 +4110,9 @@ data class LspFee (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLspFee: FfiConverterRustBuffer<LspFee> {
     override fun read(buf: ByteBuffer): LspFee {
         return LspFee(
@@ -3973,6 +4142,9 @@ data class MaxRoutingFeeConfig (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeMaxRoutingFeeConfig: FfiConverterRustBuffer<MaxRoutingFeeConfig> {
     override fun read(buf: ByteBuffer): MaxRoutingFeeConfig {
         return MaxRoutingFeeConfig(
@@ -4004,6 +4176,9 @@ data class NodeInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeNodeInfo: FfiConverterRustBuffer<NodeInfo> {
     override fun read(buf: ByteBuffer): NodeInfo {
         return NodeInfo(
@@ -4040,6 +4215,9 @@ data class NotificationToggles (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeNotificationToggles: FfiConverterRustBuffer<NotificationToggles> {
     override fun read(buf: ByteBuffer): NotificationToggles {
         return NotificationToggles(
@@ -4076,6 +4254,9 @@ data class OfferInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
     override fun read(buf: ByteBuffer): OfferInfo {
         return OfferInfo(
@@ -4109,6 +4290,42 @@ public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
 
 
 
+data class OnchainResolvingFees (
+    var `swapFees`: SwapToLightningFees?, 
+    var `sweepOnchainFeeEstimate`: Amount, 
+    var `satPerVbyte`: kotlin.UInt
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeOnchainResolvingFees: FfiConverterRustBuffer<OnchainResolvingFees> {
+    override fun read(buf: ByteBuffer): OnchainResolvingFees {
+        return OnchainResolvingFees(
+            FfiConverterOptionalTypeSwapToLightningFees.read(buf),
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: OnchainResolvingFees) = (
+            FfiConverterOptionalTypeSwapToLightningFees.allocationSize(value.`swapFees`) +
+            FfiConverterTypeAmount.allocationSize(value.`sweepOnchainFeeEstimate`) +
+            FfiConverterUInt.allocationSize(value.`satPerVbyte`)
+    )
+
+    override fun write(value: OnchainResolvingFees, buf: ByteBuffer) {
+            FfiConverterOptionalTypeSwapToLightningFees.write(value.`swapFees`, buf)
+            FfiConverterTypeAmount.write(value.`sweepOnchainFeeEstimate`, buf)
+            FfiConverterUInt.write(value.`satPerVbyte`, buf)
+    }
+}
+
+
+
 data class OpeningFeeParams (
     var `minMsat`: kotlin.ULong, 
     var `proportional`: kotlin.UInt, 
@@ -4121,6 +4338,9 @@ data class OpeningFeeParams (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeOpeningFeeParams: FfiConverterRustBuffer<OpeningFeeParams> {
     override fun read(buf: ByteBuffer): OpeningFeeParams {
         return OpeningFeeParams(
@@ -4164,6 +4384,9 @@ data class OutgoingPaymentInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeOutgoingPaymentInfo: FfiConverterRustBuffer<OutgoingPaymentInfo> {
     override fun read(buf: ByteBuffer): OutgoingPaymentInfo {
         return OutgoingPaymentInfo(
@@ -4199,6 +4422,9 @@ data class PaymentAmountLimits (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypePaymentAmountLimits: FfiConverterRustBuffer<PaymentAmountLimits> {
     override fun read(buf: ByteBuffer): PaymentAmountLimits {
         return PaymentAmountLimits(
@@ -4234,6 +4460,9 @@ data class PaymentInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypePaymentInfo: FfiConverterRustBuffer<PaymentInfo> {
     override fun read(buf: ByteBuffer): PaymentInfo {
         return PaymentInfo(
@@ -4281,6 +4510,9 @@ data class PaymentMetadata (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypePaymentMetadata: FfiConverterRustBuffer<PaymentMetadata> {
     override fun read(buf: ByteBuffer): PaymentMetadata {
         return PaymentMetadata(
@@ -4315,6 +4547,9 @@ data class PrepareOnchainPaymentResponse (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypePrepareOnchainPaymentResponse: FfiConverterRustBuffer<PrepareOnchainPaymentResponse> {
     override fun read(buf: ByteBuffer): PrepareOnchainPaymentResponse {
         return PrepareOnchainPaymentResponse(
@@ -4359,6 +4594,9 @@ data class ReceiveLimitsConfig (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeReceiveLimitsConfig: FfiConverterRustBuffer<ReceiveLimitsConfig> {
     override fun read(buf: ByteBuffer): ReceiveLimitsConfig {
         return ReceiveLimitsConfig(
@@ -4391,6 +4629,9 @@ data class RemoteServicesConfig (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeRemoteServicesConfig: FfiConverterRustBuffer<RemoteServicesConfig> {
     override fun read(buf: ByteBuffer): RemoteServicesConfig {
         return RemoteServicesConfig(
@@ -4432,6 +4673,9 @@ data class ResolveFailedSwapInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeResolveFailedSwapInfo: FfiConverterRustBuffer<ResolveFailedSwapInfo> {
     override fun read(buf: ByteBuffer): ResolveFailedSwapInfo {
         return ResolveFailedSwapInfo(
@@ -4472,6 +4716,9 @@ data class ReverseSwapInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeReverseSwapInfo: FfiConverterRustBuffer<ReverseSwapInfo> {
     override fun read(buf: ByteBuffer): ReverseSwapInfo {
         return ReverseSwapInfo(
@@ -4508,6 +4755,9 @@ data class Secret (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeSecret: FfiConverterRustBuffer<Secret> {
     override fun read(buf: ByteBuffer): Secret {
         return Secret(
@@ -4542,6 +4792,9 @@ data class SwapAddressInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeSwapAddressInfo: FfiConverterRustBuffer<SwapAddressInfo> {
     override fun read(buf: ByteBuffer): SwapAddressInfo {
         return SwapAddressInfo(
@@ -4572,31 +4825,38 @@ public object FfiConverterTypeSwapAddressInfo: FfiConverterRustBuffer<SwapAddres
 data class SwapInfo (
     var `bitcoinAddress`: kotlin.String, 
     var `createdAt`: TzTime, 
-    var `paidAmount`: Amount
+    var `paidAmount`: Amount, 
+    var `txid`: kotlin.String
 ) {
     
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeSwapInfo: FfiConverterRustBuffer<SwapInfo> {
     override fun read(buf: ByteBuffer): SwapInfo {
         return SwapInfo(
             FfiConverterString.read(buf),
             FfiConverterTypeTzTime.read(buf),
             FfiConverterTypeAmount.read(buf),
+            FfiConverterString.read(buf),
         )
     }
 
     override fun allocationSize(value: SwapInfo) = (
             FfiConverterString.allocationSize(value.`bitcoinAddress`) +
             FfiConverterTypeTzTime.allocationSize(value.`createdAt`) +
-            FfiConverterTypeAmount.allocationSize(value.`paidAmount`)
+            FfiConverterTypeAmount.allocationSize(value.`paidAmount`) +
+            FfiConverterString.allocationSize(value.`txid`)
     )
 
     override fun write(value: SwapInfo, buf: ByteBuffer) {
             FfiConverterString.write(value.`bitcoinAddress`, buf)
             FfiConverterTypeTzTime.write(value.`createdAt`, buf)
             FfiConverterTypeAmount.write(value.`paidAmount`, buf)
+            FfiConverterString.write(value.`txid`, buf)
     }
 }
 
@@ -4613,6 +4873,9 @@ data class SwapToLightningFees (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeSwapToLightningFees: FfiConverterRustBuffer<SwapToLightningFees> {
     override fun read(buf: ByteBuffer): SwapToLightningFees {
         return SwapToLightningFees(
@@ -4653,6 +4916,9 @@ data class SweepInfo (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeSweepInfo: FfiConverterRustBuffer<SweepInfo> {
     override fun read(buf: ByteBuffer): SweepInfo {
         return SweepInfo(
@@ -4689,6 +4955,9 @@ data class TermsAndConditionsStatus (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeTermsAndConditionsStatus: FfiConverterRustBuffer<TermsAndConditionsStatus> {
     override fun read(buf: ByteBuffer): TermsAndConditionsStatus {
         return TermsAndConditionsStatus(
@@ -4721,6 +4990,9 @@ data class TzConfig (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeTzConfig: FfiConverterRustBuffer<TzConfig> {
     override fun read(buf: ByteBuffer): TzConfig {
         return TzConfig(
@@ -4751,6 +5023,9 @@ data class TzTime (
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeTzTime: FfiConverterRustBuffer<TzTime> {
     override fun read(buf: ByteBuffer): TzTime {
         return TzTime(
@@ -4797,6 +5072,9 @@ sealed class ActionRequiredItem {
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeActionRequiredItem : FfiConverterRustBuffer<ActionRequiredItem>{
     override fun read(buf: ByteBuffer): ActionRequiredItem {
         return when(buf.getInt()) {
@@ -4902,6 +5180,9 @@ sealed class Activity {
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
     override fun read(buf: ByteBuffer): Activity {
         return when(buf.getInt()) {
@@ -5030,6 +5311,9 @@ enum class AnalyticsConfig {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeAnalyticsConfig: FfiConverterRustBuffer<AnalyticsConfig> {
     override fun read(buf: ByteBuffer) = try {
         AnalyticsConfig.values()[buf.getInt() - 1]
@@ -5058,6 +5342,9 @@ enum class BreezHealthCheckStatus {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeBreezHealthCheckStatus: FfiConverterRustBuffer<BreezHealthCheckStatus> {
     override fun read(buf: ByteBuffer) = try {
         BreezHealthCheckStatus.values()[buf.getInt() - 1]
@@ -5085,6 +5372,9 @@ enum class ChannelCloseState {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeChannelCloseState: FfiConverterRustBuffer<ChannelCloseState> {
     override fun read(buf: ByteBuffer) = try {
         ChannelCloseState.values()[buf.getInt() - 1]
@@ -5139,6 +5429,9 @@ sealed class DecodeDataException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeDecodeDataError : FfiConverterRustBuffer<DecodeDataException> {
     override fun read(buf: ByteBuffer): DecodeDataException {
         
@@ -5228,6 +5521,9 @@ sealed class DecodedData {
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeDecodedData : FfiConverterRustBuffer<DecodedData>{
     override fun read(buf: ByteBuffer): DecodedData {
         return when(buf.getInt()) {
@@ -5317,6 +5613,9 @@ enum class FeatureFlag {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeFeatureFlag: FfiConverterRustBuffer<FeatureFlag> {
     override fun read(buf: ByteBuffer) = try {
         FeatureFlag.values()[buf.getInt() - 1]
@@ -5345,6 +5644,9 @@ enum class InvoiceAffordability {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeInvoiceAffordability: FfiConverterRustBuffer<InvoiceAffordability> {
     override fun read(buf: ByteBuffer) = try {
         InvoiceAffordability.values()[buf.getInt() - 1]
@@ -5375,6 +5677,9 @@ enum class Level {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLevel: FfiConverterRustBuffer<Level> {
     override fun read(buf: ByteBuffer) = try {
         Level.values()[buf.getInt() - 1]
@@ -5413,6 +5718,9 @@ sealed class LiquidityLimit {
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLiquidityLimit : FfiConverterRustBuffer<LiquidityLimit>{
     override fun read(buf: ByteBuffer): LiquidityLimit {
         return when(buf.getInt()) {
@@ -5512,6 +5820,9 @@ sealed class LnException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLnError : FfiConverterRustBuffer<LnException> {
     override fun read(buf: ByteBuffer): LnException {
         
@@ -5615,6 +5926,9 @@ sealed class LnUrlPayException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLnUrlPayError : FfiConverterRustBuffer<LnUrlPayException> {
     override fun read(buf: ByteBuffer): LnUrlPayException {
         
@@ -5695,6 +6009,9 @@ enum class LnUrlPayErrorCode {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLnUrlPayErrorCode: FfiConverterRustBuffer<LnUrlPayErrorCode> {
     override fun read(buf: ByteBuffer) = try {
         LnUrlPayErrorCode.values()[buf.getInt() - 1]
@@ -5751,6 +6068,9 @@ sealed class LnUrlWithdrawException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLnUrlWithdrawError : FfiConverterRustBuffer<LnUrlWithdrawException> {
     override fun read(buf: ByteBuffer): LnUrlWithdrawException {
         
@@ -5826,6 +6146,9 @@ enum class LnUrlWithdrawErrorCode {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeLnUrlWithdrawErrorCode: FfiConverterRustBuffer<LnUrlWithdrawErrorCode> {
     override fun read(buf: ByteBuffer) = try {
         LnUrlWithdrawErrorCode.values()[buf.getInt() - 1]
@@ -5861,6 +6184,9 @@ sealed class MaxRoutingFeeMode {
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeMaxRoutingFeeMode : FfiConverterRustBuffer<MaxRoutingFeeMode>{
     override fun read(buf: ByteBuffer): MaxRoutingFeeMode {
         return when(buf.getInt()) {
@@ -5957,6 +6283,9 @@ sealed class MnemonicException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeMnemonicError : FfiConverterRustBuffer<MnemonicException> {
     override fun read(buf: ByteBuffer): MnemonicException {
         
@@ -6044,6 +6373,9 @@ enum class Network {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
     override fun read(buf: ByteBuffer) = try {
         Network.values()[buf.getInt() - 1]
@@ -6086,6 +6418,9 @@ sealed class Notification {
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification>{
     override fun read(buf: ByteBuffer): Notification {
         return when(buf.getInt()) {
@@ -6195,6 +6530,9 @@ sealed class NotificationHandlingException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeNotificationHandlingError : FfiConverterRustBuffer<NotificationHandlingException> {
     override fun read(buf: ByteBuffer): NotificationHandlingException {
         
@@ -6273,6 +6611,9 @@ enum class NotificationHandlingErrorCode {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeNotificationHandlingErrorCode: FfiConverterRustBuffer<NotificationHandlingErrorCode> {
     override fun read(buf: ByteBuffer) = try {
         NotificationHandlingErrorCode.values()[buf.getInt() - 1]
@@ -6310,6 +6651,9 @@ sealed class OfferKind {
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
     override fun read(buf: ByteBuffer): OfferKind {
         return when(buf.getInt()) {
@@ -6377,6 +6721,9 @@ enum class OfferStatus {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeOfferStatus: FfiConverterRustBuffer<OfferStatus> {
     override fun read(buf: ByteBuffer) = try {
         OfferStatus.values()[buf.getInt() - 1]
@@ -6421,6 +6768,9 @@ sealed class ParseException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeParseError : FfiConverterRustBuffer<ParseException> {
     override fun read(buf: ByteBuffer): ParseException {
         
@@ -6508,6 +6858,9 @@ sealed class ParsePhoneNumberException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeParsePhoneNumberError : FfiConverterRustBuffer<ParsePhoneNumberException> {
     override fun read(buf: ByteBuffer): ParsePhoneNumberException {
         
@@ -6608,6 +6961,9 @@ sealed class ParsePhoneNumberPrefixException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeParsePhoneNumberPrefixError : FfiConverterRustBuffer<ParsePhoneNumberPrefixException> {
     override fun read(buf: ByteBuffer): ParsePhoneNumberPrefixException {
         
@@ -6700,6 +7056,9 @@ sealed class PayException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypePayError : FfiConverterRustBuffer<PayException> {
     override fun read(buf: ByteBuffer): PayException {
         
@@ -6781,6 +7140,9 @@ enum class PayErrorCode {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypePayErrorCode: FfiConverterRustBuffer<PayErrorCode> {
     override fun read(buf: ByteBuffer) = try {
         PayErrorCode.values()[buf.getInt() - 1]
@@ -6810,6 +7172,9 @@ enum class PaymentSource {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypePaymentSource: FfiConverterRustBuffer<PaymentSource> {
     override fun read(buf: ByteBuffer) = try {
         PaymentSource.values()[buf.getInt() - 1]
@@ -6840,6 +7205,9 @@ enum class PaymentState {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypePaymentState: FfiConverterRustBuffer<PaymentState> {
     override fun read(buf: ByteBuffer) = try {
         PaymentState.values()[buf.getInt() - 1]
@@ -6873,6 +7241,9 @@ enum class PermanentFailureCode {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypePermanentFailureCode: FfiConverterRustBuffer<PermanentFailureCode> {
     override fun read(buf: ByteBuffer) = try {
         PermanentFailureCode.values()[buf.getInt() - 1]
@@ -6908,6 +7279,9 @@ sealed class PocketOfferError {
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypePocketOfferError : FfiConverterRustBuffer<PocketOfferError>{
     override fun read(buf: ByteBuffer): PocketOfferError {
         return when(buf.getInt()) {
@@ -6978,6 +7352,9 @@ sealed class RangeHit {
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeRangeHit : FfiConverterRustBuffer<RangeHit>{
     override fun read(buf: ByteBuffer): RangeHit {
         return when(buf.getInt()) {
@@ -7064,6 +7441,9 @@ sealed class Recipient {
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeRecipient : FfiConverterRustBuffer<Recipient>{
     override fun read(buf: ByteBuffer): Recipient {
         return when(buf.getInt()) {
@@ -7152,6 +7532,9 @@ enum class ReverseSwapStatus {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeReverseSwapStatus: FfiConverterRustBuffer<ReverseSwapStatus> {
     override fun read(buf: ByteBuffer) = try {
         ReverseSwapStatus.values()[buf.getInt() - 1]
@@ -7183,6 +7566,9 @@ enum class RuntimeErrorCode {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeRuntimeErrorCode: FfiConverterRustBuffer<RuntimeErrorCode> {
     override fun read(buf: ByteBuffer) = try {
         RuntimeErrorCode.values()[buf.getInt() - 1]
@@ -7221,6 +7607,9 @@ sealed class SimpleException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeSimpleError : FfiConverterRustBuffer<SimpleException> {
     override fun read(buf: ByteBuffer): SimpleException {
         
@@ -7293,6 +7682,9 @@ sealed class SwapException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeSwapError : FfiConverterRustBuffer<SwapException> {
     override fun read(buf: ByteBuffer): SwapException {
         
@@ -7391,6 +7783,9 @@ sealed class SweepException: kotlin.Exception() {
     
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeSweepError : FfiConverterRustBuffer<SweepException> {
     override fun read(buf: ByteBuffer): SweepException {
         
@@ -7474,6 +7869,9 @@ sealed class TemporaryFailureCode {
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeTemporaryFailureCode : FfiConverterRustBuffer<TemporaryFailureCode>{
     override fun read(buf: ByteBuffer): TemporaryFailureCode {
         return when(buf.getInt()) {
@@ -7551,6 +7949,9 @@ enum class TermsAndConditions {
 }
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeTermsAndConditions: FfiConverterRustBuffer<TermsAndConditions> {
     override fun read(buf: ByteBuffer) = try {
         TermsAndConditions.values()[buf.getInt() - 1]
@@ -7593,6 +7994,9 @@ sealed class UnsupportedDataType {
     companion object
 }
 
+/**
+ * @suppress
+ */
 public object FfiConverterTypeUnsupportedDataType : FfiConverterRustBuffer<UnsupportedDataType>{
     override fun read(buf: ByteBuffer): UnsupportedDataType {
         return when(buf.getInt()) {
@@ -7701,6 +8105,9 @@ internal const val UNIFFI_CALLBACK_SUCCESS = 0
 internal const val UNIFFI_CALLBACK_ERROR = 1
 internal const val UNIFFI_CALLBACK_UNEXPECTED_ERROR = 2
 
+/**
+ * @suppress
+ */
 public abstract class FfiConverterCallbackInterface<CallbackInterface: Any>: FfiConverter<CallbackInterface, Long> {
     internal val handleMap = UniffiHandleMap<CallbackInterface>()
 
@@ -7835,12 +8242,19 @@ internal object uniffiCallbackInterfaceEventsCallback {
     }
 }
 
-// The ffiConverter which transforms the Callbacks in to handles to pass to Rust.
+/**
+ * The ffiConverter which transforms the Callbacks in to handles to pass to Rust.
+ *
+ * @suppress
+ */
 public object FfiConverterTypeEventsCallback: FfiConverterCallbackInterface<EventsCallback>()
 
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalULong: FfiConverterRustBuffer<kotlin.ULong?> {
     override fun read(buf: ByteBuffer): kotlin.ULong? {
         if (buf.get().toInt() == 0) {
@@ -7870,6 +8284,9 @@ public object FfiConverterOptionalULong: FfiConverterRustBuffer<kotlin.ULong?> {
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalString: FfiConverterRustBuffer<kotlin.String?> {
     override fun read(buf: ByteBuffer): kotlin.String? {
         if (buf.get().toInt() == 0) {
@@ -7899,6 +8316,9 @@ public object FfiConverterOptionalString: FfiConverterRustBuffer<kotlin.String?>
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTimestamp: FfiConverterRustBuffer<java.time.Instant?> {
     override fun read(buf: ByteBuffer): java.time.Instant? {
         if (buf.get().toInt() == 0) {
@@ -7928,6 +8348,9 @@ public object FfiConverterOptionalTimestamp: FfiConverterRustBuffer<java.time.In
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeAmount: FfiConverterRustBuffer<Amount?> {
     override fun read(buf: ByteBuffer): Amount? {
         if (buf.get().toInt() == 0) {
@@ -7957,35 +8380,9 @@ public object FfiConverterOptionalTypeAmount: FfiConverterRustBuffer<Amount?> {
 
 
 
-public object FfiConverterOptionalTypeChannelCloseResolvingFees: FfiConverterRustBuffer<ChannelCloseResolvingFees?> {
-    override fun read(buf: ByteBuffer): ChannelCloseResolvingFees? {
-        if (buf.get().toInt() == 0) {
-            return null
-        }
-        return FfiConverterTypeChannelCloseResolvingFees.read(buf)
-    }
-
-    override fun allocationSize(value: ChannelCloseResolvingFees?): ULong {
-        if (value == null) {
-            return 1UL
-        } else {
-            return 1UL + FfiConverterTypeChannelCloseResolvingFees.allocationSize(value)
-        }
-    }
-
-    override fun write(value: ChannelCloseResolvingFees?, buf: ByteBuffer) {
-        if (value == null) {
-            buf.put(0)
-        } else {
-            buf.put(1)
-            FfiConverterTypeChannelCloseResolvingFees.write(value, buf)
-        }
-    }
-}
-
-
-
-
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeExchangeRate: FfiConverterRustBuffer<ExchangeRate?> {
     override fun read(buf: ByteBuffer): ExchangeRate? {
         if (buf.get().toInt() == 0) {
@@ -8015,6 +8412,9 @@ public object FfiConverterOptionalTypeExchangeRate: FfiConverterRustBuffer<Excha
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInfo?> {
     override fun read(buf: ByteBuffer): FiatTopupInfo? {
         if (buf.get().toInt() == 0) {
@@ -8044,6 +8444,9 @@ public object FfiConverterOptionalTypeFiatTopupInfo: FfiConverterRustBuffer<Fiat
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeFiatValue: FfiConverterRustBuffer<FiatValue?> {
     override fun read(buf: ByteBuffer): FiatValue? {
         if (buf.get().toInt() == 0) {
@@ -8073,6 +8476,9 @@ public object FfiConverterOptionalTypeFiatValue: FfiConverterRustBuffer<FiatValu
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeIncomingPaymentInfo: FfiConverterRustBuffer<IncomingPaymentInfo?> {
     override fun read(buf: ByteBuffer): IncomingPaymentInfo? {
         if (buf.get().toInt() == 0) {
@@ -8102,6 +8508,41 @@ public object FfiConverterOptionalTypeIncomingPaymentInfo: FfiConverterRustBuffe
 
 
 
+/**
+ * @suppress
+ */
+public object FfiConverterOptionalTypeOnchainResolvingFees: FfiConverterRustBuffer<OnchainResolvingFees?> {
+    override fun read(buf: ByteBuffer): OnchainResolvingFees? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeOnchainResolvingFees.read(buf)
+    }
+
+    override fun allocationSize(value: OnchainResolvingFees?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeOnchainResolvingFees.allocationSize(value)
+        }
+    }
+
+    override fun write(value: OnchainResolvingFees?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeOnchainResolvingFees.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeOpeningFeeParams: FfiConverterRustBuffer<OpeningFeeParams?> {
     override fun read(buf: ByteBuffer): OpeningFeeParams? {
         if (buf.get().toInt() == 0) {
@@ -8131,6 +8572,9 @@ public object FfiConverterOptionalTypeOpeningFeeParams: FfiConverterRustBuffer<O
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeSwapToLightningFees: FfiConverterRustBuffer<SwapToLightningFees?> {
     override fun read(buf: ByteBuffer): SwapToLightningFees? {
         if (buf.get().toInt() == 0) {
@@ -8160,6 +8604,9 @@ public object FfiConverterOptionalTypeSwapToLightningFees: FfiConverterRustBuffe
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeTzTime: FfiConverterRustBuffer<TzTime?> {
     override fun read(buf: ByteBuffer): TzTime? {
         if (buf.get().toInt() == 0) {
@@ -8189,6 +8636,9 @@ public object FfiConverterOptionalTypeTzTime: FfiConverterRustBuffer<TzTime?> {
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeLevel: FfiConverterRustBuffer<Level?> {
     override fun read(buf: ByteBuffer): Level? {
         if (buf.get().toInt() == 0) {
@@ -8218,6 +8668,9 @@ public object FfiConverterOptionalTypeLevel: FfiConverterRustBuffer<Level?> {
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypePocketOfferError: FfiConverterRustBuffer<PocketOfferError?> {
     override fun read(buf: ByteBuffer): PocketOfferError? {
         if (buf.get().toInt() == 0) {
@@ -8247,6 +8700,9 @@ public object FfiConverterOptionalTypePocketOfferError: FfiConverterRustBuffer<P
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeRecipient: FfiConverterRustBuffer<Recipient?> {
     override fun read(buf: ByteBuffer): Recipient? {
         if (buf.get().toInt() == 0) {
@@ -8276,6 +8732,9 @@ public object FfiConverterOptionalTypeRecipient: FfiConverterRustBuffer<Recipien
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterSequenceString: FfiConverterRustBuffer<List<kotlin.String>> {
     override fun read(buf: ByteBuffer): List<kotlin.String> {
         val len = buf.getInt()
@@ -8301,6 +8760,9 @@ public object FfiConverterSequenceString: FfiConverterRustBuffer<List<kotlin.Str
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterSequenceTypeFailedSwapInfo: FfiConverterRustBuffer<List<FailedSwapInfo>> {
     override fun read(buf: ByteBuffer): List<FailedSwapInfo> {
         val len = buf.getInt()
@@ -8326,6 +8788,9 @@ public object FfiConverterSequenceTypeFailedSwapInfo: FfiConverterRustBuffer<Lis
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterSequenceTypeOfferInfo: FfiConverterRustBuffer<List<OfferInfo>> {
     override fun read(buf: ByteBuffer): List<OfferInfo> {
         val len = buf.getInt()
@@ -8351,6 +8816,9 @@ public object FfiConverterSequenceTypeOfferInfo: FfiConverterRustBuffer<List<Off
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterSequenceTypeActionRequiredItem: FfiConverterRustBuffer<List<ActionRequiredItem>> {
     override fun read(buf: ByteBuffer): List<ActionRequiredItem> {
         val len = buf.getInt()
@@ -8376,6 +8844,9 @@ public object FfiConverterSequenceTypeActionRequiredItem: FfiConverterRustBuffer
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterSequenceTypeActivity: FfiConverterRustBuffer<List<Activity>> {
     override fun read(buf: ByteBuffer): List<Activity> {
         val len = buf.getInt()
@@ -8401,6 +8872,9 @@ public object FfiConverterSequenceTypeActivity: FfiConverterRustBuffer<List<Acti
 
 
 
+/**
+ * @suppress
+ */
 public object FfiConverterSequenceTypeRecipient: FfiConverterRustBuffer<List<Recipient>> {
     override fun read(buf: ByteBuffer): List<Recipient> {
         val len = buf.getInt()
