@@ -1420,7 +1420,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_calculate_lsp_fee() != 41445.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_change_fiat_currency() != 45001.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_change_fiat_currency() != 3943.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_change_timezone_config() != 21160.toShort()) {
@@ -2424,10 +2424,11 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     }
     
 
-    override fun `changeFiatCurrency`(`fiatCurrency`: kotlin.String)
+    
+    @Throws(LnException::class)override fun `changeFiatCurrency`(`fiatCurrency`: kotlin.String)
         = 
     callWithPointer {
-    uniffiRustCall() { _status ->
+    uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_change_fiat_currency(
         it, FfiConverterString.lower(`fiatCurrency`),_status)
 }
@@ -3488,7 +3489,7 @@ public object FfiConverterTypeClearWalletInfo: FfiConverterRustBuffer<ClearWalle
 
 data class Config (
     var `seed`: kotlin.ByteArray, 
-    var `fiatCurrency`: kotlin.String, 
+    var `defaultFiatCurrency`: kotlin.String, 
     var `localPersistencePath`: kotlin.String, 
     var `timezoneConfig`: TzConfig, 
     var `fileLoggingLevel`: Level?, 
@@ -3523,7 +3524,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
 
     override fun allocationSize(value: Config) = (
             FfiConverterByteArray.allocationSize(value.`seed`) +
-            FfiConverterString.allocationSize(value.`fiatCurrency`) +
+            FfiConverterString.allocationSize(value.`defaultFiatCurrency`) +
             FfiConverterString.allocationSize(value.`localPersistencePath`) +
             FfiConverterTypeTzConfig.allocationSize(value.`timezoneConfig`) +
             FfiConverterOptionalTypeLevel.allocationSize(value.`fileLoggingLevel`) +
@@ -3536,7 +3537,7 @@ public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
 
     override fun write(value: Config, buf: ByteBuffer) {
             FfiConverterByteArray.write(value.`seed`, buf)
-            FfiConverterString.write(value.`fiatCurrency`, buf)
+            FfiConverterString.write(value.`defaultFiatCurrency`, buf)
             FfiConverterString.write(value.`localPersistencePath`, buf)
             FfiConverterTypeTzConfig.write(value.`timezoneConfig`, buf)
             FfiConverterOptionalTypeLevel.write(value.`fileLoggingLevel`, buf)
