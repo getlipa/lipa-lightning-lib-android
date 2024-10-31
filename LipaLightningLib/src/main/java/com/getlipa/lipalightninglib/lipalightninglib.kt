@@ -4826,8 +4826,7 @@ public object FfiConverterTypeSwapAddressInfo: FfiConverterRustBuffer<SwapAddres
 data class SwapInfo (
     var `bitcoinAddress`: kotlin.String, 
     var `createdAt`: TzTime, 
-    var `paidAmount`: Amount, 
-    var `txid`: kotlin.String
+    var `paidAmount`: Amount
 ) {
     
     companion object
@@ -4842,22 +4841,19 @@ public object FfiConverterTypeSwapInfo: FfiConverterRustBuffer<SwapInfo> {
             FfiConverterString.read(buf),
             FfiConverterTypeTzTime.read(buf),
             FfiConverterTypeAmount.read(buf),
-            FfiConverterString.read(buf),
         )
     }
 
     override fun allocationSize(value: SwapInfo) = (
             FfiConverterString.allocationSize(value.`bitcoinAddress`) +
             FfiConverterTypeTzTime.allocationSize(value.`createdAt`) +
-            FfiConverterTypeAmount.allocationSize(value.`paidAmount`) +
-            FfiConverterString.allocationSize(value.`txid`)
+            FfiConverterTypeAmount.allocationSize(value.`paidAmount`)
     )
 
     override fun write(value: SwapInfo, buf: ByteBuffer) {
             FfiConverterString.write(value.`bitcoinAddress`, buf)
             FfiConverterTypeTzTime.write(value.`createdAt`, buf)
             FfiConverterTypeAmount.write(value.`paidAmount`, buf)
-            FfiConverterString.write(value.`txid`, buf)
     }
 }
 
