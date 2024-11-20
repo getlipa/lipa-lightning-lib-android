@@ -948,6 +948,90 @@ internal open class UniffiVTableCallbackInterfaceEventsCallback(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -968,6 +1052,18 @@ internal interface UniffiLib : Library {
         }
     }
 
+    fun uniffi_uniffi_lipalightninglib_fn_clone_actionsrequired(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
+    fun uniffi_uniffi_lipalightninglib_fn_free_actionsrequired(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_actionsrequired_dismiss_topup(`ptr`: Pointer,`id`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_actionsrequired_hide_unrecoverable_channel_close_funds_item(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_actionsrequired_hide_unrecoverable_failed_swap_item(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_actionsrequired_list(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_clone_activities(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
     fun uniffi_uniffi_lipalightninglib_fn_free_activities(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -984,6 +1080,74 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_activities_set_personal_note(`ptr`: Pointer,`paymentHash`: RustBuffer.ByValue,`note`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_clone_bolt11(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
+    fun uniffi_uniffi_lipalightninglib_fn_free_bolt11(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_bolt11_create(`ptr`: Pointer,`amountSat`: Long,`lspFeeParams`: RustBuffer.ByValue,`description`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_bolt11_pay(`ptr`: Pointer,`invoiceDetails`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_bolt11_pay_open_amount(`ptr`: Pointer,`invoiceDetails`: RustBuffer.ByValue,`amountSat`: Long,`metadata`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_clone_config(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
+    fun uniffi_uniffi_lipalightninglib_fn_free_config(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_config_background(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_config_foreground(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_config_get_analytics_config(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_config_list_currencies(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_config_register_notification_token(`ptr`: Pointer,`notificationToken`: RustBuffer.ByValue,`languageIso6391`: RustBuffer.ByValue,`countryIso31661Alpha2`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_config_set_analytics_config(`ptr`: Pointer,`config`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_config_set_feature_flag(`ptr`: Pointer,`feature`: RustBuffer.ByValue,`flagEnabled`: Byte,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_config_set_fiat_currency(`ptr`: Pointer,`fiatCurrency`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_config_set_timezone_config(`ptr`: Pointer,`timezoneConfig`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_clone_fiattopup(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
+    fun uniffi_uniffi_lipalightninglib_fn_free_fiattopup(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_accept_tc(`ptr`: Pointer,`version`: Long,`fingerprint`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_calculate_payout_fee(`ptr`: Pointer,`offer`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_get_info(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_query_tc_status(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_register(`ptr`: Pointer,`email`: RustBuffer.ByValue,`userIban`: RustBuffer.ByValue,`userCurrency`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_request_collection(`ptr`: Pointer,`offer`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_reset(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_clone_lightning(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
+    fun uniffi_uniffi_lipalightninglib_fn_free_lightning(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightning_bolt11(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightning_calculate_lsp_fee_for_amount(`ptr`: Pointer,`amountSat`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightning_determine_max_routing_fee_mode(`ptr`: Pointer,`amountSat`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightning_determine_payment_affordability(`ptr`: Pointer,`amountSat`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightning_determine_receive_amount_limits(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightning_get_lsp_fee(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightning_lnurl(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
     fun uniffi_uniffi_lipalightninglib_fn_clone_lightningnode(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
     fun uniffi_uniffi_lipalightninglib_fn_free_lightningnode(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -992,6 +1156,8 @@ internal interface UniffiLib : Library {
     ): Pointer
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_accept_pocket_terms_and_conditions(`ptr`: Pointer,`version`: Long,`fingerprint`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_actions_required(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_activities(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_background(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -1008,10 +1174,14 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_clear_wallet(`ptr`: Pointer,`clearWalletInfo`: RustBuffer.ByValue,`destinationOnchainAddressData`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_config(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_create_invoice(`ptr`: Pointer,`amountSat`: Long,`lspFeeParams`: RustBuffer.ByValue,`description`: RustBuffer.ByValue,`metadata`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_data(`ptr`: Pointer,`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_fiat_topup(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_foreground(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_generate_swap_address(`ptr`: Pointer,`lspFeeParams`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -1056,6 +1226,8 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_hide_unresolved_failed_swap_action_required_item(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_lightning(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_action_required_items(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_list_currency_codes(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -1121,6 +1293,14 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_verify_phone_number(`ptr`: Pointer,`phoneNumber`: RustBuffer.ByValue,`otp`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_withdraw_lnurlw(`ptr`: Pointer,`lnurlWithdrawRequestData`: RustBuffer.ByValue,`amountSat`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_clone_lnurl(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
+    fun uniffi_uniffi_lipalightninglib_fn_free_lnurl(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_lnurl_pay(`ptr`: Pointer,`lnurlPayRequestData`: RustBuffer.ByValue,`amountSat`: Long,`comment`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_lnurl_withdraw(`ptr`: Pointer,`lnurlWithdrawRequestData`: RustBuffer.ByValue,`amountSat`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_init_callback_vtable_eventscallback(`vtable`: UniffiVTableCallbackInterfaceEventsCallback,
     ): Unit
@@ -1268,6 +1448,14 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_func_words_by_prefix(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_actionsrequired_dismiss_topup(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_actionsrequired_hide_unrecoverable_channel_close_funds_item(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_actionsrequired_hide_unrecoverable_failed_swap_item(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_actionsrequired_list(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_activities_get(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_activities_get_by_reverse_swap(
@@ -1280,7 +1468,61 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_activities_set_personal_note(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_bolt11_create(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_bolt11_pay(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_bolt11_pay_open_amount(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_config_background(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_config_foreground(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_config_get_analytics_config(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_config_list_currencies(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_config_register_notification_token(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_config_set_analytics_config(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_config_set_feature_flag(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_config_set_fiat_currency(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_config_set_timezone_config(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_accept_tc(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_calculate_payout_fee(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_get_info(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_query_tc_status(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_register(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_request_collection(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_reset(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightning_bolt11(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightning_calculate_lsp_fee_for_amount(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightning_determine_max_routing_fee_mode(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightning_determine_payment_affordability(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightning_determine_receive_amount_limits(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightning_get_lsp_fee(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightning_lnurl(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_accept_pocket_terms_and_conditions(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_actions_required(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_activities(
     ): Short
@@ -1298,9 +1540,13 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_clear_wallet(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_config(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_create_invoice(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_data(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_fiat_topup(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_foreground(
     ): Short
@@ -1345,6 +1591,8 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_topup(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_unresolved_failed_swap_action_required_item(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_lightning(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_action_required_items(
     ): Short
@@ -1412,6 +1660,10 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_withdraw_lnurlw(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lnurl_pay(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_lnurl_withdraw(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_constructor_lightningnode_new(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_payment_received(
@@ -1456,7 +1708,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_get_terms_and_conditions_status() != 65178.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_handle_notification() != 53366.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_handle_notification() != 27529.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_mnemonic_to_secret() != 23900.toShort()) {
@@ -1469,6 +1721,18 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_words_by_prefix() != 18339.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_actionsrequired_dismiss_topup() != 60616.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_actionsrequired_hide_unrecoverable_channel_close_funds_item() != 20833.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_actionsrequired_hide_unrecoverable_failed_swap_item() != 25796.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_actionsrequired_list() != 50235.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_activities_get() != 57920.toShort()) {
@@ -1489,7 +1753,88 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_activities_set_personal_note() != 42000.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_bolt11_create() != 1035.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_bolt11_pay() != 6682.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_bolt11_pay_open_amount() != 49363.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_config_background() != 3896.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_config_foreground() != 57183.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_config_get_analytics_config() != 56514.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_config_list_currencies() != 27075.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_config_register_notification_token() != 57954.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_config_set_analytics_config() != 58647.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_config_set_feature_flag() != 32595.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_config_set_fiat_currency() != 28125.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_config_set_timezone_config() != 25187.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_accept_tc() != 42345.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_calculate_payout_fee() != 23167.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_get_info() != 62428.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_query_tc_status() != 17404.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_register() != 17799.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_request_collection() != 4275.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_reset() != 34939.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightning_bolt11() != 3635.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightning_calculate_lsp_fee_for_amount() != 58652.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightning_determine_max_routing_fee_mode() != 2981.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightning_determine_payment_affordability() != 40404.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightning_determine_receive_amount_limits() != 59145.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightning_get_lsp_fee() != 21001.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightning_lnurl() != 50401.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_accept_pocket_terms_and_conditions() != 25155.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_actions_required() != 19551.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_activities() != 23299.toShort()) {
@@ -1516,10 +1861,16 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_clear_wallet() != 22211.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_config() != 58674.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_create_invoice() != 6856.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_decode_data() != 11730.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_fiat_topup() != 11833.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_foreground() != 21792.toShort()) {
@@ -1586,6 +1937,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_hide_unresolved_failed_swap_action_required_item() != 22326.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_lightning() != 11450.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_list_action_required_items() != 17350.toShort()) {
@@ -1687,7 +2041,13 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_withdraw_lnurlw() != 52161.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_constructor_lightningnode_new() != 11021.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lnurl_pay() != 38665.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lnurl_withdraw() != 19605.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_constructor_lightningnode_new() != 17310.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_eventscallback_payment_received() != 64243.toShort()) {
@@ -2244,6 +2604,284 @@ private class JavaLangRefCleanable(
 ) : UniffiCleaner.Cleanable {
     override fun clean() = cleanable.clean()
 }
+public interface ActionsRequiredInterface {
+    
+    fun `dismissTopup`(`id`: kotlin.String)
+    
+    fun `hideUnrecoverableChannelCloseFundsItem`()
+    
+    fun `hideUnrecoverableFailedSwapItem`(`failedSwapInfo`: FailedSwapInfo)
+    
+    fun `list`(): List<ActionRequiredItem>
+    
+    companion object
+}
+
+open class ActionsRequired: Disposable, AutoCloseable, ActionsRequiredInterface {
+
+    constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val pointer: Pointer?) : Runnable {
+        override fun run() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_free_actionsrequired(ptr, status)
+                }
+            }
+        }
+    }
+
+    fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall() { status ->
+            UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_clone_actionsrequired(pointer!!, status)
+        }
+    }
+
+    
+    @Throws(LnException::class)override fun `dismissTopup`(`id`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_actionsrequired_dismiss_topup(
+        it, FfiConverterString.lower(`id`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `hideUnrecoverableChannelCloseFundsItem`()
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_actionsrequired_hide_unrecoverable_channel_close_funds_item(
+        it, _status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `hideUnrecoverableFailedSwapItem`(`failedSwapInfo`: FailedSwapInfo)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_actionsrequired_hide_unrecoverable_failed_swap_item(
+        it, FfiConverterTypeFailedSwapInfo.lower(`failedSwapInfo`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `list`(): List<ActionRequiredItem> {
+            return FfiConverterSequenceTypeActionRequiredItem.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_actionsrequired_list(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+    
+    companion object
+    
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeActionsRequired: FfiConverter<ActionsRequired, Pointer> {
+
+    override fun lower(value: ActionsRequired): Pointer {
+        return value.uniffiClonePointer()
+    }
+
+    override fun lift(value: Pointer): ActionsRequired {
+        return ActionsRequired(value)
+    }
+
+    override fun read(buf: ByteBuffer): ActionsRequired {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(Pointer(buf.getLong()))
+    }
+
+    override fun allocationSize(value: ActionsRequired) = 8UL
+
+    override fun write(value: ActionsRequired, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(Pointer.nativeValue(lower(value)))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a Pointer/Arc<T>
+// to the live Rust struct on the other side of the FFI.
+//
+// Each instance implements core operations for working with the Rust `Arc<T>` and the
+// Kotlin Pointer to work with the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque pointer to the underlying Rust struct.
+//     Method calls need to read this pointer from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its pointer should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the pointer, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the pointer, but is interrupted
+//      before it can pass the pointer over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read pointer value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
 public interface ActivitiesInterface {
     
     fun `get`(`hash`: kotlin.String): Activity
@@ -2554,9 +3192,1267 @@ public object FfiConverterTypeActivities: FfiConverter<Activities, Pointer> {
 //
 
 
+public interface Bolt11Interface {
+    
+    fun `create`(`amountSat`: kotlin.ULong, `lspFeeParams`: OpeningFeeParams?, `description`: kotlin.String, `metadata`: InvoiceCreationMetadata): InvoiceDetails
+    
+    fun `pay`(`invoiceDetails`: InvoiceDetails, `metadata`: PaymentMetadata)
+    
+    fun `payOpenAmount`(`invoiceDetails`: InvoiceDetails, `amountSat`: kotlin.ULong, `metadata`: PaymentMetadata)
+    
+    companion object
+}
+
+open class Bolt11: Disposable, AutoCloseable, Bolt11Interface {
+
+    constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val pointer: Pointer?) : Runnable {
+        override fun run() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_free_bolt11(ptr, status)
+                }
+            }
+        }
+    }
+
+    fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall() { status ->
+            UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_clone_bolt11(pointer!!, status)
+        }
+    }
+
+    
+    @Throws(LnException::class)override fun `create`(`amountSat`: kotlin.ULong, `lspFeeParams`: OpeningFeeParams?, `description`: kotlin.String, `metadata`: InvoiceCreationMetadata): InvoiceDetails {
+            return FfiConverterTypeInvoiceDetails.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_bolt11_create(
+        it, FfiConverterULong.lower(`amountSat`),FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),FfiConverterString.lower(`description`),FfiConverterTypeInvoiceCreationMetadata.lower(`metadata`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(PayException::class)override fun `pay`(`invoiceDetails`: InvoiceDetails, `metadata`: PaymentMetadata)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(PayException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_bolt11_pay(
+        it, FfiConverterTypeInvoiceDetails.lower(`invoiceDetails`),FfiConverterTypePaymentMetadata.lower(`metadata`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(PayException::class)override fun `payOpenAmount`(`invoiceDetails`: InvoiceDetails, `amountSat`: kotlin.ULong, `metadata`: PaymentMetadata)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(PayException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_bolt11_pay_open_amount(
+        it, FfiConverterTypeInvoiceDetails.lower(`invoiceDetails`),FfiConverterULong.lower(`amountSat`),FfiConverterTypePaymentMetadata.lower(`metadata`),_status)
+}
+    }
+    
+    
+
+    
+
+    
+    
+    companion object
+    
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeBolt11: FfiConverter<Bolt11, Pointer> {
+
+    override fun lower(value: Bolt11): Pointer {
+        return value.uniffiClonePointer()
+    }
+
+    override fun lift(value: Pointer): Bolt11 {
+        return Bolt11(value)
+    }
+
+    override fun read(buf: ByteBuffer): Bolt11 {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(Pointer(buf.getLong()))
+    }
+
+    override fun allocationSize(value: Bolt11) = 8UL
+
+    override fun write(value: Bolt11, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(Pointer.nativeValue(lower(value)))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a Pointer/Arc<T>
+// to the live Rust struct on the other side of the FFI.
+//
+// Each instance implements core operations for working with the Rust `Arc<T>` and the
+// Kotlin Pointer to work with the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque pointer to the underlying Rust struct.
+//     Method calls need to read this pointer from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its pointer should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the pointer, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the pointer, but is interrupted
+//      before it can pass the pointer over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read pointer value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+public interface ConfigInterface {
+    
+    fun `background`()
+    
+    fun `foreground`()
+    
+    fun `getAnalyticsConfig`(): AnalyticsConfig
+    
+    fun `listCurrencies`(): List<kotlin.String>
+    
+    fun `registerNotificationToken`(`notificationToken`: kotlin.String, `languageIso6391`: kotlin.String, `countryIso31661Alpha2`: kotlin.String)
+    
+    fun `setAnalyticsConfig`(`config`: AnalyticsConfig)
+    
+    fun `setFeatureFlag`(`feature`: FeatureFlag, `flagEnabled`: kotlin.Boolean)
+    
+    fun `setFiatCurrency`(`fiatCurrency`: kotlin.String)
+    
+    fun `setTimezoneConfig`(`timezoneConfig`: TzConfig)
+    
+    companion object
+}
+
+open class Config: Disposable, AutoCloseable, ConfigInterface {
+
+    constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val pointer: Pointer?) : Runnable {
+        override fun run() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_free_config(ptr, status)
+                }
+            }
+        }
+    }
+
+    fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall() { status ->
+            UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_clone_config(pointer!!, status)
+        }
+    }
+
+    override fun `background`()
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_config_background(
+        it, _status)
+}
+    }
+    
+    
+
+    override fun `foreground`()
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_config_foreground(
+        it, _status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `getAnalyticsConfig`(): AnalyticsConfig {
+            return FfiConverterTypeAnalyticsConfig.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_config_get_analytics_config(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    override fun `listCurrencies`(): List<kotlin.String> {
+            return FfiConverterSequenceString.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_config_list_currencies(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `registerNotificationToken`(`notificationToken`: kotlin.String, `languageIso6391`: kotlin.String, `countryIso31661Alpha2`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_config_register_notification_token(
+        it, FfiConverterString.lower(`notificationToken`),FfiConverterString.lower(`languageIso6391`),FfiConverterString.lower(`countryIso31661Alpha2`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `setAnalyticsConfig`(`config`: AnalyticsConfig)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_config_set_analytics_config(
+        it, FfiConverterTypeAnalyticsConfig.lower(`config`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `setFeatureFlag`(`feature`: FeatureFlag, `flagEnabled`: kotlin.Boolean)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_config_set_feature_flag(
+        it, FfiConverterTypeFeatureFlag.lower(`feature`),FfiConverterBoolean.lower(`flagEnabled`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `setFiatCurrency`(`fiatCurrency`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_config_set_fiat_currency(
+        it, FfiConverterString.lower(`fiatCurrency`),_status)
+}
+    }
+    
+    
+
+    override fun `setTimezoneConfig`(`timezoneConfig`: TzConfig)
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_config_set_timezone_config(
+        it, FfiConverterTypeTzConfig.lower(`timezoneConfig`),_status)
+}
+    }
+    
+    
+
+    
+
+    
+    
+    companion object
+    
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeConfig: FfiConverter<Config, Pointer> {
+
+    override fun lower(value: Config): Pointer {
+        return value.uniffiClonePointer()
+    }
+
+    override fun lift(value: Pointer): Config {
+        return Config(value)
+    }
+
+    override fun read(buf: ByteBuffer): Config {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(Pointer(buf.getLong()))
+    }
+
+    override fun allocationSize(value: Config) = 8UL
+
+    override fun write(value: Config, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(Pointer.nativeValue(lower(value)))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a Pointer/Arc<T>
+// to the live Rust struct on the other side of the FFI.
+//
+// Each instance implements core operations for working with the Rust `Arc<T>` and the
+// Kotlin Pointer to work with the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque pointer to the underlying Rust struct.
+//     Method calls need to read this pointer from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its pointer should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the pointer, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the pointer, but is interrupted
+//      before it can pass the pointer over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read pointer value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+public interface FiatTopupInterface {
+    
+    fun `acceptTc`(`version`: kotlin.Long, `fingerprint`: kotlin.String)
+    
+    fun `calculatePayoutFee`(`offer`: OfferInfo): Amount
+    
+    fun `getInfo`(): FiatTopupInfo?
+    
+    fun `queryTcStatus`(): TermsAndConditionsStatus
+    
+    fun `register`(`email`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo
+    
+    fun `requestCollection`(`offer`: OfferInfo): kotlin.String
+    
+    fun `reset`()
+    
+    companion object
+}
+
+open class FiatTopup: Disposable, AutoCloseable, FiatTopupInterface {
+
+    constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val pointer: Pointer?) : Runnable {
+        override fun run() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_free_fiattopup(ptr, status)
+                }
+            }
+        }
+    }
+
+    fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall() { status ->
+            UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_clone_fiattopup(pointer!!, status)
+        }
+    }
+
+    
+    @Throws(LnException::class)override fun `acceptTc`(`version`: kotlin.Long, `fingerprint`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_fiattopup_accept_tc(
+        it, FfiConverterLong.lower(`version`),FfiConverterString.lower(`fingerprint`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(LnException::class)override fun `calculatePayoutFee`(`offer`: OfferInfo): Amount {
+            return FfiConverterTypeAmount.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_fiattopup_calculate_payout_fee(
+        it, FfiConverterTypeOfferInfo.lower(`offer`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getInfo`(): FiatTopupInfo? {
+            return FfiConverterOptionalTypeFiatTopupInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_fiattopup_get_info(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `queryTcStatus`(): TermsAndConditionsStatus {
+            return FfiConverterTypeTermsAndConditionsStatus.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_fiattopup_query_tc_status(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `register`(`email`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo {
+            return FfiConverterTypeFiatTopupInfo.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_fiattopup_register(
+        it, FfiConverterOptionalString.lower(`email`),FfiConverterString.lower(`userIban`),FfiConverterString.lower(`userCurrency`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `requestCollection`(`offer`: OfferInfo): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_fiattopup_request_collection(
+        it, FfiConverterTypeOfferInfo.lower(`offer`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `reset`()
+        = 
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_fiattopup_reset(
+        it, _status)
+}
+    }
+    
+    
+
+    
+
+    
+    
+    companion object
+    
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFiatTopup: FfiConverter<FiatTopup, Pointer> {
+
+    override fun lower(value: FiatTopup): Pointer {
+        return value.uniffiClonePointer()
+    }
+
+    override fun lift(value: Pointer): FiatTopup {
+        return FiatTopup(value)
+    }
+
+    override fun read(buf: ByteBuffer): FiatTopup {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(Pointer(buf.getLong()))
+    }
+
+    override fun allocationSize(value: FiatTopup) = 8UL
+
+    override fun write(value: FiatTopup, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(Pointer.nativeValue(lower(value)))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a Pointer/Arc<T>
+// to the live Rust struct on the other side of the FFI.
+//
+// Each instance implements core operations for working with the Rust `Arc<T>` and the
+// Kotlin Pointer to work with the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque pointer to the underlying Rust struct.
+//     Method calls need to read this pointer from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its pointer should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the pointer, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the pointer, but is interrupted
+//      before it can pass the pointer over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read pointer value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+public interface LightningInterface {
+    
+    fun `bolt11`(): Bolt11
+    
+    fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponse
+    
+    fun `determineMaxRoutingFeeMode`(`amountSat`: kotlin.ULong): MaxRoutingFeeMode
+    
+    fun `determinePaymentAffordability`(`amountSat`: kotlin.ULong): PaymentAffordability
+    
+    fun `determineReceiveAmountLimits`(): ReceiveAmountLimits
+    
+    fun `getLspFee`(): LspFee
+    
+    fun `lnurl`(): Lnurl
+    
+    companion object
+}
+
+open class Lightning: Disposable, AutoCloseable, LightningInterface {
+
+    constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val pointer: Pointer?) : Runnable {
+        override fun run() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_free_lightning(ptr, status)
+                }
+            }
+        }
+    }
+
+    fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall() { status ->
+            UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_clone_lightning(pointer!!, status)
+        }
+    }
+
+    override fun `bolt11`(): Bolt11 {
+            return FfiConverterTypeBolt11.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightning_bolt11(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponse {
+            return FfiConverterTypeCalculateLspFeeResponse.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightning_calculate_lsp_fee_for_amount(
+        it, FfiConverterULong.lower(`amountSat`),_status)
+}
+    }
+    )
+    }
+    
+
+    override fun `determineMaxRoutingFeeMode`(`amountSat`: kotlin.ULong): MaxRoutingFeeMode {
+            return FfiConverterTypeMaxRoutingFeeMode.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightning_determine_max_routing_fee_mode(
+        it, FfiConverterULong.lower(`amountSat`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `determinePaymentAffordability`(`amountSat`: kotlin.ULong): PaymentAffordability {
+            return FfiConverterTypePaymentAffordability.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightning_determine_payment_affordability(
+        it, FfiConverterULong.lower(`amountSat`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `determineReceiveAmountLimits`(): ReceiveAmountLimits {
+            return FfiConverterTypeReceiveAmountLimits.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightning_determine_receive_amount_limits(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getLspFee`(): LspFee {
+            return FfiConverterTypeLspFee.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightning_get_lsp_fee(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    override fun `lnurl`(): Lnurl {
+            return FfiConverterTypeLnurl.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightning_lnurl(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+    
+    companion object
+    
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeLightning: FfiConverter<Lightning, Pointer> {
+
+    override fun lower(value: Lightning): Pointer {
+        return value.uniffiClonePointer()
+    }
+
+    override fun lift(value: Pointer): Lightning {
+        return Lightning(value)
+    }
+
+    override fun read(buf: ByteBuffer): Lightning {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(Pointer(buf.getLong()))
+    }
+
+    override fun allocationSize(value: Lightning) = 8UL
+
+    override fun write(value: Lightning, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(Pointer.nativeValue(lower(value)))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a Pointer/Arc<T>
+// to the live Rust struct on the other side of the FFI.
+//
+// Each instance implements core operations for working with the Rust `Arc<T>` and the
+// Kotlin Pointer to work with the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque pointer to the underlying Rust struct.
+//     Method calls need to read this pointer from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its pointer should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the pointer, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the pointer, but is interrupted
+//      before it can pass the pointer over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read pointer value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
 public interface LightningNodeInterface {
     
     fun `acceptPocketTermsAndConditions`(`version`: kotlin.Long, `fingerprint`: kotlin.String)
+    
+    fun `actionsRequired`(): ActionsRequired
     
     fun `activities`(): Activities
     
@@ -2574,9 +4470,13 @@ public interface LightningNodeInterface {
     
     fun `clearWallet`(`clearWalletInfo`: ClearWalletInfo, `destinationOnchainAddressData`: BitcoinAddressData)
     
+    fun `config`(): Config
+    
     fun `createInvoice`(`amountSat`: kotlin.ULong, `lspFeeParams`: OpeningFeeParams?, `description`: kotlin.String, `metadata`: InvoiceCreationMetadata): InvoiceDetails
     
     fun `decodeData`(`data`: kotlin.String): DecodedData
+    
+    fun `fiatTopup`(): FiatTopup
     
     fun `foreground`()
     
@@ -2621,6 +4521,8 @@ public interface LightningNodeInterface {
     fun `hideTopup`(`id`: kotlin.String)
     
     fun `hideUnresolvedFailedSwapActionRequiredItem`(`failedSwapInfo`: FailedSwapInfo)
+    
+    fun `lightning`(): Lightning
     
     fun `listActionRequiredItems`(): List<ActionRequiredItem>
     
@@ -2708,11 +4610,11 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
         this.pointer = null
         this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
     }
-    constructor(`config`: Config, `eventsCallback`: EventsCallback) :
+    constructor(`config`: LightningNodeConfig, `eventsCallback`: EventsCallback) :
         this(
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_constructor_lightningnode_new(
-        FfiConverterTypeConfig.lower(`config`),FfiConverterTypeEventsCallback.lower(`eventsCallback`),_status)
+        FfiConverterTypeLightningNodeConfig.lower(`config`),FfiConverterTypeEventsCallback.lower(`eventsCallback`),_status)
 }
     )
 
@@ -2789,6 +4691,18 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
 }
     }
     
+    
+
+    override fun `actionsRequired`(): ActionsRequired {
+            return FfiConverterTypeActionsRequired.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_actions_required(
+        it, _status)
+}
+    }
+    )
+    }
     
 
     override fun `activities`(): Activities {
@@ -2888,6 +4802,18 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
     
 
+    override fun `config`(): Config {
+            return FfiConverterTypeConfig.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_config(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
     
     @Throws(LnException::class)override fun `createInvoice`(`amountSat`: kotlin.ULong, `lspFeeParams`: OpeningFeeParams?, `description`: kotlin.String, `metadata`: InvoiceCreationMetadata): InvoiceDetails {
             return FfiConverterTypeInvoiceDetails.lift(
@@ -2908,6 +4834,18 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     uniffiRustCallWithError(DecodeDataException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_decode_data(
         it, FfiConverterString.lower(`data`),_status)
+}
+    }
+    )
+    }
+    
+
+    override fun `fiatTopup`(): FiatTopup {
+            return FfiConverterTypeFiatTopup.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_fiat_topup(
+        it, _status)
 }
     }
     )
@@ -3191,6 +5129,18 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
 }
     }
     
+    
+
+    override fun `lightning`(): Lightning {
+            return FfiConverterTypeLightning.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_lightning(
+        it, _status)
+}
+    }
+    )
+    }
     
 
     
@@ -3647,6 +5597,257 @@ public object FfiConverterTypeLightningNode: FfiConverter<LightningNode, Pointer
 }
 
 
+// This template implements a class for working with a Rust struct via a Pointer/Arc<T>
+// to the live Rust struct on the other side of the FFI.
+//
+// Each instance implements core operations for working with the Rust `Arc<T>` and the
+// Kotlin Pointer to work with the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque pointer to the underlying Rust struct.
+//     Method calls need to read this pointer from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its pointer should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the pointer, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the pointer, but is interrupted
+//      before it can pass the pointer over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read pointer value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+public interface LnurlInterface {
+    
+    fun `pay`(`lnurlPayRequestData`: LnUrlPayRequestData, `amountSat`: kotlin.ULong, `comment`: kotlin.String?): kotlin.String
+    
+    fun `withdraw`(`lnurlWithdrawRequestData`: LnUrlWithdrawRequestData, `amountSat`: kotlin.ULong): kotlin.String
+    
+    companion object
+}
+
+open class Lnurl: Disposable, AutoCloseable, LnurlInterface {
+
+    constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val pointer: Pointer?) : Runnable {
+        override fun run() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_free_lnurl(ptr, status)
+                }
+            }
+        }
+    }
+
+    fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall() { status ->
+            UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_clone_lnurl(pointer!!, status)
+        }
+    }
+
+    
+    @Throws(LnUrlPayException::class)override fun `pay`(`lnurlPayRequestData`: LnUrlPayRequestData, `amountSat`: kotlin.ULong, `comment`: kotlin.String?): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnUrlPayException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lnurl_pay(
+        it, FfiConverterTypeLnUrlPayRequestData.lower(`lnurlPayRequestData`),FfiConverterULong.lower(`amountSat`),FfiConverterOptionalString.lower(`comment`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnUrlWithdrawException::class)override fun `withdraw`(`lnurlWithdrawRequestData`: LnUrlWithdrawRequestData, `amountSat`: kotlin.ULong): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnUrlWithdrawException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lnurl_withdraw(
+        it, FfiConverterTypeLnUrlWithdrawRequestData.lower(`lnurlWithdrawRequestData`),FfiConverterULong.lower(`amountSat`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+    
+    companion object
+    
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeLnurl: FfiConverter<Lnurl, Pointer> {
+
+    override fun lower(value: Lnurl): Pointer {
+        return value.uniffiClonePointer()
+    }
+
+    override fun lift(value: Pointer): Lnurl {
+        return Lnurl(value)
+    }
+
+    override fun read(buf: ByteBuffer): Lnurl {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(Pointer(buf.getLong()))
+    }
+
+    override fun allocationSize(value: Lnurl) = 8UL
+
+    override fun write(value: Lnurl, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(Pointer.nativeValue(lower(value)))
+    }
+}
+
+
 
 data class Amount (
     var `sats`: kotlin.ULong, 
@@ -3911,70 +6112,6 @@ public object FfiConverterTypeClearWalletInfo: FfiConverterRustBuffer<ClearWalle
             FfiConverterTypeAmount.write(value.`onchainFee`, buf)
             FfiConverterTypeAmount.write(value.`swapFee`, buf)
             FfiConverterTypePrepareOnchainPaymentResponse.write(value.`prepareResponse`, buf)
-    }
-}
-
-
-
-data class Config (
-    var `seed`: kotlin.ByteArray, 
-    var `defaultFiatCurrency`: kotlin.String, 
-    var `localPersistencePath`: kotlin.String, 
-    var `timezoneConfig`: TzConfig, 
-    var `fileLoggingLevel`: Level?, 
-    var `phoneNumberAllowedCountriesIso31661Alpha2`: List<kotlin.String>, 
-    var `remoteServicesConfig`: RemoteServicesConfig, 
-    var `breezSdkConfig`: BreezSdkConfig, 
-    var `maxRoutingFeeConfig`: MaxRoutingFeeConfig, 
-    var `receiveLimitsConfig`: ReceiveLimitsConfig
-) {
-    
-    companion object
-}
-
-/**
- * @suppress
- */
-public object FfiConverterTypeConfig: FfiConverterRustBuffer<Config> {
-    override fun read(buf: ByteBuffer): Config {
-        return Config(
-            FfiConverterByteArray.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterTypeTzConfig.read(buf),
-            FfiConverterOptionalTypeLevel.read(buf),
-            FfiConverterSequenceString.read(buf),
-            FfiConverterTypeRemoteServicesConfig.read(buf),
-            FfiConverterTypeBreezSdkConfig.read(buf),
-            FfiConverterTypeMaxRoutingFeeConfig.read(buf),
-            FfiConverterTypeReceiveLimitsConfig.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: Config) = (
-            FfiConverterByteArray.allocationSize(value.`seed`) +
-            FfiConverterString.allocationSize(value.`defaultFiatCurrency`) +
-            FfiConverterString.allocationSize(value.`localPersistencePath`) +
-            FfiConverterTypeTzConfig.allocationSize(value.`timezoneConfig`) +
-            FfiConverterOptionalTypeLevel.allocationSize(value.`fileLoggingLevel`) +
-            FfiConverterSequenceString.allocationSize(value.`phoneNumberAllowedCountriesIso31661Alpha2`) +
-            FfiConverterTypeRemoteServicesConfig.allocationSize(value.`remoteServicesConfig`) +
-            FfiConverterTypeBreezSdkConfig.allocationSize(value.`breezSdkConfig`) +
-            FfiConverterTypeMaxRoutingFeeConfig.allocationSize(value.`maxRoutingFeeConfig`) +
-            FfiConverterTypeReceiveLimitsConfig.allocationSize(value.`receiveLimitsConfig`)
-    )
-
-    override fun write(value: Config, buf: ByteBuffer) {
-            FfiConverterByteArray.write(value.`seed`, buf)
-            FfiConverterString.write(value.`defaultFiatCurrency`, buf)
-            FfiConverterString.write(value.`localPersistencePath`, buf)
-            FfiConverterTypeTzConfig.write(value.`timezoneConfig`, buf)
-            FfiConverterOptionalTypeLevel.write(value.`fileLoggingLevel`, buf)
-            FfiConverterSequenceString.write(value.`phoneNumberAllowedCountriesIso31661Alpha2`, buf)
-            FfiConverterTypeRemoteServicesConfig.write(value.`remoteServicesConfig`, buf)
-            FfiConverterTypeBreezSdkConfig.write(value.`breezSdkConfig`, buf)
-            FfiConverterTypeMaxRoutingFeeConfig.write(value.`maxRoutingFeeConfig`, buf)
-            FfiConverterTypeReceiveLimitsConfig.write(value.`receiveLimitsConfig`, buf)
     }
 }
 
@@ -4303,6 +6440,70 @@ public object FfiConverterTypeInvoiceDetails: FfiConverterRustBuffer<InvoiceDeta
             FfiConverterTimestamp.write(value.`creationTimestamp`, buf)
             FfiConverterDuration.write(value.`expiryInterval`, buf)
             FfiConverterTimestamp.write(value.`expiryTimestamp`, buf)
+    }
+}
+
+
+
+data class LightningNodeConfig (
+    var `seed`: kotlin.ByteArray, 
+    var `defaultFiatCurrency`: kotlin.String, 
+    var `localPersistencePath`: kotlin.String, 
+    var `timezoneConfig`: TzConfig, 
+    var `fileLoggingLevel`: Level?, 
+    var `phoneNumberAllowedCountriesIso31661Alpha2`: List<kotlin.String>, 
+    var `remoteServicesConfig`: RemoteServicesConfig, 
+    var `breezSdkConfig`: BreezSdkConfig, 
+    var `maxRoutingFeeConfig`: MaxRoutingFeeConfig, 
+    var `receiveLimitsConfig`: ReceiveLimitsConfig
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeLightningNodeConfig: FfiConverterRustBuffer<LightningNodeConfig> {
+    override fun read(buf: ByteBuffer): LightningNodeConfig {
+        return LightningNodeConfig(
+            FfiConverterByteArray.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterTypeTzConfig.read(buf),
+            FfiConverterOptionalTypeLevel.read(buf),
+            FfiConverterSequenceString.read(buf),
+            FfiConverterTypeRemoteServicesConfig.read(buf),
+            FfiConverterTypeBreezSdkConfig.read(buf),
+            FfiConverterTypeMaxRoutingFeeConfig.read(buf),
+            FfiConverterTypeReceiveLimitsConfig.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: LightningNodeConfig) = (
+            FfiConverterByteArray.allocationSize(value.`seed`) +
+            FfiConverterString.allocationSize(value.`defaultFiatCurrency`) +
+            FfiConverterString.allocationSize(value.`localPersistencePath`) +
+            FfiConverterTypeTzConfig.allocationSize(value.`timezoneConfig`) +
+            FfiConverterOptionalTypeLevel.allocationSize(value.`fileLoggingLevel`) +
+            FfiConverterSequenceString.allocationSize(value.`phoneNumberAllowedCountriesIso31661Alpha2`) +
+            FfiConverterTypeRemoteServicesConfig.allocationSize(value.`remoteServicesConfig`) +
+            FfiConverterTypeBreezSdkConfig.allocationSize(value.`breezSdkConfig`) +
+            FfiConverterTypeMaxRoutingFeeConfig.allocationSize(value.`maxRoutingFeeConfig`) +
+            FfiConverterTypeReceiveLimitsConfig.allocationSize(value.`receiveLimitsConfig`)
+    )
+
+    override fun write(value: LightningNodeConfig, buf: ByteBuffer) {
+            FfiConverterByteArray.write(value.`seed`, buf)
+            FfiConverterString.write(value.`defaultFiatCurrency`, buf)
+            FfiConverterString.write(value.`localPersistencePath`, buf)
+            FfiConverterTypeTzConfig.write(value.`timezoneConfig`, buf)
+            FfiConverterOptionalTypeLevel.write(value.`fileLoggingLevel`, buf)
+            FfiConverterSequenceString.write(value.`phoneNumberAllowedCountriesIso31661Alpha2`, buf)
+            FfiConverterTypeRemoteServicesConfig.write(value.`remoteServicesConfig`, buf)
+            FfiConverterTypeBreezSdkConfig.write(value.`breezSdkConfig`, buf)
+            FfiConverterTypeMaxRoutingFeeConfig.write(value.`maxRoutingFeeConfig`, buf)
+            FfiConverterTypeReceiveLimitsConfig.write(value.`receiveLimitsConfig`, buf)
     }
 }
 
@@ -5011,6 +7212,38 @@ public object FfiConverterTypePrepareOnchainPaymentResponse: FfiConverterRustBuf
             FfiConverterULong.write(value.`senderAmountSat`, buf)
             FfiConverterULong.write(value.`recipientAmountSat`, buf)
             FfiConverterULong.write(value.`totalFees`, buf)
+    }
+}
+
+
+
+data class ReceiveAmountLimits (
+    var `maxReceive`: Amount, 
+    var `liquidityLimit`: LiquidityLimit
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeReceiveAmountLimits: FfiConverterRustBuffer<ReceiveAmountLimits> {
+    override fun read(buf: ByteBuffer): ReceiveAmountLimits {
+        return ReceiveAmountLimits(
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeLiquidityLimit.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ReceiveAmountLimits) = (
+            FfiConverterTypeAmount.allocationSize(value.`maxReceive`) +
+            FfiConverterTypeLiquidityLimit.allocationSize(value.`liquidityLimit`)
+    )
+
+    override fun write(value: ReceiveAmountLimits, buf: ByteBuffer) {
+            FfiConverterTypeAmount.write(value.`maxReceive`, buf)
+            FfiConverterTypeLiquidityLimit.write(value.`liquidityLimit`, buf)
     }
 }
 
@@ -7588,6 +9821,37 @@ public object FfiConverterTypePayErrorCode: FfiConverterRustBuffer<PayErrorCode>
 
 
 
+enum class PaymentAffordability {
+    
+    NOT_ENOUGH_FUNDS,
+    UNAFFORDABLE_FEES,
+    AFFORDABLE;
+    companion object
+}
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypePaymentAffordability: FfiConverterRustBuffer<PaymentAffordability> {
+    override fun read(buf: ByteBuffer) = try {
+        PaymentAffordability.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: PaymentAffordability) = 4UL
+
+    override fun write(value: PaymentAffordability, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
 enum class PaymentSource {
     
     CAMERA,
@@ -9398,11 +11662,11 @@ public object FfiConverterSequenceTypeRecipient: FfiConverterRustBuffer<List<Rec
     }
     
 
-    @Throws(NotificationHandlingException::class) fun `handleNotification`(`config`: Config, `notificationPayload`: kotlin.String, `notificationToggles`: NotificationToggles, `timeout`: java.time.Duration): Notification {
+    @Throws(NotificationHandlingException::class) fun `handleNotification`(`config`: LightningNodeConfig, `notificationPayload`: kotlin.String, `notificationToggles`: NotificationToggles, `timeout`: java.time.Duration): Notification {
             return FfiConverterTypeNotification.lift(
     uniffiRustCallWithError(NotificationHandlingException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_handle_notification(
-        FfiConverterTypeConfig.lower(`config`),FfiConverterString.lower(`notificationPayload`),FfiConverterTypeNotificationToggles.lower(`notificationToggles`),FfiConverterDuration.lower(`timeout`),_status)
+        FfiConverterTypeLightningNodeConfig.lower(`config`),FfiConverterString.lower(`notificationPayload`),FfiConverterTypeNotificationToggles.lower(`notificationToggles`),FfiConverterDuration.lower(`timeout`),_status)
 }
     )
     }
