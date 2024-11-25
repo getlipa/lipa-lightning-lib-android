@@ -1112,6 +1112,8 @@ internal open class UniffiVTableCallbackInterfaceEventsCallback(
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -1176,7 +1178,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_channelclose_determine_resolving_fees(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_channelclose_prepare_sweep(`ptr`: Pointer,`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_channelclose_prepare_sweep(`ptr`: Pointer,`destination`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_channelclose_swap(`ptr`: Pointer,`satsPerVbyte`: Int,`lspFeeParams`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1438,7 +1440,7 @@ internal interface UniffiLib : Library {
     ): Pointer
     fun uniffi_uniffi_lipalightninglib_fn_free_reverseswap(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_uniffi_lipalightninglib_fn_method_reverseswap_clear_wallet(`ptr`: Pointer,`clearWalletInfo`: RustBuffer.ByValue,`destinationOnchainAddressData`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_reverseswap_clear_wallet(`ptr`: Pointer,`clearWalletInfo`: RustBuffer.ByValue,`destination`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_reverseswap_determine_clear_wallet_feasibility(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1448,11 +1450,13 @@ internal interface UniffiLib : Library {
     ): Pointer
     fun uniffi_uniffi_lipalightninglib_fn_free_swap(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_uniffi_lipalightninglib_fn_method_swap_calculate_lsp_fee_for_amount(`ptr`: Pointer,`amountSat`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_swap_create(`ptr`: Pointer,`lspFeeParams`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_swap_determine_resolving_fees(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_swap_prepare_sweep(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,`toAddress`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_swap_prepare_sweep(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,`destination`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_swap_swap(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,`satsPerVbyte`: Int,`lspFeeParam`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1880,6 +1884,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_reverseswap_prepare_clear_wallet(
     ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_swap_calculate_lsp_fee_for_amount(
+    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_swap_create(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_swap_determine_resolving_fees(
@@ -2005,7 +2011,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_channelclose_determine_resolving_fees() != 21525.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_channelclose_prepare_sweep() != 21435.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_channelclose_prepare_sweep() != 44583.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_channelclose_swap() != 13343.toShort()) {
@@ -2341,7 +2347,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_phonenumber_verify() != 24882.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_reverseswap_clear_wallet() != 5945.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_reverseswap_clear_wallet() != 36987.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_reverseswap_determine_clear_wallet_feasibility() != 40903.toShort()) {
@@ -2350,13 +2356,16 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_reverseswap_prepare_clear_wallet() != 16256.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_calculate_lsp_fee_for_amount() != 29142.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_create() != 19186.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_determine_resolving_fees() != 43015.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_prepare_sweep() != 47233.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_prepare_sweep() != 7973.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_swap() != 22862.toShort()) {
@@ -3799,7 +3808,7 @@ public interface ChannelCloseInterface {
     
     fun `determineResolvingFees`(): OnchainResolvingFees?
     
-    fun `prepareSweep`(`address`: kotlin.String): SweepChannelCloseInfo
+    fun `prepareSweep`(`destination`: BitcoinAddressData): SweepChannelCloseInfo
     
     fun `swap`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String
     
@@ -3903,12 +3912,12 @@ open class ChannelClose: Disposable, AutoCloseable, ChannelCloseInterface {
     
 
     
-    @Throws(SweepException::class)override fun `prepareSweep`(`address`: kotlin.String): SweepChannelCloseInfo {
+    @Throws(SweepException::class)override fun `prepareSweep`(`destination`: BitcoinAddressData): SweepChannelCloseInfo {
             return FfiConverterTypeSweepChannelCloseInfo.lift(
     callWithPointer {
     uniffiRustCallWithError(SweepException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_channelclose_prepare_sweep(
-        it, FfiConverterString.lower(`address`),_status)
+        it, FfiConverterTypeBitcoinAddressData.lower(`destination`),_status)
 }
     }
     )
@@ -7431,7 +7440,7 @@ public object FfiConverterTypePhoneNumber: FfiConverter<PhoneNumber, Pointer> {
 
 public interface ReverseSwapInterface {
     
-    fun `clearWallet`(`clearWalletInfo`: ClearWalletInfo, `destinationOnchainAddressData`: BitcoinAddressData)
+    fun `clearWallet`(`clearWalletInfo`: ClearWalletInfo, `destination`: BitcoinAddressData)
     
     fun `determineClearWalletFeasibility`(): RangeHit
     
@@ -7522,12 +7531,12 @@ open class ReverseSwap: Disposable, AutoCloseable, ReverseSwapInterface {
     }
 
     
-    @Throws(LnException::class)override fun `clearWallet`(`clearWalletInfo`: ClearWalletInfo, `destinationOnchainAddressData`: BitcoinAddressData)
+    @Throws(LnException::class)override fun `clearWallet`(`clearWalletInfo`: ClearWalletInfo, `destination`: BitcoinAddressData)
         = 
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_reverseswap_clear_wallet(
-        it, FfiConverterTypeClearWalletInfo.lower(`clearWalletInfo`),FfiConverterTypeBitcoinAddressData.lower(`destinationOnchainAddressData`),_status)
+        it, FfiConverterTypeClearWalletInfo.lower(`clearWalletInfo`),FfiConverterTypeBitcoinAddressData.lower(`destination`),_status)
 }
     }
     
@@ -7696,11 +7705,13 @@ public object FfiConverterTypeReverseSwap: FfiConverter<ReverseSwap, Pointer> {
 
 public interface SwapInterface {
     
+    fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponse
+    
     fun `create`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo
     
     fun `determineResolvingFees`(`failedSwapInfo`: FailedSwapInfo): OnchainResolvingFees?
     
-    fun `prepareSweep`(`failedSwapInfo`: FailedSwapInfo, `toAddress`: kotlin.String): SweepFailedSwapInfo
+    fun `prepareSweep`(`failedSwapInfo`: FailedSwapInfo, `destination`: BitcoinAddressData): SweepFailedSwapInfo
     
     fun `swap`(`failedSwapInfo`: FailedSwapInfo, `satsPerVbyte`: kotlin.UInt, `lspFeeParam`: OpeningFeeParams?): kotlin.String
     
@@ -7791,6 +7802,19 @@ open class Swap: Disposable, AutoCloseable, SwapInterface {
     }
 
     
+    @Throws(LnException::class)override fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponse {
+            return FfiConverterTypeCalculateLspFeeResponse.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_swap_calculate_lsp_fee_for_amount(
+        it, FfiConverterULong.lower(`amountSat`),_status)
+}
+    }
+    )
+    }
+    
+
+    
     @Throws(SwapException::class)override fun `create`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo {
             return FfiConverterTypeSwapAddressInfo.lift(
     callWithPointer {
@@ -7817,12 +7841,12 @@ open class Swap: Disposable, AutoCloseable, SwapInterface {
     
 
     
-    @Throws(LnException::class)override fun `prepareSweep`(`failedSwapInfo`: FailedSwapInfo, `toAddress`: kotlin.String): SweepFailedSwapInfo {
+    @Throws(LnException::class)override fun `prepareSweep`(`failedSwapInfo`: FailedSwapInfo, `destination`: BitcoinAddressData): SweepFailedSwapInfo {
             return FfiConverterTypeSweepFailedSwapInfo.lift(
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_swap_prepare_sweep(
-        it, FfiConverterTypeFailedSwapInfo.lower(`failedSwapInfo`),FfiConverterString.lower(`toAddress`),_status)
+        it, FfiConverterTypeFailedSwapInfo.lower(`failedSwapInfo`),FfiConverterTypeBitcoinAddressData.lower(`destination`),_status)
 }
     }
     )
