@@ -1494,7 +1494,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_func_parse_lightning_address(`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(`backendUrl`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`localPersistencePath`: RustBuffer.ByValue,`fileLoggingLevel`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(`backendUrl`: RustBuffer.ByValue,`seed`: RustBuffer.ByValue,`localPersistencePath`: RustBuffer.ByValue,`fileLoggingLevel`: RustBuffer.ByValue,`allowExternalRecovery`: Byte,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_func_words_by_prefix(`prefix`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1963,7 +1963,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_parse_lightning_address() != 40400.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_recover_lightning_node() != 64552.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_func_recover_lightning_node() != 36854.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_func_words_by_prefix() != 18339.toShort()) {
@@ -2071,7 +2071,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightning_bolt11() != 3635.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightning_calculate_lsp_fee_for_amount() != 58652.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightning_calculate_lsp_fee_for_amount() != 13847.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightning_determine_max_routing_fee_mode() != 2981.toShort()) {
@@ -2356,7 +2356,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_reverseswap_prepare_clear_wallet() != 16256.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_calculate_lsp_fee_for_amount() != 29142.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_calculate_lsp_fee_for_amount() != 61544.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_create() != 19186.toShort()) {
@@ -4758,7 +4758,7 @@ public interface LightningInterface {
     
     fun `bolt11`(): Bolt11
     
-    fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponse
+    fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponseV2
     
     fun `determineMaxRoutingFeeMode`(`amountSat`: kotlin.ULong): MaxRoutingFeeMode
     
@@ -4867,8 +4867,8 @@ open class Lightning: Disposable, AutoCloseable, LightningInterface {
     
 
     
-    @Throws(LnException::class)override fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponse {
-            return FfiConverterTypeCalculateLspFeeResponse.lift(
+    @Throws(LnException::class)override fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponseV2 {
+            return FfiConverterTypeCalculateLspFeeResponseV2.lift(
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightning_calculate_lsp_fee_for_amount(
@@ -7705,7 +7705,7 @@ public object FfiConverterTypeReverseSwap: FfiConverter<ReverseSwap, Pointer> {
 
 public interface SwapInterface {
     
-    fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponse
+    fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponseV2
     
     fun `create`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo
     
@@ -7802,8 +7802,8 @@ open class Swap: Disposable, AutoCloseable, SwapInterface {
     }
 
     
-    @Throws(LnException::class)override fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponse {
-            return FfiConverterTypeCalculateLspFeeResponse.lift(
+    @Throws(LnException::class)override fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponseV2 {
+            return FfiConverterTypeCalculateLspFeeResponseV2.lift(
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_swap_calculate_lsp_fee_for_amount(
@@ -8380,6 +8380,38 @@ public object FfiConverterTypeCalculateLspFeeResponse: FfiConverterRustBuffer<Ca
     override fun write(value: CalculateLspFeeResponse, buf: ByteBuffer) {
             FfiConverterTypeAmount.write(value.`lspFee`, buf)
             FfiConverterOptionalTypeOpeningFeeParams.write(value.`lspFeeParams`, buf)
+    }
+}
+
+
+
+data class CalculateLspFeeResponseV2 (
+    var `lspFee`: Amount, 
+    var `lspFeeParams`: OpeningFeeParams
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeCalculateLspFeeResponseV2: FfiConverterRustBuffer<CalculateLspFeeResponseV2> {
+    override fun read(buf: ByteBuffer): CalculateLspFeeResponseV2 {
+        return CalculateLspFeeResponseV2(
+            FfiConverterTypeAmount.read(buf),
+            FfiConverterTypeOpeningFeeParams.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: CalculateLspFeeResponseV2) = (
+            FfiConverterTypeAmount.allocationSize(value.`lspFee`) +
+            FfiConverterTypeOpeningFeeParams.allocationSize(value.`lspFeeParams`)
+    )
+
+    override fun write(value: CalculateLspFeeResponseV2, buf: ByteBuffer) {
+            FfiConverterTypeAmount.write(value.`lspFee`, buf)
+            FfiConverterTypeOpeningFeeParams.write(value.`lspFeeParams`, buf)
     }
 }
 
@@ -9918,7 +9950,7 @@ data class SwapToLightningFees (
     var `onchainFee`: Amount, 
     var `channelOpeningFee`: Amount, 
     var `totalFees`: Amount, 
-    var `lspFeeParams`: OpeningFeeParams?
+    var `lspFeeParams`: OpeningFeeParams
 ) {
     
     companion object
@@ -9934,7 +9966,7 @@ public object FfiConverterTypeSwapToLightningFees: FfiConverterRustBuffer<SwapTo
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeAmount.read(buf),
             FfiConverterTypeAmount.read(buf),
-            FfiConverterOptionalTypeOpeningFeeParams.read(buf),
+            FfiConverterTypeOpeningFeeParams.read(buf),
         )
     }
 
@@ -9943,7 +9975,7 @@ public object FfiConverterTypeSwapToLightningFees: FfiConverterRustBuffer<SwapTo
             FfiConverterTypeAmount.allocationSize(value.`onchainFee`) +
             FfiConverterTypeAmount.allocationSize(value.`channelOpeningFee`) +
             FfiConverterTypeAmount.allocationSize(value.`totalFees`) +
-            FfiConverterOptionalTypeOpeningFeeParams.allocationSize(value.`lspFeeParams`)
+            FfiConverterTypeOpeningFeeParams.allocationSize(value.`lspFeeParams`)
     )
 
     override fun write(value: SwapToLightningFees, buf: ByteBuffer) {
@@ -9951,7 +9983,7 @@ public object FfiConverterTypeSwapToLightningFees: FfiConverterRustBuffer<SwapTo
             FfiConverterTypeAmount.write(value.`onchainFee`, buf)
             FfiConverterTypeAmount.write(value.`channelOpeningFee`, buf)
             FfiConverterTypeAmount.write(value.`totalFees`, buf)
-            FfiConverterOptionalTypeOpeningFeeParams.write(value.`lspFeeParams`, buf)
+            FfiConverterTypeOpeningFeeParams.write(value.`lspFeeParams`, buf)
     }
 }
 
@@ -14153,11 +14185,11 @@ public object FfiConverterSequenceTypeRecipient: FfiConverterRustBuffer<List<Rec
     
     
 
-    @Throws(LnException::class) fun `recoverLightningNode`(`backendUrl`: kotlin.String, `seed`: kotlin.ByteArray, `localPersistencePath`: kotlin.String, `fileLoggingLevel`: Level?)
+    @Throws(LnException::class) fun `recoverLightningNode`(`backendUrl`: kotlin.String, `seed`: kotlin.ByteArray, `localPersistencePath`: kotlin.String, `fileLoggingLevel`: Level?, `allowExternalRecovery`: kotlin.Boolean)
         = 
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_func_recover_lightning_node(
-        FfiConverterString.lower(`backendUrl`),FfiConverterByteArray.lower(`seed`),FfiConverterString.lower(`localPersistencePath`),FfiConverterOptionalTypeLevel.lower(`fileLoggingLevel`),_status)
+        FfiConverterString.lower(`backendUrl`),FfiConverterByteArray.lower(`seed`),FfiConverterString.lower(`localPersistencePath`),FfiConverterOptionalTypeLevel.lower(`fileLoggingLevel`),FfiConverterBoolean.lower(`allowExternalRecovery`),_status)
 }
     
     
