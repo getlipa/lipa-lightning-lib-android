@@ -1218,7 +1218,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_query_tc_status(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_register(`ptr`: Pointer,`email`: RustBuffer.ByValue,`userIban`: RustBuffer.ByValue,`userCurrency`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_register(`ptr`: Pointer,`email`: RustBuffer.ByValue,`referralCode`: RustBuffer.ByValue,`userIban`: RustBuffer.ByValue,`userCurrency`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_request_collection(`ptr`: Pointer,`offer`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -2059,7 +2059,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_query_tc_status() != 17404.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_register() != 17799.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_register() != 15159.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_request_collection() != 4275.toShort()) {
@@ -4440,7 +4440,7 @@ public interface FiatTopupInterface {
     
     fun `queryTcStatus`(): TermsAndConditionsStatus
     
-    fun `register`(`email`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo
+    fun `register`(`email`: kotlin.String?, `referralCode`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo
     
     fun `requestCollection`(`offer`: OfferInfo): kotlin.String
     
@@ -4582,12 +4582,12 @@ open class FiatTopup: Disposable, AutoCloseable, FiatTopupInterface {
     
 
     
-    @Throws(LnException::class)override fun `register`(`email`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo {
+    @Throws(LnException::class)override fun `register`(`email`: kotlin.String?, `referralCode`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo {
             return FfiConverterTypeFiatTopupInfo.lift(
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_fiattopup_register(
-        it, FfiConverterOptionalString.lower(`email`),FfiConverterString.lower(`userIban`),FfiConverterString.lower(`userCurrency`),_status)
+        it, FfiConverterOptionalString.lower(`email`),FfiConverterOptionalString.lower(`referralCode`),FfiConverterString.lower(`userIban`),FfiConverterString.lower(`userCurrency`),_status)
 }
     }
     )
@@ -8879,7 +8879,8 @@ data class LightningNodeConfig (
     var `remoteServicesConfig`: RemoteServicesConfig, 
     var `breezSdkConfig`: BreezSdkConfig, 
     var `maxRoutingFeeConfig`: MaxRoutingFeeConfig, 
-    var `receiveLimitsConfig`: ReceiveLimitsConfig
+    var `receiveLimitsConfig`: ReceiveLimitsConfig, 
+    var `topupReferralCodeMaxLength`: kotlin.UInt
 ) {
     
     companion object
@@ -8901,6 +8902,7 @@ public object FfiConverterTypeLightningNodeConfig: FfiConverterRustBuffer<Lightn
             FfiConverterTypeBreezSdkConfig.read(buf),
             FfiConverterTypeMaxRoutingFeeConfig.read(buf),
             FfiConverterTypeReceiveLimitsConfig.read(buf),
+            FfiConverterUInt.read(buf),
         )
     }
 
@@ -8914,7 +8916,8 @@ public object FfiConverterTypeLightningNodeConfig: FfiConverterRustBuffer<Lightn
             FfiConverterTypeRemoteServicesConfig.allocationSize(value.`remoteServicesConfig`) +
             FfiConverterTypeBreezSdkConfig.allocationSize(value.`breezSdkConfig`) +
             FfiConverterTypeMaxRoutingFeeConfig.allocationSize(value.`maxRoutingFeeConfig`) +
-            FfiConverterTypeReceiveLimitsConfig.allocationSize(value.`receiveLimitsConfig`)
+            FfiConverterTypeReceiveLimitsConfig.allocationSize(value.`receiveLimitsConfig`) +
+            FfiConverterUInt.allocationSize(value.`topupReferralCodeMaxLength`)
     )
 
     override fun write(value: LightningNodeConfig, buf: ByteBuffer) {
@@ -8928,6 +8931,7 @@ public object FfiConverterTypeLightningNodeConfig: FfiConverterRustBuffer<Lightn
             FfiConverterTypeBreezSdkConfig.write(value.`breezSdkConfig`, buf)
             FfiConverterTypeMaxRoutingFeeConfig.write(value.`maxRoutingFeeConfig`, buf)
             FfiConverterTypeReceiveLimitsConfig.write(value.`receiveLimitsConfig`, buf)
+            FfiConverterUInt.write(value.`topupReferralCodeMaxLength`, buf)
     }
 }
 
