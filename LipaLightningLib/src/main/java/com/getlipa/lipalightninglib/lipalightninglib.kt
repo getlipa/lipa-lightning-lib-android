@@ -1218,7 +1218,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_query_tc_status(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_register(`ptr`: Pointer,`email`: RustBuffer.ByValue,`referralCode`: RustBuffer.ByValue,`userIban`: RustBuffer.ByValue,`userCurrency`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_register(`ptr`: Pointer,`email`: RustBuffer.ByValue,`userIban`: RustBuffer.ByValue,`userCurrency`: RustBuffer.ByValue,`provider`: RustBuffer.ByValue,`referralCode`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_fiattopup_request_collection(`ptr`: Pointer,`offer`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1370,8 +1370,6 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_query_verified_phone_number(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(`ptr`: Pointer,`email`: RustBuffer.ByValue,`userIban`: RustBuffer.ByValue,`userCurrency`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_lightning_address(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_notification_token(`ptr`: Pointer,`notificationToken`: RustBuffer.ByValue,`languageIso6391`: RustBuffer.ByValue,`countryIso31661Alpha2`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -1455,6 +1453,8 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_fn_method_swap_create(`ptr`: Pointer,`lspFeeParams`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_swap_determine_resolving_fees(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_uniffi_lipalightninglib_fn_method_swap_get_lsp_fee(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_swap_prepare_sweep(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,`destination`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1824,8 +1824,6 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_verified_phone_number(
     ): Short
-    fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_fiat_topup(
-    ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_lightning_address(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_notification_token(
@@ -1889,6 +1887,8 @@ internal interface UniffiLib : Library {
     fun uniffi_uniffi_lipalightninglib_checksum_method_swap_create(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_swap_determine_resolving_fees(
+    ): Short
+    fun uniffi_uniffi_lipalightninglib_checksum_method_swap_get_lsp_fee(
     ): Short
     fun uniffi_uniffi_lipalightninglib_checksum_method_swap_prepare_sweep(
     ): Short
@@ -2053,13 +2053,13 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_calculate_payout_fee() != 23167.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_get_info() != 62428.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_get_info() != 57322.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_query_tc_status() != 17404.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_register() != 15159.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_register() != 60071.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_fiattopup_request_collection() != 4275.toShort()) {
@@ -2266,9 +2266,6 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_query_verified_phone_number() != 38376.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_fiat_topup() != 12958.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_register_lightning_address() != 46966.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -2287,7 +2284,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_resolve_failed_swap() != 11475.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_retrieve_latest_fiat_topup_info() != 55765.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_retrieve_latest_fiat_topup_info() != 20131.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_lightningnode_set_analytics_config() != 38927.toShort()) {
@@ -2363,6 +2360,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_determine_resolving_fees() != 43015.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_get_lsp_fee() != 28002.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_prepare_sweep() != 7973.toShort()) {
@@ -4436,11 +4436,11 @@ public interface FiatTopupInterface {
     
     fun `calculatePayoutFee`(`offer`: OfferInfo): Amount
     
-    fun `getInfo`(): FiatTopupInfo?
+    fun `getInfo`(): FiatTopupSetupInfo?
     
     fun `queryTcStatus`(): TermsAndConditionsStatus
     
-    fun `register`(`email`: kotlin.String?, `referralCode`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo
+    fun `register`(`email`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String, `provider`: kotlin.String, `referralCode`: kotlin.String?): FiatTopupSetupInfo
     
     fun `requestCollection`(`offer`: OfferInfo): kotlin.String
     
@@ -4556,8 +4556,8 @@ open class FiatTopup: Disposable, AutoCloseable, FiatTopupInterface {
     
 
     
-    @Throws(LnException::class)override fun `getInfo`(): FiatTopupInfo? {
-            return FfiConverterOptionalTypeFiatTopupInfo.lift(
+    @Throws(LnException::class)override fun `getInfo`(): FiatTopupSetupInfo? {
+            return FfiConverterOptionalTypeFiatTopupSetupInfo.lift(
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_fiattopup_get_info(
@@ -4582,12 +4582,12 @@ open class FiatTopup: Disposable, AutoCloseable, FiatTopupInterface {
     
 
     
-    @Throws(LnException::class)override fun `register`(`email`: kotlin.String?, `referralCode`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo {
-            return FfiConverterTypeFiatTopupInfo.lift(
+    @Throws(LnException::class)override fun `register`(`email`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String, `provider`: kotlin.String, `referralCode`: kotlin.String?): FiatTopupSetupInfo {
+            return FfiConverterTypeFiatTopupSetupInfo.lift(
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_fiattopup_register(
-        it, FfiConverterOptionalString.lower(`email`),FfiConverterOptionalString.lower(`referralCode`),FfiConverterString.lower(`userIban`),FfiConverterString.lower(`userCurrency`),_status)
+        it, FfiConverterOptionalString.lower(`email`),FfiConverterString.lower(`userIban`),FfiConverterString.lower(`userCurrency`),FfiConverterString.lower(`provider`),FfiConverterOptionalString.lower(`referralCode`),_status)
 }
     }
     )
@@ -5444,8 +5444,6 @@ public interface LightningNodeInterface {
     
     fun `queryVerifiedPhoneNumber`(): kotlin.String?
     
-    fun `registerFiatTopup`(`email`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo
-    
     fun `registerLightningAddress`(): kotlin.String
     
     fun `registerNotificationToken`(`notificationToken`: kotlin.String, `languageIso6391`: kotlin.String, `countryIso31661Alpha2`: kotlin.String)
@@ -5458,7 +5456,7 @@ public interface LightningNodeInterface {
     
     fun `resolveFailedSwap`(`resolveFailedSwapInfo`: ResolveFailedSwapInfo): kotlin.String
     
-    fun `retrieveLatestFiatTopupInfo`(): FiatTopupInfo?
+    fun `retrieveLatestFiatTopupInfo`(): FiatTopupSetupInfo?
     
     fun `setAnalyticsConfig`(`config`: AnalyticsConfig)
     
@@ -6284,19 +6282,6 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
-    @Throws(LnException::class)override fun `registerFiatTopup`(`email`: kotlin.String?, `userIban`: kotlin.String, `userCurrency`: kotlin.String): FiatTopupInfo {
-            return FfiConverterTypeFiatTopupInfo.lift(
-    callWithPointer {
-    uniffiRustCallWithError(LnException) { _status ->
-    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_register_fiat_topup(
-        it, FfiConverterOptionalString.lower(`email`),FfiConverterString.lower(`userIban`),FfiConverterString.lower(`userCurrency`),_status)
-}
-    }
-    )
-    }
-    
-
-    
     @Throws(LnException::class)override fun `registerLightningAddress`(): kotlin.String {
             return FfiConverterString.lift(
     callWithPointer {
@@ -6372,8 +6357,8 @@ open class LightningNode: Disposable, AutoCloseable, LightningNodeInterface {
     
 
     
-    @Throws(LnException::class)override fun `retrieveLatestFiatTopupInfo`(): FiatTopupInfo? {
-            return FfiConverterOptionalTypeFiatTopupInfo.lift(
+    @Throws(LnException::class)override fun `retrieveLatestFiatTopupInfo`(): FiatTopupSetupInfo? {
+            return FfiConverterOptionalTypeFiatTopupSetupInfo.lift(
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_lightningnode_retrieve_latest_fiat_topup_info(
@@ -7711,6 +7696,8 @@ public interface SwapInterface {
     
     fun `determineResolvingFees`(`failedSwapInfo`: FailedSwapInfo): OnchainResolvingFees?
     
+    fun `getLspFee`(): LspFee
+    
     fun `prepareSweep`(`failedSwapInfo`: FailedSwapInfo, `destination`: BitcoinAddressData): SweepFailedSwapInfo
     
     fun `swap`(`failedSwapInfo`: FailedSwapInfo, `satsPerVbyte`: kotlin.UInt, `lspFeeParam`: OpeningFeeParams?): kotlin.String
@@ -7834,6 +7821,19 @@ open class Swap: Disposable, AutoCloseable, SwapInterface {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_swap_determine_resolving_fees(
         it, FfiConverterTypeFailedSwapInfo.lower(`failedSwapInfo`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    @Throws(LnException::class)override fun `getLspFee`(): LspFee {
+            return FfiConverterTypeLspFee.lift(
+    callWithPointer {
+    uniffiRustCallWithError(LnException) { _status ->
+    UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_swap_get_lsp_fee(
+        it, _status)
 }
     }
     )
@@ -8613,7 +8613,7 @@ public object FfiConverterTypeFailedSwapInfo: FfiConverterRustBuffer<FailedSwapI
 
 
 
-data class FiatTopupInfo (
+data class FiatTopupSetupInfo (
     var `orderId`: kotlin.String, 
     var `debitorIban`: kotlin.String, 
     var `creditorReference`: kotlin.String, 
@@ -8638,9 +8638,9 @@ data class FiatTopupInfo (
 /**
  * @suppress
  */
-public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInfo> {
-    override fun read(buf: ByteBuffer): FiatTopupInfo {
-        return FiatTopupInfo(
+public object FfiConverterTypeFiatTopupSetupInfo: FfiConverterRustBuffer<FiatTopupSetupInfo> {
+    override fun read(buf: ByteBuffer): FiatTopupSetupInfo {
+        return FiatTopupSetupInfo(
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
@@ -8660,7 +8660,7 @@ public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInf
         )
     }
 
-    override fun allocationSize(value: FiatTopupInfo) = (
+    override fun allocationSize(value: FiatTopupSetupInfo) = (
             FfiConverterString.allocationSize(value.`orderId`) +
             FfiConverterString.allocationSize(value.`debitorIban`) +
             FfiConverterString.allocationSize(value.`creditorReference`) +
@@ -8679,7 +8679,7 @@ public object FfiConverterTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInf
             FfiConverterString.allocationSize(value.`currency`)
     )
 
-    override fun write(value: FiatTopupInfo, buf: ByteBuffer) {
+    override fun write(value: FiatTopupSetupInfo, buf: ByteBuffer) {
             FfiConverterString.write(value.`orderId`, buf)
             FfiConverterString.write(value.`debitorIban`, buf)
             FfiConverterString.write(value.`creditorReference`, buf)
@@ -13618,28 +13618,28 @@ public object FfiConverterOptionalTypeExchangeRate: FfiConverterRustBuffer<Excha
 /**
  * @suppress
  */
-public object FfiConverterOptionalTypeFiatTopupInfo: FfiConverterRustBuffer<FiatTopupInfo?> {
-    override fun read(buf: ByteBuffer): FiatTopupInfo? {
+public object FfiConverterOptionalTypeFiatTopupSetupInfo: FfiConverterRustBuffer<FiatTopupSetupInfo?> {
+    override fun read(buf: ByteBuffer): FiatTopupSetupInfo? {
         if (buf.get().toInt() == 0) {
             return null
         }
-        return FfiConverterTypeFiatTopupInfo.read(buf)
+        return FfiConverterTypeFiatTopupSetupInfo.read(buf)
     }
 
-    override fun allocationSize(value: FiatTopupInfo?): ULong {
+    override fun allocationSize(value: FiatTopupSetupInfo?): ULong {
         if (value == null) {
             return 1UL
         } else {
-            return 1UL + FfiConverterTypeFiatTopupInfo.allocationSize(value)
+            return 1UL + FfiConverterTypeFiatTopupSetupInfo.allocationSize(value)
         }
     }
 
-    override fun write(value: FiatTopupInfo?, buf: ByteBuffer) {
+    override fun write(value: FiatTopupSetupInfo?, buf: ByteBuffer) {
         if (value == null) {
             buf.put(0)
         } else {
             buf.put(1)
-            FfiConverterTypeFiatTopupInfo.write(value, buf)
+            FfiConverterTypeFiatTopupSetupInfo.write(value, buf)
         }
     }
 }
