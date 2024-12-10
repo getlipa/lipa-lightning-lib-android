@@ -1180,7 +1180,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_channelclose_prepare_sweep(`ptr`: Pointer,`destination`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_channelclose_swap(`ptr`: Pointer,`satsPerVbyte`: Int,`lspFeeParams`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_channelclose_swap(`ptr`: Pointer,`satsPerVbyte`: Int,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_channelclose_sweep(`ptr`: Pointer,`sweepInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1450,7 +1450,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_uniffi_lipalightninglib_fn_method_swap_calculate_lsp_fee_for_amount(`ptr`: Pointer,`amountSat`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_swap_create(`ptr`: Pointer,`lspFeeParams`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_swap_create(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_swap_determine_resolving_fees(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1458,7 +1458,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_swap_prepare_sweep(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,`destination`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_uniffi_lipalightninglib_fn_method_swap_swap(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,`satsPerVbyte`: Int,`lspFeeParam`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_uniffi_lipalightninglib_fn_method_swap_swap(`ptr`: Pointer,`failedSwapInfo`: RustBuffer.ByValue,`satsPerVbyte`: Int,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_uniffi_lipalightninglib_fn_method_swap_sweep(`ptr`: Pointer,`sweepFailedSwapInfo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -2014,7 +2014,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_channelclose_prepare_sweep() != 44583.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_channelclose_swap() != 13343.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_channelclose_swap() != 47042.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_channelclose_sweep() != 3534.toShort()) {
@@ -2356,7 +2356,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_calculate_lsp_fee_for_amount() != 61544.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_create() != 19186.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_create() != 14616.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_determine_resolving_fees() != 43015.toShort()) {
@@ -2368,7 +2368,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_prepare_sweep() != 7973.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_swap() != 22862.toShort()) {
+    if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_swap() != 51446.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_uniffi_lipalightninglib_checksum_method_swap_sweep() != 44251.toShort()) {
@@ -3810,7 +3810,7 @@ public interface ChannelCloseInterface {
     
     fun `prepareSweep`(`destination`: BitcoinAddressData): SweepChannelCloseInfo
     
-    fun `swap`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String
+    fun `swap`(`satsPerVbyte`: kotlin.UInt): kotlin.String
     
     fun `sweep`(`sweepInfo`: SweepChannelCloseInfo): kotlin.String
     
@@ -3925,12 +3925,12 @@ open class ChannelClose: Disposable, AutoCloseable, ChannelCloseInterface {
     
 
     
-    @Throws(SweepException::class)override fun `swap`(`satsPerVbyte`: kotlin.UInt, `lspFeeParams`: OpeningFeeParams?): kotlin.String {
+    @Throws(SweepException::class)override fun `swap`(`satsPerVbyte`: kotlin.UInt): kotlin.String {
             return FfiConverterString.lift(
     callWithPointer {
     uniffiRustCallWithError(SweepException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_channelclose_swap(
-        it, FfiConverterUInt.lower(`satsPerVbyte`),FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),_status)
+        it, FfiConverterUInt.lower(`satsPerVbyte`),_status)
 }
     }
     )
@@ -7692,7 +7692,7 @@ public interface SwapInterface {
     
     fun `calculateLspFeeForAmount`(`amountSat`: kotlin.ULong): CalculateLspFeeResponseV2
     
-    fun `create`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo
+    fun `create`(): SwapAddressInfo
     
     fun `determineResolvingFees`(`failedSwapInfo`: FailedSwapInfo): OnchainResolvingFees?
     
@@ -7700,7 +7700,7 @@ public interface SwapInterface {
     
     fun `prepareSweep`(`failedSwapInfo`: FailedSwapInfo, `destination`: BitcoinAddressData): SweepFailedSwapInfo
     
-    fun `swap`(`failedSwapInfo`: FailedSwapInfo, `satsPerVbyte`: kotlin.UInt, `lspFeeParam`: OpeningFeeParams?): kotlin.String
+    fun `swap`(`failedSwapInfo`: FailedSwapInfo, `satsPerVbyte`: kotlin.UInt): kotlin.String
     
     fun `sweep`(`sweepFailedSwapInfo`: SweepFailedSwapInfo): kotlin.String
     
@@ -7802,12 +7802,12 @@ open class Swap: Disposable, AutoCloseable, SwapInterface {
     
 
     
-    @Throws(SwapException::class)override fun `create`(`lspFeeParams`: OpeningFeeParams?): SwapAddressInfo {
+    @Throws(SwapException::class)override fun `create`(): SwapAddressInfo {
             return FfiConverterTypeSwapAddressInfo.lift(
     callWithPointer {
     uniffiRustCallWithError(SwapException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_swap_create(
-        it, FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParams`),_status)
+        it, _status)
 }
     }
     )
@@ -7854,12 +7854,12 @@ open class Swap: Disposable, AutoCloseable, SwapInterface {
     
 
     
-    @Throws(LnException::class)override fun `swap`(`failedSwapInfo`: FailedSwapInfo, `satsPerVbyte`: kotlin.UInt, `lspFeeParam`: OpeningFeeParams?): kotlin.String {
+    @Throws(LnException::class)override fun `swap`(`failedSwapInfo`: FailedSwapInfo, `satsPerVbyte`: kotlin.UInt): kotlin.String {
             return FfiConverterString.lift(
     callWithPointer {
     uniffiRustCallWithError(LnException) { _status ->
     UniffiLib.INSTANCE.uniffi_uniffi_lipalightninglib_fn_method_swap_swap(
-        it, FfiConverterTypeFailedSwapInfo.lower(`failedSwapInfo`),FfiConverterUInt.lower(`satsPerVbyte`),FfiConverterOptionalTypeOpeningFeeParams.lower(`lspFeeParam`),_status)
+        it, FfiConverterTypeFailedSwapInfo.lower(`failedSwapInfo`),FfiConverterUInt.lower(`satsPerVbyte`),_status)
 }
     }
     )
