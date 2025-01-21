@@ -9325,8 +9325,64 @@ public object FfiConverterTypeNotificationToggles: FfiConverterRustBuffer<Notifi
 
 
 
+data class Offer (
+    var `id`: kotlin.String, 
+    var `exchangeRate`: ExchangeRate, 
+    var `topupValueMinorUnits`: kotlin.ULong, 
+    var `topupValueSats`: kotlin.ULong?, 
+    var `exchangeFeeMinorUnits`: kotlin.ULong, 
+    var `exchangeFeeRatePermyriad`: kotlin.UShort, 
+    var `lightningPayoutFee`: Amount?, 
+    var `error`: PocketOfferError?
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeOffer: FfiConverterRustBuffer<Offer> {
+    override fun read(buf: ByteBuffer): Offer {
+        return Offer(
+            FfiConverterString.read(buf),
+            FfiConverterTypeExchangeRate.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterUShort.read(buf),
+            FfiConverterOptionalTypeAmount.read(buf),
+            FfiConverterOptionalTypePocketOfferError.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: Offer) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterTypeExchangeRate.allocationSize(value.`exchangeRate`) +
+            FfiConverterULong.allocationSize(value.`topupValueMinorUnits`) +
+            FfiConverterOptionalULong.allocationSize(value.`topupValueSats`) +
+            FfiConverterULong.allocationSize(value.`exchangeFeeMinorUnits`) +
+            FfiConverterUShort.allocationSize(value.`exchangeFeeRatePermyriad`) +
+            FfiConverterOptionalTypeAmount.allocationSize(value.`lightningPayoutFee`) +
+            FfiConverterOptionalTypePocketOfferError.allocationSize(value.`error`)
+    )
+
+    override fun write(value: Offer, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterTypeExchangeRate.write(value.`exchangeRate`, buf)
+            FfiConverterULong.write(value.`topupValueMinorUnits`, buf)
+            FfiConverterOptionalULong.write(value.`topupValueSats`, buf)
+            FfiConverterULong.write(value.`exchangeFeeMinorUnits`, buf)
+            FfiConverterUShort.write(value.`exchangeFeeRatePermyriad`, buf)
+            FfiConverterOptionalTypeAmount.write(value.`lightningPayoutFee`, buf)
+            FfiConverterOptionalTypePocketOfferError.write(value.`error`, buf)
+    }
+}
+
+
+
 data class OfferInfo (
-    var `offerKind`: OfferKind, 
+    var `offer`: Offer, 
     var `amount`: Amount, 
     var `lnurlw`: kotlin.String?, 
     var `createdAt`: java.time.Instant, 
@@ -9343,7 +9399,7 @@ data class OfferInfo (
 public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
     override fun read(buf: ByteBuffer): OfferInfo {
         return OfferInfo(
-            FfiConverterTypeOfferKind.read(buf),
+            FfiConverterTypeOffer.read(buf),
             FfiConverterTypeAmount.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterTimestamp.read(buf),
@@ -9353,7 +9409,7 @@ public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
     }
 
     override fun allocationSize(value: OfferInfo) = (
-            FfiConverterTypeOfferKind.allocationSize(value.`offerKind`) +
+            FfiConverterTypeOffer.allocationSize(value.`offer`) +
             FfiConverterTypeAmount.allocationSize(value.`amount`) +
             FfiConverterOptionalString.allocationSize(value.`lnurlw`) +
             FfiConverterTimestamp.allocationSize(value.`createdAt`) +
@@ -9362,7 +9418,7 @@ public object FfiConverterTypeOfferInfo: FfiConverterRustBuffer<OfferInfo> {
     )
 
     override fun write(value: OfferInfo, buf: ByteBuffer) {
-            FfiConverterTypeOfferKind.write(value.`offerKind`, buf)
+            FfiConverterTypeOffer.write(value.`offer`, buf)
             FfiConverterTypeAmount.write(value.`amount`, buf)
             FfiConverterOptionalString.write(value.`lnurlw`, buf)
             FfiConverterTimestamp.write(value.`createdAt`, buf)
@@ -10349,7 +10405,7 @@ sealed class Activity {
     
     data class OfferClaim(
         val `incomingPaymentInfo`: IncomingPaymentInfo, 
-        val `offerKind`: OfferKind) : Activity() {
+        val `offer`: Offer) : Activity() {
         companion object
     }
     
@@ -10389,7 +10445,7 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
                 )
             3 -> Activity.OfferClaim(
                 FfiConverterTypeIncomingPaymentInfo.read(buf),
-                FfiConverterTypeOfferKind.read(buf),
+                FfiConverterTypeOffer.read(buf),
                 )
             4 -> Activity.Swap(
                 FfiConverterOptionalTypeIncomingPaymentInfo.read(buf),
@@ -10426,7 +10482,7 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
             (
                 4UL
                 + FfiConverterTypeIncomingPaymentInfo.allocationSize(value.`incomingPaymentInfo`)
-                + FfiConverterTypeOfferKind.allocationSize(value.`offerKind`)
+                + FfiConverterTypeOffer.allocationSize(value.`offer`)
             )
         }
         is Activity.Swap -> {
@@ -10469,7 +10525,7 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
             is Activity.OfferClaim -> {
                 buf.putInt(3)
                 FfiConverterTypeIncomingPaymentInfo.write(value.`incomingPaymentInfo`, buf)
-                FfiConverterTypeOfferKind.write(value.`offerKind`, buf)
+                FfiConverterTypeOffer.write(value.`offer`, buf)
                 Unit
             }
             is Activity.Swap -> {
@@ -11603,6 +11659,9 @@ sealed class Notification {
         companion object
     }
     
+    object OnchainPaymentSwappedOut : Notification()
+    
+    
     data class LnurlInvoiceCreated(
         val `amountSat`: kotlin.ULong) : Notification() {
         companion object
@@ -11627,7 +11686,8 @@ public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification
                 FfiConverterULong.read(buf),
                 FfiConverterString.read(buf),
                 )
-            3 -> Notification.LnurlInvoiceCreated(
+            3 -> Notification.OnchainPaymentSwappedOut
+            4 -> Notification.LnurlInvoiceCreated(
                 FfiConverterULong.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
@@ -11649,6 +11709,12 @@ public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification
                 4UL
                 + FfiConverterULong.allocationSize(value.`amountSat`)
                 + FfiConverterString.allocationSize(value.`paymentHash`)
+            )
+        }
+        is Notification.OnchainPaymentSwappedOut -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
             )
         }
         is Notification.LnurlInvoiceCreated -> {
@@ -11674,8 +11740,12 @@ public object FfiConverterTypeNotification : FfiConverterRustBuffer<Notification
                 FfiConverterString.write(value.`paymentHash`, buf)
                 Unit
             }
-            is Notification.LnurlInvoiceCreated -> {
+            is Notification.OnchainPaymentSwappedOut -> {
                 buf.putInt(3)
+                Unit
+            }
+            is Notification.LnurlInvoiceCreated -> {
+                buf.putInt(4)
                 FfiConverterULong.write(value.`amountSat`, buf)
                 Unit
             }
@@ -11820,84 +11890,6 @@ public object FfiConverterTypeNotificationHandlingErrorCode: FfiConverterRustBuf
 
     override fun write(value: NotificationHandlingErrorCode, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
-    }
-}
-
-
-
-
-
-sealed class OfferKind {
-    
-    data class Pocket(
-        val `id`: kotlin.String, 
-        val `exchangeRate`: ExchangeRate, 
-        val `topupValueMinorUnits`: kotlin.ULong, 
-        val `topupValueSats`: kotlin.ULong?, 
-        val `exchangeFeeMinorUnits`: kotlin.ULong, 
-        val `exchangeFeeRatePermyriad`: kotlin.UShort, 
-        val `lightningPayoutFee`: Amount?, 
-        val `error`: PocketOfferError?) : OfferKind() {
-        companion object
-    }
-    
-
-    
-    companion object
-}
-
-/**
- * @suppress
- */
-public object FfiConverterTypeOfferKind : FfiConverterRustBuffer<OfferKind>{
-    override fun read(buf: ByteBuffer): OfferKind {
-        return when(buf.getInt()) {
-            1 -> OfferKind.Pocket(
-                FfiConverterString.read(buf),
-                FfiConverterTypeExchangeRate.read(buf),
-                FfiConverterULong.read(buf),
-                FfiConverterOptionalULong.read(buf),
-                FfiConverterULong.read(buf),
-                FfiConverterUShort.read(buf),
-                FfiConverterOptionalTypeAmount.read(buf),
-                FfiConverterOptionalTypePocketOfferError.read(buf),
-                )
-            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
-        }
-    }
-
-    override fun allocationSize(value: OfferKind) = when(value) {
-        is OfferKind.Pocket -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`id`)
-                + FfiConverterTypeExchangeRate.allocationSize(value.`exchangeRate`)
-                + FfiConverterULong.allocationSize(value.`topupValueMinorUnits`)
-                + FfiConverterOptionalULong.allocationSize(value.`topupValueSats`)
-                + FfiConverterULong.allocationSize(value.`exchangeFeeMinorUnits`)
-                + FfiConverterUShort.allocationSize(value.`exchangeFeeRatePermyriad`)
-                + FfiConverterOptionalTypeAmount.allocationSize(value.`lightningPayoutFee`)
-                + FfiConverterOptionalTypePocketOfferError.allocationSize(value.`error`)
-            )
-        }
-    }
-
-    override fun write(value: OfferKind, buf: ByteBuffer) {
-        when(value) {
-            is OfferKind.Pocket -> {
-                buf.putInt(1)
-                FfiConverterString.write(value.`id`, buf)
-                FfiConverterTypeExchangeRate.write(value.`exchangeRate`, buf)
-                FfiConverterULong.write(value.`topupValueMinorUnits`, buf)
-                FfiConverterOptionalULong.write(value.`topupValueSats`, buf)
-                FfiConverterULong.write(value.`exchangeFeeMinorUnits`, buf)
-                FfiConverterUShort.write(value.`exchangeFeeRatePermyriad`, buf)
-                FfiConverterOptionalTypeAmount.write(value.`lightningPayoutFee`, buf)
-                FfiConverterOptionalTypePocketOfferError.write(value.`error`, buf)
-                Unit
-            }
-        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 }
 
